@@ -1,0 +1,19 @@
+site_name: python_anvil
+site_description: Anvil API
+site_author: Allan Almazan
+
+repo_url: https://github.com/aalmazan/python-anvil
+edit_uri: https://github.com/aalmazan/python-anvil/edit/master/docs
+
+theme: readthedocs
+
+markdown_extensions:
+  - codehilite
+
+nav:
+  - Home: index.md
+  - Advanced: advanced.md
+  - About:
+    - Release Notes: about/changelog.md
+    - Contributing: about/contributing.md
+    - License: about/license.md
