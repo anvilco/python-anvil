@@ -17,7 +17,7 @@ CONFIG = {
     "github_repo": "python-anvil",
     "default_branch": "master",
     "project_name": "python_anvil",
-    "package_name": "anvil_api",
+    "package_name": "python_anvil",
     "project_short_description": "Anvil API",
     "python_major_version": 3,
     "python_minor_version": 6,

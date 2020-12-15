@@ -45,3 +45,7 @@ Icon*
 
 # Eclipse
 .settings
+
+.tox
+.idea
+.vscode

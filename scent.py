@@ -12,7 +12,7 @@ else:
     notify = Notifier.notify
 
 
-watch_paths = ["anvil_api", "tests"]
+watch_paths = ["python_anvil", "tests"]
 
 
 class Options:

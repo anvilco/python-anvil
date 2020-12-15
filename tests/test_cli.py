@@ -3,9 +3,11 @@
 
 import pytest
 from click.testing import CliRunner
-from expecter import expect
 
-from anvil_api.cli import main
+from python_anvil.cli import cli
+
+
+# from expecter import expect
 
 
 @pytest.fixture
@@ -16,13 +18,5 @@ def runner():
 def describe_cli():
     def describe_conversion():
         def when_integer(runner):
-            result = runner.invoke(main, ['42'])
-
-            expect(result.exit_code) == 0
-            expect(result.output) == "12.80165\n"
-
-        def when_invalid(runner):
-            result = runner.invoke(main, ['foobar'])
-
-            expect(result.exit_code) == 0
-            expect(result.output) == ""
+            result = runner.invoke(cli, ['42'])
+            assert result
