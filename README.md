@@ -11,6 +11,8 @@ Anvil is a suite of tools for integrating document-based workflows and PDFs with
 1. Anvil Workflows converts your PDF forms into simple, intuitive websites that 
    fill the PDFs and gather signatures for you.
 2. Anvil PDF Filling API allows you to fill any PDF with JSON data.
+3. Anvil PDF Generation API allows you to create new PDFs.
+4. Anvil Etch E-sign API allows you to request signatures on a PDF signing packet.
 
 Currently, this API library only supports our PDF filling API and our GraphQL API.
 
