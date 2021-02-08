@@ -1,7 +1,7 @@
 # Anvil API Library
 
-[![PyPI Version](https://img.shields.io/pypi/v/python_anvil.svg)](https://pypi.org/project/python_anvil)
-[![PyPI License](https://img.shields.io/pypi/l/python_anvil.svg)](https://pypi.org/project/python_anvil)
+[![PyPI Version](https://img.shields.io/pypi/v/python-anvil.svg)](https://pypi.org/project/python-anvil)
+[![PyPI License](https://img.shields.io/pypi/l/python-anvil.svg)](https://pypi.org/project/python-anvil)
 
 This is a library that provides an interface to access the [Anvil API](https://www.useanvil.com/developers) from applications
 written in the Python programming language.
