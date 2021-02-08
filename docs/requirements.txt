@@ -1,2 +1,2 @@
-mkdocs @ file:///Users/allan/Library/Caches/pypoetry/artifacts/e5/99/40/ea12a1537f1ac078ea1e60daddb6e0146998f05524ac67801841df7912/mkdocs-1.0.4-py2.py3-none-any.whl
-Pygments @ file:///Users/allan/Library/Caches/pypoetry/artifacts/54/12/c1/dee5244df91f15f2bd40d20b21c37bb0067e7ec19e45606a530f902ce5/Pygments-2.7.4-py3-none-any.whl
+mkdocs==1.0.4; (python_full_version >= "2.7.9" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+pygments==2.7.4; python_version >= "3.5"
