@@ -59,7 +59,7 @@ class GraphqlRequest(AnvilRequest):
 
 
 class RestRequest(AnvilRequest):
-    API_HOST = "http://app.useanvil.com"
+    API_HOST = "https://app.useanvil.com"
     API_BASE = "api"
     API_VERSION = "v1"
 
