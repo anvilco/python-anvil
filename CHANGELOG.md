@@ -1,7 +1,10 @@
+# 0.2.0 (2021-05-05)
+
+- Add support for HTML to PDF on `generate_pdf`
+
 # 0.1.1 (2021-02-16)
 
-* Fix for REST API calls failing
-
+- Fix for REST API calls failing
 
 # 0.1.0 (2021-01-30)
 
