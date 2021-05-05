@@ -85,6 +85,17 @@ class Anvil:
         else:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
+        # For HTML-type payloads, data must be a dict (or JSON object).
+        if data.type == 'html' and isinstance(data.data, list):
+            raise ValueError(
+                "`payload` data must be a dict when generating a PDF from html"
+            )
+        elif data.type == 'markdown' and isinstance(data.data, dict):
+            raise ValueError(
+                "`payload` data must be a list of dicts when generating a PDF "
+                "from markdown (this is the default)"
+            )
+
         # Any data errors would come from here..
         api = RestRequest(client=self.client)
         return api.post("generate-pdf", data=remove_empty_items(data.to_dict()))

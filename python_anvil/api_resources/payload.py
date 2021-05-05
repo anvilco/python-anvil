@@ -31,9 +31,10 @@ class FillPDFPayload(DataClassJsonMixin):
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class GeneratePDFPayload(DataClassJsonMixin):
-    data: List[Dict[str, Any]]
+    data: Union[List[Dict[str, Any]], Dict[str, Any]]
     logo: Optional[EmbeddedLogo] = None
     title: Optional[str] = None
+    type: Optional[str] = 'markdown'  # or html
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
