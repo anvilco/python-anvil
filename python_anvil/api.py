@@ -85,6 +85,27 @@ class Anvil:
         else:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
+        # `dataclasses_json` doesn't seem to validate the `type` field here,
+        # so double-check that.
+        if data.type and data.type.lower() not in ["html", "markdown"]:
+            raise ValueError("`type` must be either 'html' or 'markdown'")
+
+        # For HTML-type payloads, data must be a dict (or JSON object).
+        if data.type == "html":
+            if not isinstance(data.data, dict):
+                raise ValueError(
+                    "`payload` data must be a dict when generating a PDF from HTML"
+                )
+            if "html" not in data.data:
+                raise ValueError(
+                    "`payload` data must have 'html' if using the 'html' type"
+                )
+        elif data.type == 'markdown' and not isinstance(data.data, list):
+            raise ValueError(
+                "`payload` data must be a list of dicts when generating a PDF "
+                "from markdown (this is the default)"
+            )
+
         # Any data errors would come from here..
         api = RestRequest(client=self.client)
         return api.post("generate-pdf", data=remove_empty_items(data.to_dict()))

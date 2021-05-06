@@ -37,6 +37,28 @@ response = anvil.fill_pdf("some_template", data)
 Anvil allows you to dynamically generate new PDFs using JSON data you provide via the /api/v1/generate-pdf REST
 endpoint. Useful for agreements, invoices, disclosures, or any other text-heavy documents.
 
+By default, `generate_pdf` will format data assuming it's in [Markdown](https://daringfireball.net/projects/markdown/).
+
+HTML is another supported input type. This can be used by providing
+`"type": "html"` in the payload and making the `data` field a dict containing
+keys `"html"` and an optional `"css"`. Example below:
+
+```python 
+anvil = Anvil(api_key="MY KEY")
+data = {
+    "type": "html",
+    "title": "Some Title",
+    "data": {
+      "html": "<h2>HTML Heading</h2>"
+      "css": "h2 { color: red }"
+    }
+}
+response = anvil.generate_pdf(data)
+```
+
+See the official [Anvil Docs on HTML to PDF](https://www.useanvil.com/docs/api/generate-pdf#html--css-to-pdf)
+for more details.
+
 <strong>payload: Union[dict, AnyStr, GeneratePDFPayload]</strong>
 
 Data to embed into the PDF. Supported `payload` types are:
