@@ -52,7 +52,9 @@ def describe_api():
         def test_dict_payload(m_request_post, anvil):
             anvil.generate_pdf({"data": [{"d1": "data"}]})
             m_request_post.assert_called_once_with(
-                "generate-pdf", data={'data': [{'d1': 'data'}]}
+                # Defaults to 'markdown'
+                "generate-pdf",
+                data={'data': [{'d1': 'data'}], 'type': 'markdown'},
             )
 
         @mock.patch('python_anvil.api.RestRequest.post')
@@ -60,8 +62,50 @@ def describe_api():
             payload = """{ "data": [{ "d1": "data" }] }"""
             anvil.generate_pdf(payload)
             m_request_post.assert_called_once_with(
-                "generate-pdf", data={'data': [{'d1': 'data'}]}
+                "generate-pdf", data={"data": [{"d1": "data"}], "type": "markdown"}
             )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_payload_html_type(m_request_post, anvil):
+            anvil.generate_pdf({"data": {"html": "<h1>Hello</h1>"}, "type": "html"})
+            m_request_post.assert_called_once_with(
+                "generate-pdf",
+                data={"data": {"html": "<h1>Hello</h1>"}, "type": "html"},
+            )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_invalid_payload_html_payload(m_request_post, anvil):
+            with pytest.raises(ValueError):
+                anvil.generate_pdf({"data": {"no_html_here": "Nope"}, "type": "html"})
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_payload_invalid_type(m_request_post, anvil):
+            with pytest.raises(ValueError):
+                anvil.generate_pdf(
+                    {"data": [{"d1": "data"}], "type": "something_invalid"}
+                )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_invalid_data_for_html(m_request_post, anvil):
+            with pytest.raises(ValueError):
+                anvil.generate_pdf(
+                    {
+                        # This should be a plain dict, not a list
+                        "data": [{"d1": "data"}],
+                        "type": "html",
+                    }
+                )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_invalid_data_for_markdown(m_request_post, anvil):
+            with pytest.raises(ValueError):
+                anvil.generate_pdf(
+                    {
+                        # This should be a plain dict, not a list
+                        "data": {"d1": "data"},
+                        "type": "markdown",
+                    }
+                )
 
     def describe_current_user_query():
         @mock.patch('python_anvil.api.GraphqlRequest.post')

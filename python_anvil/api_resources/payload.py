@@ -34,7 +34,7 @@ class GeneratePDFPayload(DataClassJsonMixin):
     data: Union[List[Dict[str, Any]], Dict[str, Any]]
     logo: Optional[EmbeddedLogo] = None
     title: Optional[str] = None
-    type: Optional[str] = 'markdown'  # or html
+    type: Optional[str] = "markdown"  # or html
 
 
 @dataclass_json(letter_case=LetterCase.CAMEL)
