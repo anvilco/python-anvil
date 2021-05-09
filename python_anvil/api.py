@@ -65,9 +65,11 @@ class Anvil:
         """
         try:
             if isinstance(payload, dict):
-                data = FillPDFPayload.from_dict(payload)
+                data = FillPDFPayload(**payload)
             elif isinstance(payload, str):
-                data = FillPDFPayload.from_json(payload)
+                data = FillPDFPayload.parse_raw(
+                    payload, content_type="application/json"
+                )
             elif isinstance(payload, FillPDFPayload):
                 data = payload
             else:
@@ -82,7 +84,7 @@ class Anvil:
         api = RestRequest(client=self.client)
         return api.post(
             f"fill/{template_id}.pdf",
-            remove_empty_items(data.to_dict() if data else {}),
+            data.dict(by_alias=True, exclude_none=True) if data else {},
             **kwargs,
         )
 
@@ -91,37 +93,18 @@ class Anvil:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
         if isinstance(payload, dict):
-            data = GeneratePDFPayload.from_dict(payload)
+            data = GeneratePDFPayload(**payload)
         elif isinstance(payload, str):
-            data = GeneratePDFPayload.from_json(payload)
+            data = GeneratePDFPayload.parse_raw(
+                payload, content_type="application/json"
+            )
         else:
             raise ValueError("`payload` must be a valid JSON string or a dict")
-
-        # `dataclasses_json` doesn't seem to validate the `type` field here,
-        # so double-check that.
-        if data.type and data.type.lower() not in ["html", "markdown"]:
-            raise ValueError("`type` must be either 'html' or 'markdown'")
-
-        # For HTML-type payloads, data must be a dict (or JSON object).
-        if data.type == "html":
-            if not isinstance(data.data, dict):
-                raise ValueError(
-                    "`payload` data must be a dict when generating a PDF from HTML"
-                )
-            if "html" not in data.data:
-                raise ValueError(
-                    "`payload` data must have 'html' if using the 'html' type"
-                )
-        elif data.type == 'markdown' and not isinstance(data.data, list):
-            raise ValueError(
-                "`payload` data must be a list of dicts when generating a PDF "
-                "from markdown (this is the default)"
-            )
 
         # Any data errors would come from here..
         api = RestRequest(client=self.client)
         return api.post(
-            "generate-pdf", data=remove_empty_items(data.to_dict()), **kwargs
+            "generate-pdf", data=data.dict(by_alias=True, exclude_none=True), **kwargs
         )
 
     def get_cast(self, eid: str, fields=None, **kwargs):
@@ -217,7 +200,12 @@ class Anvil:
     def create_etch_packet(
         self,
         payload: Optional[
-            Union[dict, CreateEtchPacketPayload, CreateEtchPacket]
+            Union[
+                dict,
+                CreateEtchPacketPayload,
+                CreateEtchPacket,
+                AnyStr,
+            ]
         ] = None,
         json=None,
         **kwargs,
@@ -229,7 +217,9 @@ class Anvil:
             raise TypeError('One of the arguments `payload` or `json` must exist')
 
         if json:
-            payload = CreateEtchPacketPayload.from_json(json)
+            payload = CreateEtchPacketPayload.parse_raw(
+                json, content_type="application/json"
+            )
 
         if isinstance(payload, dict):
             mutation = CreateEtchPacket.create_from_dict(payload)
@@ -241,9 +231,8 @@ class Anvil:
             raise ValueError(
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
-
         return self.mutate(
-            mutation, variables=mutation.create_payload().to_dict(), **kwargs
+            mutation, variables=mutation.create_payload().dict(by_alias=True), **kwargs
         )
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
@@ -253,7 +242,7 @@ class Anvil:
             client_user_id=client_user_id,
         )
         payload = mutation.create_payload()
-        return self.mutate(mutation, variables=payload.to_dict(), **kwargs)
+        return self.mutate(mutation, variables=payload.dict(by_alias=True), **kwargs)
 
     def download_documents(self, document_group_eid: str, **kwargs):
         """Retrieve all completed documents in zip form."""

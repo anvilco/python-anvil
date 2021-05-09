@@ -1,60 +1,75 @@
-# pylint: disable=too-many-instance-attributes
-from dataclasses import dataclass
-
-from dataclasses_json import DataClassJsonMixin, LetterCase, dataclass_json
-from typing import Any, Dict, List, Optional, Union
+import re
+from pydantic import BaseModel as _BaseModel, validator
+from typing import Any, Dict, List, Literal, Optional, Union
 
 
-# NOTE: All dataclasses here have a, probably excessive, `DataClassJsonMixin`
-# mixin in order to keep mypy happy for now. When using serializations methods
-# you would get an error such as:
-# `error: "FillPDFPayload" has no attribute "to_dict"`
-# when running mypy.
+under_pat = re.compile(r"_([a-z])")
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class EmbeddedLogo(DataClassJsonMixin):
+def underscore_to_camel(name):
+    ret = under_pat.sub(lambda x: x.group(1).upper(), name)
+    return ret
+
+
+class BaseModel(_BaseModel):
+    class Config:
+        alias_generator = underscore_to_camel
+        allow_population_by_field_name = True
+
+
+class EmbeddedLogo(BaseModel):
     src: str
     max_width: Optional[int]
     max_height: Optional[int]
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class FillPDFPayload(DataClassJsonMixin):
-    data: Dict[str, Any]
+class FillPDFPayload(BaseModel):
+    data: Union[List[Dict[str, Any]], Dict[str, Any]]
     title: Optional[str] = None
     font_size: Optional[int] = None
     text_color: Optional[str] = None
 
-
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class GeneratePDFPayload(DataClassJsonMixin):
-    data: Union[List[Dict[str, Any]], Dict[str, Any]]
-    logo: Optional[EmbeddedLogo] = None
-    title: Optional[str] = None
-    type: Optional[str] = "markdown"  # or html
+    @validator("data")
+    def data_cannot_be_empty(cls, v, values, **kwargs):
+        if isinstance(v, dict) and not len(v):
+            raise ValueError("cannot be empty")
+        return v
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class GenerateEtchSigningURLPayload(DataClassJsonMixin):
+class GeneratePDFPayload(BaseModel):
+    data: Union[List[Dict[str, Any]], Dict[Literal["html", "css"], str]]
+    logo: Optional[EmbeddedLogo]
+    title: Optional[str]
+    type: Optional[Literal["markdown", "html"]] = "markdown"
+
+    @validator("data")
+    def data_must_match_type(cls, v, values, **kwargs):
+        if "type" in values and values["type"] == "html":
+            if "html" not in v:
+                raise ValueError("must contain HTML if using `html` type")
+            if isinstance(v, list):
+                raise ValueError("must contain a data dict not a list")
+        return v
+
+    @validator("type")
+    def type_must_match_data(cls, v, values, **kwargs):
+        if v == "html":
+            if "data" in values and not isinstance(values["data"], dict):
+                raise ValueError("HTML types must used a dict data payload")
+        return v
+
+
+class GenerateEtchSigningURLPayload(BaseModel):
     signer_eid: str
     client_user_id: str
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class SignerField(DataClassJsonMixin):
+class SignerField(BaseModel):
     file_id: str
     field_id: str
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class EtchSigner(DataClassJsonMixin):
+class EtchSigner(BaseModel):
     """Dataclass representing etch signers."""
 
     name: str
@@ -66,9 +81,7 @@ class EtchSigner(DataClassJsonMixin):
     routing_order: Optional[int] = None
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class SignatureField(DataClassJsonMixin):
+class SignatureField(BaseModel):
     id: str
     type: str
     page_num: int
@@ -77,17 +90,13 @@ class SignatureField(DataClassJsonMixin):
     rect: Dict[str, float]
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class Base64Upload(DataClassJsonMixin):
+class Base64Upload(BaseModel):
     data: str
     filename: str
     mimetype: str = "application/pdf"
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class DocumentUpload(DataClassJsonMixin):
+class DocumentUpload(BaseModel):
     """Dataclass representing an uploaded document."""
 
     id: str
@@ -99,24 +108,18 @@ class DocumentUpload(DataClassJsonMixin):
     text_color: str = "#000000"
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class EtchCastRef(DataClassJsonMixin):
+class EtchCastRef(BaseModel):
     """Dataclass representing an existing template used as a reference."""
 
     id: str
     cast_eid: str
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class CreateEtchFilePayload(DataClassJsonMixin):
+class CreateEtchFilePayload(BaseModel):
     payloads: Union[str, Dict[str, FillPDFPayload]]
 
 
-@dataclass_json(letter_case=LetterCase.CAMEL)
-@dataclass
-class CreateEtchPacketPayload(DataClassJsonMixin):
+class CreateEtchPacketPayload(BaseModel):
     """Payload for createEtchPacket.
 
     See the full packet payload defined here:
