@@ -125,16 +125,20 @@ class Anvil:
 
         return res["data"]["cast"]
 
-    def get_casts(self, fields=None) -> List:
+    def get_casts(self, fields=None, is_template=True) -> List:
         if not fields:
             # Use default fields
             fields = ['eid', 'title', 'fieldInfo']
+
+        cast_args = ''
+        if is_template:
+            cast_args = '(isTemplate: true)'
 
         res = self.query(
             f"""{{
               currentUser {{
                 organizations {{
-                  casts {{
+                  casts{cast_args} {{
                     {" ".join(fields)}
                   }}
                 }}
