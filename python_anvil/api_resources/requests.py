@@ -19,10 +19,17 @@ class AnvilRequest:
 
         raise Exception(message)
 
-    def process_response(self, response, status_code, headers):
+    def process_response(self, response, status_code, headers, **kwargs):
         res = response
         if not 200 <= status_code < 300:
             self.handle_error(response, status_code, headers)
+
+        # Include headers alongside the response.
+        # This is useful for figuring out rate limits outside of this library's
+        # scope and to manage waiting.
+        include_headers = kwargs.get('include_headers', False)
+        if include_headers:
+            return res, headers
 
         return res
 
@@ -39,7 +46,7 @@ class GraphqlRequest(AnvilRequest):
     def post(self, query, variables=None):
         return self.run_query("POST", query, variables=variables)
 
-    def run_query(self, method, query, variables=None):
+    def run_query(self, method, query, variables=None, **kwargs):
         data = {"query": query}
         if variables:
             data["variables"] = variables
@@ -54,8 +61,7 @@ class GraphqlRequest(AnvilRequest):
             parse_json=True,
         )
 
-        res = self.process_response(content, status_code, headers)
-        return res
+        return self.process_response(content, status_code, headers, **kwargs)
 
 
 class RestRequest(AnvilRequest):
@@ -70,19 +76,19 @@ class RestRequest(AnvilRequest):
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}/{self.API_VERSION}"
 
-    def get(self, url, params=None):
+    def get(self, url, params=None, **kwargs):
         content, status_code, headers = self._client.request(
             "GET", f"{self.get_url()}/{url}", params=params
         )
-        return self.process_response(content, status_code, headers)
+        return self.process_response(content, status_code, headers, **kwargs)
 
-    def post(self, url, data=None):
+    def post(self, url, data=None, **kwargs):
         content, status_code, headers = self._client.request(
             "POST",
             f"{self.get_url()}/{url}",
             json=data,
         )
-        return self.process_response(content, status_code, headers)
+        return self.process_response(content, status_code, headers, **kwargs)
 
 
 class PlainRequest(AnvilRequest):
@@ -96,16 +102,16 @@ class PlainRequest(AnvilRequest):
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}"
 
-    def get(self, url, params=None):
+    def get(self, url, params=None, **kwargs):
         content, status_code, headers = self._client.request(
             "GET", f"{self.get_url()}/{url}", params=params
         )
-        return self.process_response(content, status_code, headers)
+        return self.process_response(content, status_code, headers, **kwargs)
 
-    def post(self, url, data=None):
+    def post(self, url, data=None, **kwargs):
         content, status_code, headers = self._client.request(
             "POST",
             f"{self.get_url()}/{url}",
             json=data,
         )
-        return self.process_response(content, status_code, headers)
+        return self.process_response(content, status_code, headers, **kwargs)
