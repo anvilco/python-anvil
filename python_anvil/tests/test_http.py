@@ -30,4 +30,18 @@ def describe_http_client():
             mock_b64.assert_called_once()
 
     def describe_request():
-        pass
+        @mock.patch("python_anvil.http.HTTPBasicAuth")
+        @mock.patch("python_anvil.http.HTTPClient.do_request")
+        def test_default_args(do_request, basic_auth):
+            basic_auth.return_value = "my_auth"
+            client = HTTPClient(api_key="my_key")
+            res = client.request("GET", "http://localhost")
+            do_request.assert_called_once_with(
+                "GET",
+                "http://localhost",
+                headers=None,
+                data=None,
+                auth="my_auth",
+                params=None,
+                retry=True,
+            )
