@@ -51,6 +51,25 @@ class AnvilRequest:
         return res
 
 
+class BaseAnvilHttpRequest(AnvilRequest):
+    def __init__(self, client, options=None):
+        self._client = client
+        self._options = options
+
+    def get_url(self):
+        raise NotImplementedError
+
+    def get(self, url, params=None, **kwargs):
+        retry = kwargs.pop("retry", True)
+        content, status_code, headers = self._request("GET", url, params=params, retry=retry)
+        return self.process_response(content, status_code, headers, **kwargs)
+
+    def post(self, url, data=None, **kwargs):
+        retry = kwargs.pop("retry", True)
+        content, status_code, headers = self._request("POST", url, json=data, retry=retry)
+        return self.process_response(content, status_code, headers, **kwargs)
+
+
 class GraphqlRequest(AnvilRequest):
     API_HOST = "https://graphql.useanvil.com"
 
@@ -90,42 +109,18 @@ class GraphqlRequest(AnvilRequest):
                                      include_headers=include_headers, **kwargs)
 
 
-class RestRequest(AnvilRequest):
+class RestRequest(BaseAnvilHttpRequest):
     API_HOST = "https://app.useanvil.com"
     API_BASE = "api"
     API_VERSION = "v1"
 
-    def __init__(self, client, options=None):
-        self._client = client
-        self._options = options
-
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}/{self.API_VERSION}"
 
-    def get(self, url, params=None, **kwargs):
-        content, status_code, headers = self._request("GET", url, params=params)
-        return self.process_response(content, status_code, headers, **kwargs)
 
-    def post(self, url, data=None, **kwargs):
-        content, status_code, headers = self._request("POST", url, json=data)
-        return self.process_response(content, status_code, headers, **kwargs)
-
-
-class PlainRequest(AnvilRequest):
+class PlainRequest(BaseAnvilHttpRequest):
     API_HOST = "https://app.useanvil.com"
     API_BASE = "api"
 
-    def __init__(self, client, options=None):
-        self._client = client
-        self._options = options
-
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}"
-
-    def get(self, url, params=None, **kwargs):
-        content, status_code, headers = self._request("GET", url, params=params)
-        return self.process_response(content, status_code, headers, **kwargs)
-
-    def post(self, url, data=None, **kwargs):
-        content, status_code, headers = self._request("POST", url, json=data)
-        return self.process_response(content, status_code, headers, **kwargs)
