@@ -9,21 +9,21 @@ from requests.auth import HTTPBasicAuth
 logger = getLogger(__name__)
 
 REQUESTS_LIMIT = {
-    'dev': {
-        'calls': 2,
-        'seconds': 1,
+    "dev": {
+        "calls": 2,
+        "seconds": 1,
     },
-    'prod': {
-        'calls': 40,
-        'seconds': 1,
+    "prod": {
+        "calls": 40,
+        "seconds": 1,
     },
 }
 
-RATELIMIT_ENV = 'dev'
+RATELIMIT_ENV = "dev"
 
 
 class HTTPClient:
-    def __init__(self, api_key=None, environment='dev'):
+    def __init__(self, api_key=None, environment="dev"):
         self._session = requests.Session()
         self.api_key = api_key
         global RATELIMIT_ENV
@@ -44,8 +44,8 @@ class HTTPClient:
 
     @sleep_and_retry
     @limits(
-        calls=REQUESTS_LIMIT[RATELIMIT_ENV]['calls'],
-        period=REQUESTS_LIMIT[RATELIMIT_ENV]['seconds'],
+        calls=REQUESTS_LIMIT[RATELIMIT_ENV]["calls"],
+        period=REQUESTS_LIMIT[RATELIMIT_ENV]["seconds"],
     )
     def do_request(
         self,
@@ -70,16 +70,22 @@ class HTTPClient:
                 **kwargs,
             )
 
-            if retry and res.status_code == 429:
-                time_to_wait = int(res.headers.get('Retry-After', 1))
-                logger.warning(
-                    f"Rate-limited: request not accepted. Retrying in {time_to_wait} "
-                    f"second{'s' if time_to_wait > 1 else ''}."
-                )
+            if res.status_code == 429:
+                time_to_wait = int(res.headers.get("Retry-After", 1))
+                if retry:
+                    logger.warning(
+                        f"Rate-limited: request not accepted. Retrying in {time_to_wait} "
+                        f"second{'s' if time_to_wait > 1 else ''}."
+                    )
 
-                # This exception will raise up to the `sleep_and_retry` decorator
-                # which will handle waiting for `time_to_wait` seconds.
-                raise RateLimitException('Retrying', period_remaining=time_to_wait)
+                    # This exception will raise up to the `sleep_and_retry` decorator
+                    # which will handle waiting for `time_to_wait` seconds.
+                    raise RateLimitException("Retrying", period_remaining=time_to_wait)
+                else:
+                    raise Exception(
+                        f"Rate limit exceeded. Retry after {time_to_wait} seconds."
+                    )
+
             break
 
         return res
