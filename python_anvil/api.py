@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import AnyStr, Dict, List, Optional, Union
+from typing import AnyStr, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
@@ -129,13 +129,16 @@ class Anvil:
             **kwargs,
         )
 
-        # TODO: Lots of repetition here when headers are included...
+        def get_return():
+            return res["data"]["cast"]
+
         if type(res) == tuple:
             res, headers = res
+            return get_return(), headers
 
-        return res["data"]["cast"]
+        return get_return()
 
-    def get_casts(self, fields=None, **kwargs) -> List:
+    def get_casts(self, fields=None, **kwargs) -> Union[List, Tuple[List, Dict]]:
         if not fields:
             # Use default fields
             fields = ['eid', 'title', 'fieldInfo']
@@ -153,12 +156,16 @@ class Anvil:
             **kwargs,
         )
 
+        def get_return():
+            orgs = res["data"]["currentUser"]["organizations"]
+            return [item for org in orgs for item in org["casts"]]
+
         # TODO: Lots of repetition here when headers are included...
         if type(res) == tuple:
             res, headers = res
+            return get_return(), headers
 
-        orgs = res["data"]["currentUser"]["organizations"]
-        return [item for org in orgs for item in org["casts"]]
+        return get_return()
 
     def get_current_user(self, **kwargs):
         res = self.query(
@@ -183,14 +190,17 @@ class Anvil:
             **kwargs,
         )
 
+        def get_return():
+            return res["data"]["currentUser"]
+
         # TODO: Lots of repetition here when headers are included...
         if type(res) == tuple:
             res, headers = res
-        user = res["data"]["currentUser"]
+            return get_return(), headers
 
-        return user
+        return get_return()
 
-    def get_welds(self, **kwargs) -> list:
+    def get_welds(self, **kwargs) -> Union[List, Tuple[List, Dict]]:
         res = self.query(
             """{
               currentUser {
@@ -206,39 +216,16 @@ class Anvil:
             **kwargs,
         )
 
-        # TODO: Lots of repetition here when headers are included...
-        if type(res) == tuple:
-            res, headers = res
-
-        orgs = res["data"]["currentUser"]["organizations"]
-        return [item for org in orgs for item in org["welds"]]
-
-    def get_queries(self):
-        """
-        Gets list of available queries.
-
-        TODO: This is probably going to be removed in the near future
-            (in the API).
-        :return:
-        """
-        res = self.query(
-            """{
-              __schema {
-                queryType {
-                  fields {
-                    name
-                    description
-                  }
-                }
-              }
-            }"""
-        )
+        def get_return():
+            orgs = res["data"]["currentUser"]["organizations"]
+            return [item for org in orgs for item in org["welds"]]
 
         # TODO: Lots of repetition here when headers are included...
         if type(res) == tuple:
             res, headers = res
+            return get_return(), headers
 
-        return res["data"]["__schema"]["queryType"]
+        return get_return()
 
     def create_etch_packet(
         self,
