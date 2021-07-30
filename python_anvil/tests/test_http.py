@@ -1,8 +1,15 @@
 # pylint: disable=redefined-outer-name,unused-variable,expression-not-assigned,singleton-comparison
 import pytest
+from typing import Dict
 from unittest import mock
 
 from python_anvil.http import HTTPClient
+
+
+class HTTPResponse:
+    status_code = 200
+    content = ""
+    headers: Dict = {}
 
 
 def describe_http_client():
@@ -34,8 +41,13 @@ def describe_http_client():
         @mock.patch("python_anvil.http.HTTPClient.do_request")
         def test_default_args(do_request, basic_auth):
             basic_auth.return_value = "my_auth"
+            response = HTTPResponse()
+            do_request.return_value = response
+
             client = HTTPClient(api_key="my_key")
             res = client.request("GET", "http://localhost")
+
+            assert res == (response.content, response.status_code, response.headers)
             do_request.assert_called_once_with(
                 "GET",
                 "http://localhost",
