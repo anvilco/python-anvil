@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
@@ -175,7 +176,7 @@ class CreateEtchPacket(BaseQuery):
 
     def get_file_payloads(self):
         existing_files = [f.id for f in self.files if f]
-        for key, val in self.file_payloads.items():
+        for key, _ in self.file_payloads.items():
             if key not in existing_files:
                 raise ValueError(
                     f"`{key}` was not added as a file. Please add "

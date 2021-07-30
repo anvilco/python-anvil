@@ -1,4 +1,4 @@
-# pylint: disable=unused-variable
+# pylint: disable=unused-variable,unused-argument,too-many-statements
 import json
 import pytest
 from unittest import mock
@@ -50,7 +50,7 @@ def describe_api():
             )
 
         @mock.patch('python_anvil.api.RestRequest.post')
-        def test_dict_payload(m_request_post, anvil):
+        def test_payload_obj(m_request_post, anvil):
             payload = FillPDFPayload(data={"jsonData": "this was a payload instance"})
             anvil.fill_pdf("some_template", payload=payload)
             m_request_post.assert_called_once_with(

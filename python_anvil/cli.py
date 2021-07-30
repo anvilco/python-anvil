@@ -1,3 +1,4 @@
+# pylint: disable=too-many-locals
 import click
 import os
 from csv import DictReader
@@ -37,7 +38,7 @@ def current_user(ctx):
     debug = ctx.obj["debug"]
     res = anvil.get_current_user(debug=debug)
 
-    if type(res) == tuple:
+    if isinstance(res, tuple):
         res, headers = res
         if debug:
             click.echo(headers)
@@ -65,7 +66,7 @@ def generate_pdf(ctx, input_filename, out_filename):
     with click.open_file(input_filename, "r") as infile:
         res = anvil.generate_pdf(infile.read(), debug=debug)
 
-    if type(res) == tuple:
+    if isinstance(res, tuple):
         res, headers = res
         if debug:
             click.echo(headers)
@@ -85,7 +86,7 @@ def weld(ctx, eid, list_all):
 
     if list_all:
         res = anvil.get_welds(debug=debug)
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             if debug:
                 click.echo(headers)
@@ -110,7 +111,7 @@ def cast(ctx, eid, list_all):
     if list_all:
         res = anvil.get_casts(debug=debug)
 
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             if debug:
                 click.echo(headers)
@@ -122,7 +123,7 @@ def cast(ctx, eid, list_all):
         click.echo(f"Getting cast with eid '{eid}' \n")
         res = anvil.get_cast(eid, debug=debug)
 
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             if debug:
                 click.echo(headers)
@@ -177,7 +178,7 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
                 res = anvil.fill_pdf(template_id, payload.to_dict(), debug=debug)
 
                 # Get debug stuff if it was asked for
-                if type(res) == tuple:
+                if isinstance(res, tuple):
                     res, headers = res
                     click.echo(headers)
 
@@ -213,8 +214,8 @@ def create_etch(ctx, payload):
     res = anvil.create_etch_packet(json=payload.read(), debug=debug)
 
     # Get debug stuff if it was asked for
-    if type(res) == tuple:
-        data, headers = res
+    if isinstance(res, tuple):
+        res, headers = res
         click.echo(headers)
 
     if 'data' in res:

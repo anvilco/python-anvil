@@ -3,7 +3,7 @@ from python_anvil.http import HTTPClient
 
 class AnvilRequest:
     show_headers = False
-    _client = None
+    _client: HTTPClient
 
     def get_url(self):
         raise NotImplementedError
@@ -18,7 +18,7 @@ class AnvilRequest:
         if method.upper() not in ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]:
             raise ValueError("Invalid HTTP method provided")
 
-        full_url = "/".join([self.get_url(), url]) if len(url) else self.get_url()
+        full_url = "/".join([self.get_url(), url]) if len(url) > 0 else self.get_url()
 
         return self._client.request(method, full_url, **kwargs)
 

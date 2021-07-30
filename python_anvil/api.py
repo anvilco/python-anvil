@@ -132,7 +132,7 @@ class Anvil:
         def get_return():
             return res["data"]["cast"]
 
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             return get_return(), headers
 
@@ -161,7 +161,7 @@ class Anvil:
             return [item for org in orgs for item in org["casts"]]
 
         # TODO: Lots of repetition here when headers are included...
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             return get_return(), headers
 
@@ -194,7 +194,7 @@ class Anvil:
             return res["data"]["currentUser"]
 
         # TODO: Lots of repetition here when headers are included...
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             return get_return(), headers
 
@@ -221,7 +221,7 @@ class Anvil:
             return [item for org in orgs for item in org["welds"]]
 
         # TODO: Lots of repetition here when headers are included...
-        if type(res) == tuple:
+        if isinstance(res, tuple):
             res, headers = res
             return get_return(), headers
 
