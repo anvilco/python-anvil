@@ -27,13 +27,21 @@ def cli(ctx: click.Context, debug=False):
 
     anvil = Anvil(API_KEY)
     ctx.obj["anvil"] = anvil
+    ctx.obj["debug"] = debug
 
 
 @cli.command("current-user", help="Show details about your API user")
 @click.pass_context
 def current_user(ctx):
     anvil = ctx.obj["anvil"]
-    res = anvil.get_current_user()
+    debug = ctx.obj["debug"]
+    res = anvil.get_current_user(debug=debug)
+
+    if type(res) == tuple:
+        res, headers = res
+        if debug:
+            click.echo(headers)
+
     click.echo(f"User data: \n\n {res}")
 
 
@@ -52,9 +60,15 @@ def current_user(ctx):
 def generate_pdf(ctx, input_filename, out_filename):
     """Generate a PDF"""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     with click.open_file(input_filename, "r") as infile:
-        res = anvil.generate_pdf(infile.read())
+        res = anvil.generate_pdf(infile.read(), debug=debug)
+
+    if type(res) == tuple:
+        res, headers = res
+        if debug:
+            click.echo(headers)
 
     with open(out_filename, "wb") as file:
         file.write(res)
@@ -67,9 +81,15 @@ def generate_pdf(ctx, input_filename, out_filename):
 def weld(ctx, eid, list_all):
     """Fetch weld info or list of welds"""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     if list_all:
-        res = anvil.get_welds()
+        res = anvil.get_welds(debug=debug)
+        if type(res) == tuple:
+            res, headers = res
+            if debug:
+                click.echo(headers)
+
         data = [(w["eid"], w.get("slug"), w.get("title")) for w in res]
         click.echo(tabulate(data, tablefmt="pretty", headers=["eid", "slug", "title"]))
         return
@@ -85,26 +105,33 @@ def weld(ctx, eid, list_all):
 def cast(ctx, eid, list_all):
     """Fetch Cast data given a Cast eid."""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     if list_all:
-        res = anvil.get_casts()
+        res = anvil.get_casts(debug=debug)
+
+        if type(res) == tuple:
+            res, headers = res
+            if debug:
+                click.echo(headers)
+
         data = [[c["eid"], c["title"]] for c in res]
         click.echo(tabulate(data, headers=["eid", "title"]))
         return
     if eid:
         click.echo(f"Getting cast with eid '{eid}' \n")
-        res = anvil.get_cast(eid)
+        res = anvil.get_cast(eid, debug=debug)
+
+        if type(res) == tuple:
+            res, headers = res
+            if debug:
+                click.echo(headers)
 
         def get_field_info(cc):
             return tabulate(cc.get("fields", []))
 
-        click.echo(
-            tabulate(
-                [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]],
-                tablefmt="pretty",
-                headers=res.keys(),
-            )
-        )
+        table_data = [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]]
+        click.echo(tabulate(table_data, tablefmt="pretty", headers=res.keys()))
 
 
 @cli.command("fill-pdf")
@@ -127,6 +154,7 @@ def cast(ctx, eid, list_all):
 def fill_pdf(ctx, template_id, out_filename, payload_csv):
     """Fill PDF template with data"""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     if all([template_id, out_filename, payload_csv]):
         payloads = []  # type: List[FillPDFPayload]
@@ -146,11 +174,17 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
         with click.progressbar(payloads, label="Filling PDFs and saving") as ps:
             indexed_files = utils.build_batch_filenames(out_filename)
             for payload in ps:
-                data = anvil.fill_pdf(template_id, payload.to_dict())
+                res = anvil.fill_pdf(template_id, payload.to_dict(), debug=debug)
+
+                # Get debug stuff if it was asked for
+                if type(res) == tuple:
+                    res, headers = res
+                    click.echo(headers)
+
                 next_file = next(indexed_files)
                 click.echo(f"\nWriting {next_file}")
                 with click.open_file(next_file, "wb") as file:
-                    file.write(data)
+                    file.write(res)
                 sleep(1)
 
 
@@ -175,7 +209,13 @@ def create_etch(ctx, payload):
         > $ ANVIL_API_KEY=mykey anvil create-etch --payload -
     """
     anvil = ctx.obj["anvil"]
-    res = anvil.create_etch_packet(json=payload.read())
+    debug = ctx.obj["debug"]
+    res = anvil.create_etch_packet(json=payload.read(), debug=debug)
+
+    # Get debug stuff if it was asked for
+    if type(res) == tuple:
+        data, headers = res
+        click.echo(headers)
 
     if 'data' in res:
         click.echo(
