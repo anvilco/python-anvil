@@ -11,6 +11,7 @@ from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
 from .utils import remove_empty_items
 
+
 logger = getLogger(__name__)
 
 
@@ -40,7 +41,9 @@ class Anvil:
         api = RestRequest(self.client, options=options)
         return api
 
-    def fill_pdf(self, template_id: str, payload: Union[dict, AnyStr], **kwargs):
+    def fill_pdf(
+        self, template_id: str, payload: Union[dict, AnyStr, FillPDFPayload], **kwargs
+    ):
         """Fill an existing template with provided payload data.
 
         Use the casts graphql query to get a list of available templates you
@@ -108,7 +111,9 @@ class Anvil:
 
         # Any data errors would come from here..
         api = RestRequest(client=self.client)
-        return api.post("generate-pdf", data=remove_empty_items(data.to_dict()), **kwargs)
+        return api.post(
+            "generate-pdf", data=remove_empty_items(data.to_dict()), **kwargs
+        )
 
     def get_cast(self, eid: str, fields=None, **kwargs):
         if not fields:
@@ -263,7 +268,9 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
 
-        return self.mutate(mutation, variables=mutation.create_payload().to_dict(), **kwargs)
+        return self.mutate(
+            mutation, variables=mutation.create_payload().to_dict(), **kwargs
+        )
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
         """Generate a signing URL for a given user."""

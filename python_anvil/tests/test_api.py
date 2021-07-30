@@ -5,6 +5,7 @@ from unittest import mock
 
 from python_anvil.api import Anvil, CreateEtchPacket
 
+from ..api_resources.payload import FillPDFPayload
 from . import payloads
 
 
@@ -44,7 +45,17 @@ def describe_api():
             payload = """{ "data": {"jsonData": "is here"} }"""
             anvil.fill_pdf("some_template", payload=payload)
             m_request_post.assert_called_once_with(
-                "fill/some_template.pdf", {'data': {'jsonData': 'is here'}},
+                "fill/some_template.pdf",
+                {'data': {'jsonData': 'is here'}},
+            )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_dict_payload(m_request_post, anvil):
+            payload = FillPDFPayload(data={"jsonData": "this was a payload instance"})
+            anvil.fill_pdf("some_template", payload=payload)
+            m_request_post.assert_called_once_with(
+                "fill/some_template.pdf",
+                {'data': {'jsonData': 'this was a payload instance'}},
             )
 
         @mock.patch('python_anvil.api.RestRequest.post')

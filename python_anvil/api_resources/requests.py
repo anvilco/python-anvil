@@ -61,12 +61,16 @@ class BaseAnvilHttpRequest(AnvilRequest):
 
     def get(self, url, params=None, **kwargs):
         retry = kwargs.pop("retry", True)
-        content, status_code, headers = self._request("GET", url, params=params, retry=retry)
+        content, status_code, headers = self._request(
+            "GET", url, params=params, retry=retry
+        )
         return self.process_response(content, status_code, headers, **kwargs)
 
     def post(self, url, data=None, **kwargs):
         retry = kwargs.pop("retry", True)
-        content, status_code, headers = self._request("POST", url, json=data, retry=retry)
+        content, status_code, headers = self._request(
+            "POST", url, json=data, retry=retry
+        )
         return self.process_response(content, status_code, headers, **kwargs)
 
 
@@ -105,8 +109,14 @@ class GraphqlRequest(AnvilRequest):
             **kwargs,
         )
 
-        return self.process_response(content, status_code, headers, debug=debug,
-                                     include_headers=include_headers, **kwargs)
+        return self.process_response(
+            content,
+            status_code,
+            headers,
+            debug=debug,
+            include_headers=include_headers,
+            **kwargs,
+        )
 
 
 class RestRequest(BaseAnvilHttpRequest):
