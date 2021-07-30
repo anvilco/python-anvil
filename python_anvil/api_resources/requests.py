@@ -3,9 +3,24 @@ from python_anvil.http import HTTPClient
 
 class AnvilRequest:
     show_headers = False
+    _client = None
 
     def get_url(self):
         raise NotImplementedError
+
+    def _request(self, method, url, **kwargs):
+        if not self._client:
+            raise AssertionError(
+                "Client has not been initialized. Please use the constructors "
+                "provided by the other request implementations."
+            )
+
+        if method.upper() not in ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]:
+            raise ValueError("Invalid HTTP method provided")
+
+        full_url = "/".join([self.get_url(), url]) if len(url) else self.get_url()
+
+        return self._client.request(method, full_url, **kwargs)
 
     def handle_error(self, response, status_code, headers):
         extra = None
@@ -24,11 +39,13 @@ class AnvilRequest:
         if not 200 <= status_code < 300:
             self.handle_error(response, status_code, headers)
 
+        debug = kwargs.pop('debug', False)
+
         # Include headers alongside the response.
         # This is useful for figuring out rate limits outside of this library's
         # scope and to manage waiting.
-        include_headers = kwargs.get('include_headers', False)
-        if include_headers:
+        include_headers = kwargs.pop('include_headers', False)
+        if debug or include_headers:
             return res, headers
 
         return res
@@ -43,25 +60,34 @@ class GraphqlRequest(AnvilRequest):
     def get_url(self):
         return f"{self.API_HOST}"
 
-    def post(self, query, variables=None):
-        return self.run_query("POST", query, variables=variables)
+    def post(self, query, variables=None, **kwargs):
+        return self.run_query("POST", query, variables=variables, **kwargs)
 
     def run_query(self, method, query, variables=None, **kwargs):
         data = {"query": query}
         if variables:
             data["variables"] = variables
 
-        content, status_code, headers = self._client.request(
+        # Optional debug kwargs.
+        # At this point, only the CLI will pass this in as a
+        # "show me everything" sort of switch.
+        debug = kwargs.pop("debug", False)
+        include_headers = kwargs.pop("include_headers", False)
+
+        content, status_code, headers = self._request(
             method,
-            self.get_url(),
+            # URL blank here since graphql requests don't append to url
+            '',
             # Queries need to be wrapped by curly braces(?) based on the
             # current API implementation.
             # The current library for graphql query generation doesn't do this(?)
             json=data,
             parse_json=True,
+            **kwargs,
         )
 
-        return self.process_response(content, status_code, headers, **kwargs)
+        return self.process_response(content, status_code, headers, debug=debug,
+                                     include_headers=include_headers, **kwargs)
 
 
 class RestRequest(AnvilRequest):
@@ -77,17 +103,11 @@ class RestRequest(AnvilRequest):
         return f"{self.API_HOST}/{self.API_BASE}/{self.API_VERSION}"
 
     def get(self, url, params=None, **kwargs):
-        content, status_code, headers = self._client.request(
-            "GET", f"{self.get_url()}/{url}", params=params
-        )
+        content, status_code, headers = self._request("GET", url, params=params)
         return self.process_response(content, status_code, headers, **kwargs)
 
     def post(self, url, data=None, **kwargs):
-        content, status_code, headers = self._client.request(
-            "POST",
-            f"{self.get_url()}/{url}",
-            json=data,
-        )
+        content, status_code, headers = self._request("POST", url, json=data)
         return self.process_response(content, status_code, headers, **kwargs)
 
 
@@ -103,15 +123,9 @@ class PlainRequest(AnvilRequest):
         return f"{self.API_HOST}/{self.API_BASE}"
 
     def get(self, url, params=None, **kwargs):
-        content, status_code, headers = self._client.request(
-            "GET", f"{self.get_url()}/{url}", params=params
-        )
+        content, status_code, headers = self._request("GET", url, params=params)
         return self.process_response(content, status_code, headers, **kwargs)
 
     def post(self, url, data=None, **kwargs):
-        content, status_code, headers = self._client.request(
-            "POST",
-            f"{self.get_url()}/{url}",
-            json=data,
-        )
+        content, status_code, headers = self._request("POST", url, json=data)
         return self.process_response(content, status_code, headers, **kwargs)
