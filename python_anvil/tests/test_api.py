@@ -146,12 +146,6 @@ def describe_api():
             anvil.get_welds()
             assert m_request_post.call_count == 1
 
-    def describe_get_queries():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
-        def test_get_queries(m_request_post, anvil):
-            anvil.get_queries()
-            assert m_request_post.call_count == 1
-
     def describe_generate_etch_signing_url():
         @mock.patch('python_anvil.api.GraphqlRequest.post')
         def test_get_url(m_request_post, anvil):
