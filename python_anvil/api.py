@@ -144,7 +144,7 @@ class Anvil:
             f"""{{
               currentUser {{
                 organizations {{
-                  casts(isTemplate: true) {{
+                  casts {{
                     {" ".join(fields)}
                   }}
                 }}
