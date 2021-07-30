@@ -141,3 +141,23 @@ These dataclasses exist in `python_anvil/api_resources/payload.py`.
 Please see [dataclass_json's docs](https://lidatong.github.io/dataclasses-json/) for more details on how to use these
 dataclass instances.
 
+
+### Supported kwargs
+
+All API functions also accept arbitrary kwargs which will affect how some underlying functions behave.
+
+* `retry` (default: `True`) - When this is passed as an argument, it will enable/disable request retries due to rate
+  limit errors. By default, this library _will_ retry requests for a maximum of 5 times.
+* `include_headers` (default: `False`) - When this is passed as an argument, the function's return will be a tuple
+  containing: `Tuple[Response, DictHeaders]`. This is useful if you would like to have more control over the response
+  data. Specifically, you can control API retries when used with `retry=False`.
+
+  Example:
+  ```python
+    from python_anvil.api import Anvil
+    anvil = Anvil(api_key=MY_API_KEY)
+    # Including headers
+    res, headers = anvil.fill_pdf("some_template_id", payload, include_headers=True)
+    # No headers
+    res = anvil.fill_pdf("some_template_id", payload, include_headers=False)
+  ```
