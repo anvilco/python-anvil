@@ -14,7 +14,10 @@ from .api_resources.payload import FillPDFPayload
 
 
 logger = getLogger(__name__)
-API_KEY = os.environ.get("ANVIL_API_KEY")
+
+
+def get_api_key():
+    return os.environ.get("ANVIL_API_KEY")
 
 
 @click.group()
@@ -23,10 +26,11 @@ API_KEY = os.environ.get("ANVIL_API_KEY")
 def cli(ctx: click.Context, debug=False):
     ctx.ensure_object(dict)
 
-    if not API_KEY:
+    key = get_api_key()
+    if not key:
         raise ValueError("$ANVIL_API_KEY must be defined in your environment variables")
 
-    anvil = Anvil(API_KEY)
+    anvil = Anvil(key)
     ctx.obj["anvil"] = anvil
     ctx.obj["debug"] = debug
 
@@ -71,7 +75,7 @@ def generate_pdf(ctx, input_filename, out_filename):
         if debug:
             click.echo(headers)
 
-    with open(out_filename, "wb") as file:
+    with click.open_file(out_filename, "wb") as file:
         file.write(res)
 
 
