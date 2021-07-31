@@ -3,6 +3,7 @@ import pytest
 from typing import Dict
 from unittest import mock
 
+from python_anvil.exceptions import AnvilRequestException
 from python_anvil.http import HTTPClient
 
 
@@ -13,6 +14,14 @@ class HTTPResponse:
 
 
 def describe_http_client():
+    @pytest.fixture
+    def mock_response():
+        class MockResponse:
+            status_code = 429
+            headers = {"Retry-After": 1}
+
+        return MockResponse
+
     def test_client():
         client = HTTPClient()
         assert isinstance(client, HTTPClient)
@@ -56,4 +65,77 @@ def describe_http_client():
                 auth="my_auth",
                 params=None,
                 retry=True,
+            )
+
+    def describe_do_request():
+        @mock.patch("python_anvil.http.requests.Session")
+        def test_default_args(session):
+            mock_session = mock.MagicMock()
+            session.return_value = mock_session
+            client = HTTPClient(api_key="my_key")
+            client.do_request("GET", "http://localhost")
+
+            # Should only be called once, never retried.
+            mock_session.request.assert_called_once_with(
+                "GET",
+                "http://localhost",
+                headers=None,
+                data=None,
+                auth=None,
+                params=None,
+            )
+
+        @mock.patch("python_anvil.http.RateLimitException")
+        @mock.patch("python_anvil.http.requests.Session")
+        def test_default_args_with_retry(session, ratelimit_exc, mock_response):
+            class MockException(Exception):
+                pass
+
+            mock_session = mock.MagicMock()
+            mock_session.request.return_value = mock_response()
+            session.return_value = mock_session
+            ratelimit_exc.return_value = MockException()
+
+            client = HTTPClient(api_key="my_key")
+            with pytest.raises(MockException):
+                client.do_request("GET", "http://localhost", retry=True)
+
+            assert ratelimit_exc.call_count == 1
+
+            # Should only be called once, would retry but RateLimitException
+            # is mocked here.
+            mock_session.request.assert_called_once_with(
+                "GET",
+                "http://localhost",
+                headers=None,
+                data=None,
+                auth=None,
+                params=None,
+            )
+
+        @mock.patch("python_anvil.http.RateLimitException")
+        @mock.patch("python_anvil.http.requests.Session")
+        def test_default_args_without_retry(session, ratelimit_exc, mock_response):
+            class MockException(Exception):
+                pass
+
+            mock_session = mock.MagicMock()
+            mock_session.request.return_value = mock_response()
+            session.return_value = mock_session
+            ratelimit_exc.return_value = MockException()
+
+            client = HTTPClient(api_key="my_key")
+            with pytest.raises(AnvilRequestException):
+                client.do_request("GET", "http://localhost", retry=False)
+
+            assert ratelimit_exc.call_count == 0
+
+            # Should only be called once, never retried.
+            mock_session.request.assert_called_once_with(
+                "GET",
+                "http://localhost",
+                headers=None,
+                data=None,
+                auth=None,
+                params=None,
             )

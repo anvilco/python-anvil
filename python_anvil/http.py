@@ -5,6 +5,8 @@ from ratelimit import limits, sleep_and_retry
 from ratelimit.exception import RateLimitException
 from requests.auth import HTTPBasicAuth
 
+from python_anvil.exceptions import AnvilRequestException
+
 
 logger = getLogger(__name__)
 
@@ -82,7 +84,7 @@ class HTTPClient:
                     # which will handle waiting for `time_to_wait` seconds.
                     raise RateLimitException("Retrying", period_remaining=time_to_wait)
                 else:
-                    raise Exception(
+                    raise AnvilRequestException(
                         f"Rate limit exceeded. Retry after {time_to_wait} seconds."
                     )
 
