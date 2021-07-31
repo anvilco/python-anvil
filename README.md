@@ -34,7 +34,7 @@ Install it directly into an activated virtual environment:
 $ pip install python-anvil
 ```
 
-or add it to your [Poetry](https://poetry.eustace.io/) project:
+or add it to your [Poetry](https://python-poetry.org/) project:
 
 ```text
 $ poetry add python-anvil
