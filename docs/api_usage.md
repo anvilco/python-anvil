@@ -1,17 +1,31 @@
-<h1>API Usage</h1>
+# API Usage
 
 All methods assume that a valid API key is already available. Please take a look
 at [Anvil API Basics](https://www.useanvil.com/docs/api/basics) for more details on how to get your key.
+
+### Anvil() constructor
+
+* `api_key` - Your Anvil API key, either development or production
+* `environment` (default: `'dev'`) - The type of key being used. This affects how the library sets rate limits on API
+  calls if a rate limit error occurs. Allowed values: `["dev", "prod"]`
+
+Example:
+
+```python
+from python_anvil.api import Anvil
+
+anvil = Anvil(api_key="MY_KEY", environment="prod")
+```
 
 ### Anvil.fill_pdf
 
 Anvil allows you to fill templatized PDFs using the payload provided.
 
-<strong>template_data: str (required)</strong>
+**template_data: str (required)**
 
 The template id that will be filled. The template must already exist in your organization account.
 
-<strong>payload: Optional[Union[dict, AnyStr, FillPDFPayload]]</strong>
+**payload: Optional[Union[dict, AnyStr, FillPDFPayload]]**
 
 Data to embed into the PDF. Supported `payload` types are:
 
@@ -23,6 +37,8 @@ Data to embed into the PDF. Supported `payload` types are:
 Example:
 
 ```python
+from python_anvil.api import Anvil
+
 anvil = Anvil(api_key="MY KEY")
 data = {
     "title": "Some Title",
@@ -43,14 +59,16 @@ HTML is another supported input type. This can be used by providing
 `"type": "html"` in the payload and making the `data` field a dict containing
 keys `"html"` and an optional `"css"`. Example below:
 
-```python 
+```python
+from python_anvil.api import Anvil
+
 anvil = Anvil(api_key="MY KEY")
 data = {
     "type": "html",
     "title": "Some Title",
     "data": {
-      "html": "<h2>HTML Heading</h2>"
-      "css": "h2 { color: red }"
+      "html": "<h2>HTML Heading</h2>",
+      "css": "h2 { color: red }",
     }
 }
 response = anvil.generate_pdf(data)
@@ -59,7 +77,7 @@ response = anvil.generate_pdf(data)
 See the official [Anvil Docs on HTML to PDF](https://www.useanvil.com/docs/api/generate-pdf#html--css-to-pdf)
 for more details.
 
-<strong>payload: Union[dict, AnyStr, GeneratePDFPayload]</strong>
+**payload: Union[dict, AnyStr, GeneratePDFPayload]**
 
 Data to embed into the PDF. Supported `payload` types are:
 
@@ -152,12 +170,16 @@ All API functions also accept arbitrary kwargs which will affect how some underl
   containing: `Tuple[Response, DictHeaders]`. This is useful if you would like to have more control over the response
   data. Specifically, you can control API retries when used with `retry=False`.
 
-  Example:
-  ```python
-    from python_anvil.api import Anvil
-    anvil = Anvil(api_key=MY_API_KEY)
-    # Including headers
-    res, headers = anvil.fill_pdf("some_template_id", payload, include_headers=True)
-    # No headers
-    res = anvil.fill_pdf("some_template_id", payload, include_headers=False)
-  ```
+Example:
+
+```python
+from python_anvil.api import Anvil
+
+anvil = Anvil(api_key=MY_API_KEY)
+
+# Including headers
+res, headers = anvil.fill_pdf("some_template_id", payload, include_headers=True)
+
+# No headers
+res = anvil.fill_pdf("some_template_id", payload, include_headers=False)
+```

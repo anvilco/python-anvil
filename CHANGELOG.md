@@ -1,10 +1,18 @@
+# 0.3.0 (2021-07-31)
+
+- Fixed API ratelimit not being set correctly
+- Added support for setting API key environment which sets different API rate limits
+- Added support for `--include-headers` in all API methods which includes HTTP response headers in function returns
+- Added support for `--retry` in all API methods which enables/disables automatic retries
+- Added support for `--debug` flag in CLI which outputs headers from HTTP responses
+
 # 0.2.0 (2021-05-05)
 
-- Add support for HTML to PDF on `generate_pdf`
+- Added support for HTML to PDF on `generate_pdf`
 
 # 0.1.1 (2021-02-16)
 
-- Fix for REST API calls failing
+- Fixed for REST API calls failing
 
 # 0.1.0 (2021-01-30)
 
