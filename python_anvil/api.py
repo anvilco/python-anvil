@@ -68,7 +68,7 @@ class Anvil:
             raise ValueError(
                 "`payload` validation failed. Please make sure all required "
                 "fields are set. "
-            )
+            ) from e
 
         api = RestRequest(client=self.client)
         return api.post(

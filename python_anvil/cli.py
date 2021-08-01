@@ -63,7 +63,7 @@ def current_user(ctx):
 )
 @click.pass_context
 def generate_pdf(ctx, input_filename, out_filename):
-    """Generate a PDF"""
+    """Generate a PDF."""
     anvil = ctx.obj["anvil"]
     debug = ctx.obj["debug"]
 
@@ -84,7 +84,7 @@ def generate_pdf(ctx, input_filename, out_filename):
 @click.argument("eid", default="")
 @click.pass_context
 def weld(ctx, eid, list_all):
-    """Fetch weld info or list of welds"""
+    """Fetch weld info or list of welds."""
     anvil = ctx.obj["anvil"]
     debug = ctx.obj["debug"]
 
@@ -157,7 +157,7 @@ def cast(ctx, eid, list_all):
 )
 @click.pass_context
 def fill_pdf(ctx, template_id, out_filename, payload_csv):
-    """Fill PDF template with data"""
+    """Fill PDF template with data."""
     anvil = ctx.obj["anvil"]
     debug = ctx.obj["debug"]
 
@@ -311,4 +311,4 @@ def gql_query(ctx, query, variables):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    cli()
+    cli()  # pylint: disable=no-value-for-parameter

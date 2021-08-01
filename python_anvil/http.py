@@ -24,11 +24,15 @@ REQUESTS_LIMIT = {
 RATELIMIT_ENV = "dev"
 
 
+def _handle_request_error(e: Exception):
+    raise e
+
+
 class HTTPClient:
     def __init__(self, api_key=None, environment="dev"):
         self._session = requests.Session()
         self.api_key = api_key
-        global RATELIMIT_ENV
+        global RATELIMIT_ENV  # pylint: disable=global-statement
         RATELIMIT_ENV = environment
 
     def get_auth(self, encode=False) -> str:
@@ -76,17 +80,19 @@ class HTTPClient:
                 time_to_wait = int(res.headers.get("Retry-After", 1))
                 if retry:
                     logger.warning(
-                        f"Rate-limited: request not accepted. Retrying in {time_to_wait} "
-                        f"second{'s' if time_to_wait > 1 else ''}."
+                        "Rate-limited: request not accepted. Retrying in "
+                        "%i second%s.",
+                        time_to_wait,
+                        's' if time_to_wait > 1 else '',
                     )
 
                     # This exception will raise up to the `sleep_and_retry` decorator
                     # which will handle waiting for `time_to_wait` seconds.
                     raise RateLimitException("Retrying", period_remaining=time_to_wait)
-                else:
-                    raise AnvilRequestException(
-                        f"Rate limit exceeded. Retry after {time_to_wait} seconds."
-                    )
+
+                raise AnvilRequestException(
+                    f"Rate limit exceeded. Retry after {time_to_wait} seconds."
+                )
 
             break
 
@@ -140,10 +146,7 @@ class HTTPClient:
                 # HTTP client: https://github.com/stripe/stripe-python/blob/afa872c538bee0a1e14c8e131df52dd3c24ff05a/stripe/http_client.py#L304-L308
                 content = res.content
             status_code = res.status_code
-        except Exception as e:
-            self._handle_request_error(e)
+        except Exception as e:  # pylint: disable=broad-except
+            _handle_request_error(e)
 
         return content, status_code, res.headers
-
-    def _handle_request_error(self, e: Exception):
-        raise e
