@@ -1,4 +1,4 @@
-# 0.3.0 (2021-07-31)
+# 0.3.0 (2021-08-03)
 
 - Fixed API ratelimit not being set correctly
 - Added support for setting API key environment which sets different API rate limits
