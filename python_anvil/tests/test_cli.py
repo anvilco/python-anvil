@@ -49,10 +49,10 @@ def describe_cli():
         @mock.patch("python_anvil.api.Anvil.query")
         def it_handles_headers(query, runner, monkeypatch):
             set_key(monkeypatch)
-            query.return_value = (
-                {"data": {"currentUser": {"name": "Cameron"}}},
-                {"Header-1": "val1", "Header-2": "val2"},
-            )
+            query.return_value = {
+                "response": {"data": {"currentUser": {"name": "Cameron"}}},
+                "headers": {"Header-1": "val1", "Header-2": "val2"},
+            }
 
             res = runner.invoke(cli, ['--debug', 'current-user'])
             assert "{'name': 'Cameron'}" in res.output
