@@ -166,9 +166,9 @@ All API functions also accept arbitrary kwargs which will affect how some underl
 
 * `retry` (default: `True`) - When this is passed as an argument, it will enable/disable request retries due to rate
   limit errors. By default, this library _will_ retry requests for a maximum of 5 times.
-* `include_headers` (default: `False`) - When this is passed as an argument, the function's return will be a tuple
-  containing: `Tuple[Response, DictHeaders]`. This is useful if you would like to have more control over the response
-  data. Specifically, you can control API retries when used with `retry=False`.
+* `include_headers` (default: `False`) - When this is passed as an argument, the function's return will be a `dict`
+  containing: `{"response": {...data}, "headers": {...data}}`. This is useful if you would like to have more control
+  over the response data. Specifically, you can control API retries when used with `retry=False`.
 
 Example:
 
@@ -178,7 +178,9 @@ from python_anvil.api import Anvil
 anvil = Anvil(api_key=MY_API_KEY)
 
 # Including headers
-res, headers = anvil.fill_pdf("some_template_id", payload, include_headers=True)
+res = anvil.fill_pdf("some_template_id", payload, include_headers=True)
+response = res["response"]
+headers = res["headers"]
 
 # No headers
 res = anvil.fill_pdf("some_template_id", payload, include_headers=False)
