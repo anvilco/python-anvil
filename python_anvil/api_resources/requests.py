@@ -27,7 +27,7 @@ class AnvilRequest:
         if self.show_headers:
             extra = headers
 
-        if hasattr(response, 'decode'):
+        if hasattr(response, "decode"):
             message = f"Error: {status_code}: {response.decode()} {extra}"
         else:
             message = f"Error: {status_code}: {response} {extra}"
@@ -39,14 +39,14 @@ class AnvilRequest:
         if not 200 <= status_code < 300:
             self.handle_error(response, status_code, headers)
 
-        debug = kwargs.pop('debug', False)
+        debug = kwargs.pop("debug", False)
 
         # Include headers alongside the response.
         # This is useful for figuring out rate limits outside of this library's
         # scope and to manage waiting.
-        include_headers = kwargs.pop('include_headers', False)
+        include_headers = kwargs.pop("include_headers", False)
         if debug or include_headers:
-            return res, headers
+            return {"response": res, "headers": headers}
 
         return res
 
