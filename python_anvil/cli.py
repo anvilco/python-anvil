@@ -20,6 +20,14 @@ def get_api_key():
     return os.environ.get("ANVIL_API_KEY")
 
 
+def contains_headers(res):
+    return isinstance(res, dict) and "headers" in res
+
+
+def process_response(res):
+    return res["response"], res["headers"]
+
+
 @click.group()
 @click.option("--debug/--no-debug", default=False)
 @click.pass_context
@@ -42,8 +50,8 @@ def current_user(ctx):
     debug = ctx.obj["debug"]
     res = anvil.get_current_user(debug=debug)
 
-    if isinstance(res, tuple):
-        res, headers = res
+    if contains_headers(res):
+        res, headers = process_response(res)
         if debug:
             click.echo(headers)
 
@@ -70,8 +78,8 @@ def generate_pdf(ctx, input_filename, out_filename):
     with click.open_file(input_filename, "r") as infile:
         res = anvil.generate_pdf(infile.read(), debug=debug)
 
-    if isinstance(res, tuple):
-        res, headers = res
+    if contains_headers(res):
+        res, headers = process_response(res)
         if debug:
             click.echo(headers)
 
@@ -90,8 +98,8 @@ def weld(ctx, eid, list_all):
 
     if list_all:
         res = anvil.get_welds(debug=debug)
-        if isinstance(res, tuple):
-            res, headers = res
+        if contains_headers(res):
+            res, headers = process_response(res)
             if debug:
                 click.echo(headers)
 
@@ -112,23 +120,27 @@ def cast(ctx, eid, list_all):
     anvil = ctx.obj["anvil"]
     debug = ctx.obj["debug"]
 
+    if not list_all and not eid:
+        raise AssertionError("Cast eid or --list option required")
+
     if list_all:
         res = anvil.get_casts(debug=debug)
 
-        if isinstance(res, tuple):
-            res, headers = res
+        if contains_headers(res):
+            res, headers = process_response(res)
             if debug:
                 click.echo(headers)
 
         data = [[c["eid"], c["title"]] for c in res]
         click.echo(tabulate(data, headers=["eid", "title"]))
         return
+
     if eid:
         click.echo(f"Getting cast with eid '{eid}' \n")
         res = anvil.get_cast(eid, debug=debug)
 
-        if isinstance(res, tuple):
-            res, headers = res
+        if contains_headers(res):
+            res, headers = process_response(res)
             if debug:
                 click.echo(headers)
 
@@ -181,10 +193,10 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
             for payload in ps:
                 res = anvil.fill_pdf(template_id, payload.to_dict(), debug=debug)
 
-                # Get debug stuff if it was asked for
-                if isinstance(res, tuple):
-                    res, headers = res
-                    click.echo(headers)
+                if contains_headers(res):
+                    res, headers = process_response(res)
+                    if debug:
+                        click.echo(headers)
 
                 next_file = next(indexed_files)
                 click.echo(f"\nWriting {next_file}")
@@ -217,12 +229,12 @@ def create_etch(ctx, payload):
     debug = ctx.obj["debug"]
     res = anvil.create_etch_packet(json=payload.read(), debug=debug)
 
-    # Get debug stuff if it was asked for
-    if isinstance(res, tuple):
-        res, headers = res
-        click.echo(headers)
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
 
-    if 'data' in res:
+    if "data" in res:
         click.echo(
             f"Etch packet created with id: {res['data']['createEtchPacket']['eid']}"
         )
@@ -249,11 +261,18 @@ def create_etch(ctx, payload):
 @click.pass_context
 def generate_etch_url(ctx, signer_eid, client_user_id):
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
     res = anvil.generate_etch_signing_url(
-        signer_eid=signer_eid, client_user_id=client_user_id
+        signer_eid=signer_eid, client_user_id=client_user_id, debug=debug
     )
-    url = res.get('data', {}).get('generateEtchSignURL')
-    click.echo(f'Signing URL is: {url}')
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
+    url = res.get("data", {}).get("generateEtchSignURL")
+    click.echo(f"Signing URL is: {url}")
 
 
 @cli.command("download-documents", help="Download etch documents")
@@ -276,7 +295,13 @@ def generate_etch_url(ctx, signer_eid, client_user_id):
 @click.pass_context
 def download_documents(ctx, document_group_eid, filename, stdout):
     anvil = ctx.obj["anvil"]
-    res = anvil.download_documents(document_group_eid)
+    debug = ctx.obj["debug"]
+    res = anvil.download_documents(document_group_eid, debug=debug)
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
 
     if not stdout:
         if not filename:
@@ -306,7 +331,14 @@ def download_documents(ctx, document_group_eid, filename, stdout):
 @click.pass_context
 def gql_query(ctx, query, variables):
     anvil = ctx.obj["anvil"]
-    res = anvil.query(query, variables=variables)
+    debug = ctx.obj["debug"]
+    res = anvil.query(query, variables=variables, debug=debug)
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
     click.echo(res)
 
 

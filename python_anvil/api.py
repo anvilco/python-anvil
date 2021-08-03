@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import AnyStr, Dict, List, Optional, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
@@ -13,6 +13,15 @@ from .utils import remove_empty_items
 
 
 logger = getLogger(__name__)
+
+
+def _get_return(res: Dict, get_data: Callable[[Dict], Union[Dict, List]]):
+    """Process response and get data from path if provided."""
+    _res = res
+    if "response" in res and "headers" in res:
+        _res = res["response"]
+        return {"response": get_data(_res), "headers": res["headers"]}
+    return get_data(_res)
 
 
 class Anvil:
@@ -129,14 +138,10 @@ class Anvil:
             **kwargs,
         )
 
-        def get_return():
-            return res["data"]["cast"]
+        def get_data(r):
+            return r["data"]["cast"]
 
-        if isinstance(res, tuple):
-            res, headers = res
-            return get_return(), headers
-
-        return get_return()
+        return _get_return(res, get_data=get_data)
 
     def get_casts(self, fields=None, **kwargs) -> Union[List, Tuple[List, Dict]]:
         if not fields:
@@ -156,16 +161,11 @@ class Anvil:
             **kwargs,
         )
 
-        def get_return():
-            orgs = res["data"]["currentUser"]["organizations"]
+        def get_data(r):
+            orgs = r["data"]["currentUser"]["organizations"]
             return [item for org in orgs for item in org["casts"]]
 
-        # TODO: Lots of repetition here when headers are included...
-        if isinstance(res, tuple):
-            res, headers = res
-            return get_return(), headers
-
-        return get_return()
+        return _get_return(res, get_data=get_data)
 
     def get_current_user(self, **kwargs):
         res = self.query(
@@ -190,15 +190,7 @@ class Anvil:
             **kwargs,
         )
 
-        def get_return():
-            return res["data"]["currentUser"]
-
-        # TODO: Lots of repetition here when headers are included...
-        if isinstance(res, tuple):
-            res, headers = res
-            return get_return(), headers
-
-        return get_return()
+        return _get_return(res, get_data=lambda r: r["data"]["currentUser"])
 
     def get_welds(self, **kwargs) -> Union[List, Tuple[List, Dict]]:
         res = self.query(
@@ -216,16 +208,11 @@ class Anvil:
             **kwargs,
         )
 
-        def get_return():
-            orgs = res["data"]["currentUser"]["organizations"]
+        def get_data(r):
+            orgs = r["data"]["currentUser"]["organizations"]
             return [item for org in orgs for item in org["welds"]]
 
-        # TODO: Lots of repetition here when headers are included...
-        if isinstance(res, tuple):
-            res, headers = res
-            return get_return(), headers
-
-        return get_return()
+        return _get_return(res, get_data=get_data)
 
     def create_etch_packet(
         self,
