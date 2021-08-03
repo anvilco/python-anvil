@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
@@ -105,7 +106,7 @@ class CreateEtchPacket(BaseQuery):
 
     @classmethod
     def create_from_dict(cls, payload: dict):
-        """Creates a new instance of `CreateEtchPacket` from a dict payload."""
+        """Create a new instance of `CreateEtchPacket` from a dict payload."""
         try:
             mutation = cls(
                 **{k: v for k, v in payload.items() if k not in ["signers", "files"]}
@@ -113,7 +114,7 @@ class CreateEtchPacket(BaseQuery):
         except TypeError as e:
             raise ValueError(
                 f"`payload` must be a valid CreateEtchPacket instance or dict. {e}"
-            )
+            ) from e
         if "signers" in payload:
             for signer in payload["signers"]:
                 mutation.add_signer(EtchSigner(**signer))
@@ -125,7 +126,7 @@ class CreateEtchPacket(BaseQuery):
         return mutation
 
     def add_signer(self, signer: Union[dict, EtchSigner]):
-        """Adds a signer to the mutation payload.
+        """Add a signer to the mutation payload.
 
         :param signer: Signer object to add to the payload
         :type signer: dict|EtchSigner
@@ -157,7 +158,7 @@ class CreateEtchPacket(BaseQuery):
         self.signers.append(data)
 
     def add_file(self, file: Union[DocumentUpload, EtchCastRef]):
-        """Adds file to a pending list of Upload objects.
+        """Add file to a pending list of Upload objects.
 
         Files will not be uploaded when running this method. The will be
         uploaded when the mutation actually runs.
@@ -175,7 +176,7 @@ class CreateEtchPacket(BaseQuery):
 
     def get_file_payloads(self):
         existing_files = [f.id for f in self.files if f]
-        for key, val in self.file_payloads.items():
+        for key, _ in self.file_payloads.items():
             if key not in existing_files:
                 raise ValueError(
                     f"`{key}` was not added as a file. Please add "
@@ -185,7 +186,7 @@ class CreateEtchPacket(BaseQuery):
         return self.file_payloads
 
     def create_payload(self):
-        """Creates a payload based on data set on the class instance.
+        """Create a payload based on data set on the class instance.
 
         Check `api_resources.payload.CreateEtchPacketPayload` for full payload
         requirements. Data requirements aren't explicitly enforced here, but

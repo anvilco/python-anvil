@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import AnyStr, Dict, List, Optional, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
@@ -15,6 +15,15 @@ from .utils import remove_empty_items
 logger = getLogger(__name__)
 
 
+def _get_return(res: Dict, get_data: Callable[[Dict], Union[Dict, List]]):
+    """Process response and get data from path if provided."""
+    _res = res
+    if "response" in res and "headers" in res:
+        _res = res["response"]
+        return {"response": get_data(_res), "headers": res["headers"]}
+    return get_data(_res)
+
+
 class Anvil:
     """Main Anvil API class.
 
@@ -26,23 +35,25 @@ class Anvil:
         >> pdf_data = anvil.fill_pdf("the_template_id", payload)
     """
 
-    def __init__(self, api_key=None):
-        self.client = HTTPClient(api_key=api_key)
+    def __init__(self, api_key=None, environment='dev'):
+        self.client = HTTPClient(api_key=api_key, environment=environment)
 
-    def query(self, query: str, variables: Optional[str] = None):
+    def query(self, query: str, variables: Optional[str] = None, **kwargs):
         gql = GraphqlRequest(client=self.client)
-        return gql.post(query, variables=variables)
+        return gql.post(query, variables=variables, **kwargs)
 
-    def mutate(self, query: BaseQuery, variables: dict):
+    def mutate(self, query: BaseQuery, variables: dict, **kwargs):
         gql = GraphqlRequest(client=self.client)
-        return gql.post(query.get_mutation(), variables)
+        return gql.post(query.get_mutation(), variables, **kwargs)
 
     def request_rest(self, options: Optional[dict] = None):
         api = RestRequest(self.client, options=options)
         return api
 
-    def fill_pdf(self, template_id: str, payload: Union[dict, AnyStr]):
-        """Fills an existing template with provided payload data.
+    def fill_pdf(
+        self, template_id: str, payload: Union[dict, AnyStr, FillPDFPayload], **kwargs
+    ):
+        """Fill an existing template with provided payload data.
 
         Use the casts graphql query to get a list of available templates you
         can use for this request.
@@ -52,7 +63,6 @@ class Anvil:
         :param payload: payload in the form of a dict or JSON data
         :type payload: dict|str
         """
-        data = None
         try:
             if isinstance(payload, dict):
                 data = FillPDFPayload.from_dict(payload)
@@ -63,18 +73,20 @@ class Anvil:
             else:
                 raise ValueError("`payload` must be a valid JSON string or a dict")
         except KeyError as e:
+            logger.exception(e)
             raise ValueError(
                 "`payload` validation failed. Please make sure all required "
                 "fields are set. "
-            )
+            ) from e
 
         api = RestRequest(client=self.client)
         return api.post(
             f"fill/{template_id}.pdf",
             remove_empty_items(data.to_dict() if data else {}),
+            **kwargs,
         )
 
-    def generate_pdf(self, payload: Union[AnyStr, Dict]):
+    def generate_pdf(self, payload: Union[AnyStr, Dict], **kwargs):
         if not payload:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
@@ -108,24 +120,30 @@ class Anvil:
 
         # Any data errors would come from here..
         api = RestRequest(client=self.client)
-        return api.post("generate-pdf", data=remove_empty_items(data.to_dict()))
+        return api.post(
+            "generate-pdf", data=remove_empty_items(data.to_dict()), **kwargs
+        )
 
-    def get_cast(self, eid: str, fields=None):
+    def get_cast(self, eid: str, fields=None, **kwargs):
         if not fields:
             # Use default fields
             fields = ['eid', 'title', 'fieldInfo']
 
         res = self.query(
             f"""{{
-          cast(eid: "{eid}") {{
-            {" ".join(fields)}
-          }}
-        }}"""
+              cast(eid: "{eid}") {{
+                {" ".join(fields)}
+              }}
+            }}""",
+            **kwargs,
         )
 
-        return res["data"]["cast"]
+        def get_data(r):
+            return r["data"]["cast"]
 
-    def get_casts(self, fields=None) -> List:
+        return _get_return(res, get_data=get_data)
+
+    def get_casts(self, fields=None, **kwargs) -> Union[List, Tuple[List, Dict]]:
         if not fields:
             # Use default fields
             fields = ['eid', 'title', 'fieldInfo']
@@ -139,13 +157,17 @@ class Anvil:
                   }}
                 }}
               }}
-            }}"""
+            }}""",
+            **kwargs,
         )
 
-        orgs = res["data"]["currentUser"]["organizations"]
-        return [item for org in orgs for item in org["casts"]]
+        def get_data(r):
+            orgs = r["data"]["currentUser"]["organizations"]
+            return [item for org in orgs for item in org["casts"]]
 
-    def get_current_user(self):
+        return _get_return(res, get_data=get_data)
+
+    def get_current_user(self, **kwargs):
         res = self.query(
             """{
               currentUser {
@@ -164,12 +186,13 @@ class Anvil:
                 }
               }
             }
-            """
+            """,
+            **kwargs,
         )
-        user = res["data"]["currentUser"]
-        return user
 
-    def get_welds(self) -> list:
+        return _get_return(res, get_data=lambda r: r["data"]["currentUser"])
+
+    def get_welds(self, **kwargs) -> Union[List, Tuple[List, Dict]]:
         res = self.query(
             """{
               currentUser {
@@ -181,33 +204,15 @@ class Anvil:
                   }
                 }
               }
-            }"""
-        )
-        orgs = res["data"]["currentUser"]["organizations"]
-        return [item for org in orgs for item in org["welds"]]
-
-    def get_queries(self):
-        """
-        Gets list of available queries.
-
-        TODO: This is probably going to be removed in the near future
-            (in the API).
-        :return:
-        """
-        res = self.query(
-            """{
-              __schema {
-                queryType {
-                  fields {
-                    name
-                    description
-                  }
-                }
-              }
-            }"""
+            }""",
+            **kwargs,
         )
 
-        return res["data"]["__schema"]["queryType"]
+        def get_data(r):
+            orgs = r["data"]["currentUser"]["organizations"]
+            return [item for org in orgs for item in org["welds"]]
+
+        return _get_return(res, get_data=get_data)
 
     def create_etch_packet(
         self,
@@ -215,6 +220,7 @@ class Anvil:
             Union[dict, CreateEtchPacketPayload, CreateEtchPacket]
         ] = None,
         json=None,
+        **kwargs,
     ):
         """Create etch packet via a graphql mutation."""
         # Create an etch packet payload instance excluding signers and files
@@ -236,18 +242,20 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
 
-        return self.mutate(mutation, variables=mutation.create_payload().to_dict())
+        return self.mutate(
+            mutation, variables=mutation.create_payload().to_dict(), **kwargs
+        )
 
-    def generate_etch_signing_url(self, signer_eid: str, client_user_id: str):
+    def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
         """Generate a signing URL for a given user."""
         mutation = GenerateEtchSigningURL(
             signer_eid=signer_eid,
             client_user_id=client_user_id,
         )
         payload = mutation.create_payload()
-        return self.mutate(mutation, variables=payload.to_dict())
+        return self.mutate(mutation, variables=payload.to_dict(), **kwargs)
 
-    def download_documents(self, document_group_eid: str):
+    def download_documents(self, document_group_eid: str, **kwargs):
         """Retrieve all completed documents in zip form."""
         api = PlainRequest(client=self.client)
-        return api.get(f"document-group/{document_group_eid}.zip")
+        return api.get(f"document-group/{document_group_eid}.zip", **kwargs)

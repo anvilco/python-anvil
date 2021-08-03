@@ -1,3 +1,4 @@
+# pylint: disable=too-many-locals
 import click
 import os
 from csv import DictReader
@@ -13,7 +14,18 @@ from .api_resources.payload import FillPDFPayload
 
 
 logger = getLogger(__name__)
-API_KEY = os.environ.get("ANVIL_API_KEY")
+
+
+def get_api_key():
+    return os.environ.get("ANVIL_API_KEY")
+
+
+def contains_headers(res):
+    return isinstance(res, dict) and "headers" in res
+
+
+def process_response(res):
+    return res["response"], res["headers"]
 
 
 @click.group()
@@ -22,18 +34,27 @@ API_KEY = os.environ.get("ANVIL_API_KEY")
 def cli(ctx: click.Context, debug=False):
     ctx.ensure_object(dict)
 
-    if not API_KEY:
+    key = get_api_key()
+    if not key:
         raise ValueError("$ANVIL_API_KEY must be defined in your environment variables")
 
-    anvil = Anvil(API_KEY)
+    anvil = Anvil(key)
     ctx.obj["anvil"] = anvil
+    ctx.obj["debug"] = debug
 
 
 @cli.command("current-user", help="Show details about your API user")
 @click.pass_context
 def current_user(ctx):
     anvil = ctx.obj["anvil"]
-    res = anvil.get_current_user()
+    debug = ctx.obj["debug"]
+    res = anvil.get_current_user(debug=debug)
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
     click.echo(f"User data: \n\n {res}")
 
 
@@ -50,13 +71,19 @@ def current_user(ctx):
 )
 @click.pass_context
 def generate_pdf(ctx, input_filename, out_filename):
-    """Generate a PDF"""
+    """Generate a PDF."""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     with click.open_file(input_filename, "r") as infile:
-        res = anvil.generate_pdf(infile.read())
+        res = anvil.generate_pdf(infile.read(), debug=debug)
 
-    with open(out_filename, "wb") as file:
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
+    with click.open_file(out_filename, "wb") as file:
         file.write(res)
 
 
@@ -65,11 +92,17 @@ def generate_pdf(ctx, input_filename, out_filename):
 @click.argument("eid", default="")
 @click.pass_context
 def weld(ctx, eid, list_all):
-    """Fetch weld info or list of welds"""
+    """Fetch weld info or list of welds."""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     if list_all:
-        res = anvil.get_welds()
+        res = anvil.get_welds(debug=debug)
+        if contains_headers(res):
+            res, headers = process_response(res)
+            if debug:
+                click.echo(headers)
+
         data = [(w["eid"], w.get("slug"), w.get("title")) for w in res]
         click.echo(tabulate(data, tablefmt="pretty", headers=["eid", "slug", "title"]))
         return
@@ -85,26 +118,37 @@ def weld(ctx, eid, list_all):
 def cast(ctx, eid, list_all):
     """Fetch Cast data given a Cast eid."""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
+
+    if not list_all and not eid:
+        raise AssertionError("Cast eid or --list option required")
 
     if list_all:
-        res = anvil.get_casts()
+        res = anvil.get_casts(debug=debug)
+
+        if contains_headers(res):
+            res, headers = process_response(res)
+            if debug:
+                click.echo(headers)
+
         data = [[c["eid"], c["title"]] for c in res]
         click.echo(tabulate(data, headers=["eid", "title"]))
         return
+
     if eid:
         click.echo(f"Getting cast with eid '{eid}' \n")
-        res = anvil.get_cast(eid)
+        res = anvil.get_cast(eid, debug=debug)
+
+        if contains_headers(res):
+            res, headers = process_response(res)
+            if debug:
+                click.echo(headers)
 
         def get_field_info(cc):
             return tabulate(cc.get("fields", []))
 
-        click.echo(
-            tabulate(
-                [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]],
-                tablefmt="pretty",
-                headers=res.keys(),
-            )
-        )
+        table_data = [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]]
+        click.echo(tabulate(table_data, tablefmt="pretty", headers=res.keys()))
 
 
 @cli.command("fill-pdf")
@@ -125,8 +169,9 @@ def cast(ctx, eid, list_all):
 )
 @click.pass_context
 def fill_pdf(ctx, template_id, out_filename, payload_csv):
-    """Fill PDF template with data"""
+    """Fill PDF template with data."""
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
 
     if all([template_id, out_filename, payload_csv]):
         payloads = []  # type: List[FillPDFPayload]
@@ -146,11 +191,17 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
         with click.progressbar(payloads, label="Filling PDFs and saving") as ps:
             indexed_files = utils.build_batch_filenames(out_filename)
             for payload in ps:
-                data = anvil.fill_pdf(template_id, payload.to_dict())
+                res = anvil.fill_pdf(template_id, payload.to_dict(), debug=debug)
+
+                if contains_headers(res):
+                    res, headers = process_response(res)
+                    if debug:
+                        click.echo(headers)
+
                 next_file = next(indexed_files)
                 click.echo(f"\nWriting {next_file}")
                 with click.open_file(next_file, "wb") as file:
-                    file.write(data)
+                    file.write(res)
                 sleep(1)
 
 
@@ -175,9 +226,15 @@ def create_etch(ctx, payload):
         > $ ANVIL_API_KEY=mykey anvil create-etch --payload -
     """
     anvil = ctx.obj["anvil"]
-    res = anvil.create_etch_packet(json=payload.read())
+    debug = ctx.obj["debug"]
+    res = anvil.create_etch_packet(json=payload.read(), debug=debug)
 
-    if 'data' in res:
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
+    if "data" in res:
         click.echo(
             f"Etch packet created with id: {res['data']['createEtchPacket']['eid']}"
         )
@@ -204,11 +261,18 @@ def create_etch(ctx, payload):
 @click.pass_context
 def generate_etch_url(ctx, signer_eid, client_user_id):
     anvil = ctx.obj["anvil"]
+    debug = ctx.obj["debug"]
     res = anvil.generate_etch_signing_url(
-        signer_eid=signer_eid, client_user_id=client_user_id
+        signer_eid=signer_eid, client_user_id=client_user_id, debug=debug
     )
-    url = res.get('data', {}).get('generateEtchSignURL')
-    click.echo(f'Signing URL is: {url}')
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
+    url = res.get("data", {}).get("generateEtchSignURL")
+    click.echo(f"Signing URL is: {url}")
 
 
 @cli.command("download-documents", help="Download etch documents")
@@ -231,7 +295,13 @@ def generate_etch_url(ctx, signer_eid, client_user_id):
 @click.pass_context
 def download_documents(ctx, document_group_eid, filename, stdout):
     anvil = ctx.obj["anvil"]
-    res = anvil.download_documents(document_group_eid)
+    debug = ctx.obj["debug"]
+    res = anvil.download_documents(document_group_eid, debug=debug)
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
 
     if not stdout:
         if not filename:
@@ -261,9 +331,16 @@ def download_documents(ctx, document_group_eid, filename, stdout):
 @click.pass_context
 def gql_query(ctx, query, variables):
     anvil = ctx.obj["anvil"]
-    res = anvil.query(query, variables=variables)
+    debug = ctx.obj["debug"]
+    res = anvil.query(query, variables=variables, debug=debug)
+
+    if contains_headers(res):
+        res, headers = process_response(res)
+        if debug:
+            click.echo(headers)
+
     click.echo(res)
 
 
 if __name__ == "__main__":  # pragma: no cover
-    cli()
+    cli()  # pylint: disable=no-value-for-parameter

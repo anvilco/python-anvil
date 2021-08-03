@@ -1,3 +1,4 @@
+# pylint: disable=too-many-instance-attributes
 from dataclasses import dataclass
 
 from dataclasses_json import DataClassJsonMixin, LetterCase, dataclass_json

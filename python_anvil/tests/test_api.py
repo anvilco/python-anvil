@@ -1,10 +1,11 @@
-# pylint: disable=unused-variable
+# pylint: disable=unused-variable,unused-argument,too-many-statements
 import json
 import pytest
 from unittest import mock
 
 from python_anvil.api import Anvil, CreateEtchPacket
 
+from ..api_resources.payload import FillPDFPayload
 from . import payloads
 
 
@@ -18,12 +19,18 @@ def describe_api():
 
     def describe_init():
         @mock.patch('python_anvil.api.HTTPClient')
-        def test_init_key(mock_client):
+        def test_init_key_default(mock_client):
             Anvil(api_key="what")
-            mock_client.assert_called_once_with(api_key="what")
+            mock_client.assert_called_once_with(api_key="what", environment="dev")
+
+        @mock.patch('python_anvil.api.HTTPClient')
+        def test_init_key_prod(mock_client):
+            Anvil(api_key="what", environment="prod")
+            mock_client.assert_called_once_with(api_key="what", environment="prod")
 
     def describe_query():
         def test_query():
+            # TODO: ...
             pass
 
     def describe_fill_pdf():
@@ -38,14 +45,34 @@ def describe_api():
             payload = """{ "data": {"jsonData": "is here"} }"""
             anvil.fill_pdf("some_template", payload=payload)
             m_request_post.assert_called_once_with(
-                "fill/some_template.pdf", {'data': {'jsonData': 'is here'}}
+                "fill/some_template.pdf",
+                {'data': {'jsonData': 'is here'}},
+            )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_payload_obj(m_request_post, anvil):
+            payload = FillPDFPayload(data={"jsonData": "this was a payload instance"})
+            anvil.fill_pdf("some_template", payload=payload)
+            m_request_post.assert_called_once_with(
+                "fill/some_template.pdf",
+                {'data': {'jsonData': 'this was a payload instance'}},
             )
 
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_empty_payload(m_request_post, anvil):
             with pytest.raises(ValueError):
                 anvil.fill_pdf("some_template", payload={})
-                assert m_request_post.call_count == 0
+            assert m_request_post.call_count == 0
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_with_kwargs(m_request_post, anvil):
+            payload = """{ "data": {"jsonData": "is here"} }"""
+            anvil.fill_pdf("some_template", payload=payload, include_headers=True)
+            m_request_post.assert_called_once_with(
+                "fill/some_template.pdf",
+                {"data": {"jsonData": "is here"}},
+                include_headers=True,
+            )
 
     def describe_generate_pdf():
         @mock.patch('python_anvil.api.RestRequest.post')
@@ -117,12 +144,6 @@ def describe_api():
         @mock.patch('python_anvil.api.GraphqlRequest.post')
         def test_get_weld(m_request_post, anvil):
             anvil.get_welds()
-            assert m_request_post.call_count == 1
-
-    def describe_get_queries():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
-        def test_get_queries(m_request_post, anvil):
-            anvil.get_queries()
             assert m_request_post.call_count == 1
 
     def describe_generate_etch_signing_url():

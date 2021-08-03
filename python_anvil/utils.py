@@ -9,7 +9,7 @@ logger = getLogger(__name__)
 
 def build_batch_filenames(filename: str, start_idx=0, separator: str = "-"):
     """
-    Creates a generator for filenames in sequential order.
+    Create a generator for filenames in sequential order.
 
     Example:
         build_batch_filenames('somefile.pdf') will yield filenames:
@@ -31,12 +31,12 @@ def build_batch_filenames(filename: str, start_idx=0, separator: str = "-"):
 
 
 def create_unique_id(prefix: str = "field") -> str:
-    """Helper function to create a prefixed unique id."""
+    """Create a prefixed unique id."""
     return f"{prefix}-{uuid.uuid4().hex}"
 
 
 def remove_empty_items(dict_obj: dict):
-    """Removes null values from a dict."""
+    """Remove null values from a dict."""
     return {k: v for k, v in dict_obj.items() if v is not None}
 
 
