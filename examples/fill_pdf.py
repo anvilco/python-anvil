@@ -15,6 +15,9 @@ def main():
         "font_size": 12,
         "text_color": "#00FF00",
         "data": {
+            # cast field id as the key, and either an object containing
+            # styling options, or a string containing text to fill the
+            # field with.
             "cast123": {
                 "textColor": "#0000FF",
                 "fontSize": 24,
