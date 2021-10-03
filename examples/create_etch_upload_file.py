@@ -1,12 +1,16 @@
+# pylint: disable=duplicate-code
 import base64
+
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
 from python_anvil.api_resources.payload import (
-    EtchSigner,
-    SignerField,
+    Base64Upload,
     DocumentUpload,
-    Base64Upload, SignatureField
+    EtchSigner,
+    SignatureField,
+    SignerField,
 )
+
 
 API_KEY = 'my-api-key'
 
@@ -44,14 +48,16 @@ def main():
             # downloading their signature packet
             filename="a_custom_filename.pdf",
         ),
-        fields=[SignatureField(
-            id="sign1",
-            type="signature",
-            page_num=0,
-            # The position and size of the field. The coordinates provided here
-            # (x=100, y=100) is the top-left of the rectangle.
-            rect=dict(x=183, y=100, width=250, height=50)
-        )]
+        fields=[
+            SignatureField(
+                id="sign1",
+                type="signature",
+                page_num=0,
+                # The position and size of the field. The coordinates provided here
+                # (x=100, y=100) is the top-left of the rectangle.
+                rect=dict(x=183, y=100, width=250, height=50),
+            )
+        ],
     )
 
     # Gather your signer data
