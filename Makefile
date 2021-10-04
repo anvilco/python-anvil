@@ -57,8 +57,8 @@ endif
 
 .PHONY: format
 format: install
-	poetry run isort $(PACKAGE) tests
-	poetry run black $(PACKAGE) tests
+	poetry run isort $(PACKAGE) examples tests
+	poetry run black $(PACKAGE) examples tests
 	@ echo
 
 .PHONY: check
@@ -66,9 +66,9 @@ check: install format  ## Run formaters, linters, and static analysis
 ifdef CI
 	git diff --exit-code
 endif
-	poetry run mypy $(PACKAGE) tests --config-file=.mypy.ini
-	poetry run pylint $(PACKAGE) tests --rcfile=.pylint.ini
-	poetry run pydocstyle $(PACKAGE) tests
+	poetry run mypy $(PACKAGE) examples tests --config-file=.mypy.ini
+	poetry run pylint $(PACKAGE) examples tests --rcfile=.pylint.ini
+	poetry run pydocstyle $(PACKAGE) examples tests
 
 # TESTS #######################################################################
 
