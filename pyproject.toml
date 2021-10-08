@@ -43,7 +43,7 @@ click = "^7.0"
 requests = "^2.25.0"
 ratelimit = "^2.2.1"
 tabulate = "^0.8.7"
-pydantic = "^1.8.1"
+pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
 
