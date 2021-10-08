@@ -9,7 +9,6 @@ from .api_resources.payload import (
 )
 from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
-from .utils import remove_empty_items
 
 
 logger = getLogger(__name__)

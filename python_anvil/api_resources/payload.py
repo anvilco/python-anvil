@@ -1,5 +1,13 @@
+# pylint: disable=no-self-argument,no-self-use
+
 import re
-from pydantic import BaseModel as _BaseModel, validator
+
+# Disabling pylint no-name-in-module because this is the documented way to
+# import `BaseModel` and it's not broken, so let's keep it.
+from pydantic import (  # pylint: disable=no-name-in-module
+    BaseModel as _BaseModel,
+    validator,
+)
 from typing import Any, Dict, List, Literal, Optional, Union
 
 
@@ -13,6 +21,11 @@ def underscore_to_camel(name):
 
 class BaseModel(_BaseModel):
     class Config:
+        """Config override for all models.
+
+        This override is mainly so everything can go from snake to camel-case.
+        """
+
         alias_generator = underscore_to_camel
         allow_population_by_field_name = True
 
@@ -30,8 +43,8 @@ class FillPDFPayload(BaseModel):
     text_color: Optional[str] = None
 
     @validator("data")
-    def data_cannot_be_empty(cls, v, values, **kwargs):
-        if isinstance(v, dict) and not len(v):
+    def data_cannot_be_empty(cls, v):
+        if isinstance(v, dict) and len(v) == 0:
             raise ValueError("cannot be empty")
         return v
 
@@ -43,7 +56,7 @@ class GeneratePDFPayload(BaseModel):
     type: Optional[Literal["markdown", "html"]] = "markdown"
 
     @validator("data")
-    def data_must_match_type(cls, v, values, **kwargs):
+    def data_must_match_type(cls, v, values):
         if "type" in values and values["type"] == "html":
             if "html" not in v:
                 raise ValueError("must contain HTML if using `html` type")
@@ -52,7 +65,7 @@ class GeneratePDFPayload(BaseModel):
         return v
 
     @validator("type")
-    def type_must_match_data(cls, v, values, **kwargs):
+    def type_must_match_data(cls, v, values):
         if v == "html":
             if "data" in values and not isinstance(values["data"], dict):
                 raise ValueError("HTML types must used a dict data payload")

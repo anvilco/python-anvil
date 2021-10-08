@@ -9,9 +9,6 @@ from unittest import mock
 from python_anvil.cli import cli
 
 
-# from expecter import expect
-
-
 @pytest.fixture
 def runner():
     return CliRunner()
