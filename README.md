@@ -24,7 +24,7 @@ General API documentation: [Anvil API docs](https://www.useanvil.com/docs)
 
 ## Requirements
 
-* Python 3.6+
+* Python 3.6.2+
 
 ## Installation
 
