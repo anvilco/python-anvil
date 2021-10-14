@@ -54,7 +54,20 @@ def main():
         # send emails when this etch packet is created.
         # It can also be set to "embedded" which will _not_ send emails, and
         # you will need to handle sending the signer URLs manually in some way.
-        signer_type="embedded",
+        signer_type="email",
+        # You can also change how signatures will be collected.
+        # "draw" will allow the signer to draw their signature
+        # "text" will insert a text version of the signer's name into the
+        # signature field.
+        signature_mode="draw",
+        # Whether or not to the signer is required to click each signature
+        # field manually. If `False`, the PDF will be signed once the signer
+        # accepts the PDF without making the user go through the PDF.
+        accept_each_field=False,
+        # URL of where the signer will be redirected after signing.
+        # The URL will also have certain URL params added on, so the page
+        # can be customized based on the signing action.
+        redirect_url="https://www.google.com"
     )
 
     # Add your signer.
