@@ -1,4 +1,4 @@
-# 1.0.0 (2021-10-08)
+# 1.0.0 (2021-10-14)
 
 - **[BREAKING CHANGE]** `dataclasses-json` library removed and replaced
   with [pydantic](https://github.com/samuelcolvin/pydantic/).
@@ -6,6 +6,10 @@
   from `api_resources/payload.py`, you will likely need to update all usages. Please
   see [pydantic's docs](https://pydantic-docs.helpmanual.io/usage/models/) for more details.
 - **[BREAKING CHANGE]** Increased minimum required Python version to 3.6.2.
+- Updated `EtchSigner` model to be more in sync with new official documentation.
+  See `create_etch_existing_cast.py` file for examples and `api_resources/payload.py` for `EtchSigner` changes.
+- Updated CLI command `anvil cast --list` to only return casts that are templates.
+  Use `anvil cast --all` if you'd like the previous behavior.
 - Updated a number of dependencies, the vast majority being dev-dependencies.
 
 # 0.3.0 (2021-08-03)
