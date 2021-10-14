@@ -125,16 +125,18 @@ class Anvil:
 
         return _get_return(res, get_data=get_data)
 
-    def get_casts(self, fields=None, **kwargs) -> Union[List, Tuple[List, Dict]]:
+    def get_casts(self, fields=None, show_all=False, **kwargs) -> Union[List, Tuple[List, Dict]]:
         if not fields:
             # Use default fields
-            fields = ['eid', 'title', 'fieldInfo']
+            fields = ["eid", "title", "fieldInfo"]
+
+        cast_args = "" if show_all else "(isTemplate: true)"
 
         res = self.query(
             f"""{{
               currentUser {{
                 organizations {{
-                  casts {{
+                  casts {cast_args} {{
                     {" ".join(fields)}
                   }}
                 }}
