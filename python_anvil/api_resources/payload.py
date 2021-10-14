@@ -6,6 +6,7 @@ import re
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     BaseModel as _BaseModel,
+    Field,
     validator,
 )
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -89,9 +90,15 @@ class EtchSigner(BaseModel):
     email: str
     fields: List[SignerField]
     signer_type: str = "email"
-    # Will be generated if `None`
-    id: Optional[str] = ""
+    # id will be generated if `None`
+    id: Optional[str] = None
     routing_order: Optional[int] = None
+    redirect_url: Optional[str] = Field(None, alias="redirectURL")
+    # acceptEachField, signatureMode
+    accept_each_field: Optional[bool] = None
+    enable_emails: Optional[List[str]] = None
+    # signature_mode can be "draw" or "text" (default: text)
+    signature_mode: Optional[str] = None
 
 
 class SignatureField(BaseModel):
