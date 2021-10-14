@@ -104,6 +104,7 @@ def describe_api():
         def test_invalid_payload_html_payload(m_request_post, anvil):
             with pytest.raises(ValueError):
                 anvil.generate_pdf({"data": {"no_html_here": "Nope"}, "type": "html"})
+            assert m_request_post.call_count == 0
 
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_payload_invalid_type(m_request_post, anvil):
@@ -111,6 +112,7 @@ def describe_api():
                 anvil.generate_pdf(
                     {"data": [{"d1": "data"}], "type": "something_invalid"}
                 )
+            assert m_request_post.call_count == 0
 
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_invalid_data_for_html(m_request_post, anvil):
@@ -122,6 +124,7 @@ def describe_api():
                         "type": "html",
                     }
                 )
+            assert m_request_post.call_count == 0
 
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_invalid_data_for_markdown(m_request_post, anvil):
@@ -133,6 +136,7 @@ def describe_api():
                         "type": "markdown",
                     }
                 )
+            assert m_request_post.call_count == 0
 
     def describe_current_user_query():
         @mock.patch('python_anvil.api.GraphqlRequest.post')

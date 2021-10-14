@@ -1,7 +1,7 @@
 [tool.poetry]
 
 name = "python_anvil"
-version = "0.3.0"
+version = "1.0.0"
 description = "Anvil API"
 
 license = "MIT"
@@ -37,27 +37,27 @@ classifiers = [
 
 [tool.poetry.dependencies]
 
-python = "^3.6"
+python = "^3.6.2"
 
 click = "^7.0"
 requests = "^2.25.0"
 ratelimit = "^2.2.1"
-dataclasses-json = "^0.5.2"
-tabulate = "^0.8.7"
+tabulate = "^0.8.9"
+pydantic = "^1.8.2"
 
 [tool.poetry.dev-dependencies]
 
 # Formatters
-black = "=20.8b1"
-isort = "=5.5.1"
+black = "=21.9b0"
+isort = "=5.9.3"
 
 # Linters
 mypy = "*"
 pydocstyle = "*"
-pylint = "~2.6.0"
+pylint = "2.11.1"
 
 # Testing
-pytest = "^5.3.2"
+pytest = "6.2.5"
 pytest-cov = "*"
 pytest-describe = { git = "https://github.com/pytest-dev/pytest-describe", rev = "453aa9045b265e313f356f1492d8991c02a6aea6" } # use 2.0 when released
 pytest-expecter = "^2.1"
@@ -68,7 +68,7 @@ freezegun = "*"
 coveragespace = {git = "https://github.com/jacebrowning/coverage-space-cli.git", rev = "c167484787a223227b1ad5393300f8ca2bafe7a2"}
 
 # Documentation
-mkdocs = "~1.0"
+mkdocs = "1.2.2"
 pygments = "^2.5.2"
 
 # Tooling
@@ -76,6 +76,7 @@ pyinstaller = "*"
 sniffer = "*"
 MacFSEvents = { version = "*", platform = "darwin" }
 pync = { version = "*", platform = "darwin" }
+# Updating `ipython` any further will require a minimum Python of >=3.7
 ipython = "^7.12.0"
 pyinotify = {version = "^0.9.6", optional = true}
 tox = "^3.21.2"

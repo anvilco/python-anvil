@@ -1,3 +1,13 @@
+# 1.0.0 (2021-10-08)
+
+- **[BREAKING CHANGE]** `dataclasses-json` library removed and replaced
+  with [pydantic](https://github.com/samuelcolvin/pydantic/).
+  This should not affect any users who only use the CLI and API methods, but if you are using any models directly
+  from `api_resources/payload.py`, you will likely need to update all usages. Please
+  see [pydantic's docs](https://pydantic-docs.helpmanual.io/usage/models/) for more details.
+- **[BREAKING CHANGE]** Increased minimum required Python version to 3.6.2.
+- Updated a number of dependencies, the vast majority being dev-dependencies.
+
 # 0.3.0 (2021-08-03)
 
 - Fixed API ratelimit not being set correctly

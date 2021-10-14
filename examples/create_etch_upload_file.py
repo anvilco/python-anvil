@@ -1,4 +1,7 @@
 # pylint: disable=duplicate-code
+# NOTE: The pylint disable above doesn't actually work (yet?)
+# SEE: https://github.com/PyCQA/pylint/issues/214
+
 import base64
 
 from python_anvil.api import Anvil
@@ -20,7 +23,7 @@ def main():
 
     # Create an instance of the builder
     packet = CreateEtchPacket(
-        name="Packet Name",
+        name="Etch packet with uploaded file",
         signature_email_subject="Please sign these forms",
     )
 
