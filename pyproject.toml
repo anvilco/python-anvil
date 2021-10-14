@@ -80,6 +80,7 @@ pync = { version = "*", platform = "darwin" }
 ipython = "^7.12.0"
 pyinotify = {version = "^0.9.6", optional = true}
 tox = "^3.21.2"
+pre-commit = "^2.15.0"
 
 [tool.poetry.scripts]
 

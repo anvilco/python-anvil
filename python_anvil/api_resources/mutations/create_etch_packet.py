@@ -64,7 +64,7 @@ mutation CreateEtchPacket (
       signers: $signers,
       webhookURL: $webhookURL,
       data: $data
-    ) 
+    )
         {query}
   }}
 """

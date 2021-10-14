@@ -125,7 +125,9 @@ class Anvil:
 
         return _get_return(res, get_data=get_data)
 
-    def get_casts(self, fields=None, show_all=False, **kwargs) -> Union[List, Tuple[List, Dict]]:
+    def get_casts(
+        self, fields=None, show_all=False, **kwargs
+    ) -> Union[List, Tuple[List, Dict]]:
         if not fields:
             # Use default fields
             fields = ["eid", "title", "fieldInfo"]
@@ -233,7 +235,9 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
         return self.mutate(
-            mutation, variables=mutation.create_payload().dict(by_alias=True, exclude_none=True), **kwargs
+            mutation,
+            variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
+            **kwargs,
         )
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):

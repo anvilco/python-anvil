@@ -112,8 +112,16 @@ def weld(ctx, eid, list_all):
 
 
 @cli.command()
-@click.option("-l", "--list", "list_templates", help="List available casts marked as templates", is_flag=True)
-@click.option("-a", "--all", "list_all", help="List all casts, even non-templates", is_flag=True)
+@click.option(
+    "-l",
+    "--list",
+    "list_templates",
+    help="List available casts marked as templates",
+    is_flag=True,
+)
+@click.option(
+    "-a", "--all", "list_all", help="List all casts, even non-templates", is_flag=True
+)
 @click.argument("eid", default="")
 @click.pass_context
 def cast(ctx, eid, list_all, list_templates):
