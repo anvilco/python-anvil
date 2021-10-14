@@ -94,7 +94,6 @@ class EtchSigner(BaseModel):
     id: Optional[str] = None
     routing_order: Optional[int] = None
     redirect_url: Optional[str] = Field(None, alias="redirectURL")
-    # acceptEachField, signatureMode
     accept_each_field: Optional[bool] = None
     enable_emails: Optional[List[str]] = None
     # signature_mode can be "draw" or "text" (default: text)
