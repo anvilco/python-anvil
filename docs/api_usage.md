@@ -90,7 +90,7 @@ Data to embed into the PDF. Supported `payload` types are:
 
 Queries the GraphQL API and returns a list of available casts.
 
-By default, this will retrieve the `'eid', 'title', 'fieldInfo'` fields for the 
+By default, this will retrieve the `'eid', 'title', 'fieldInfo'` fields for the
 casts, but this can be changed with the `fields` argument.
 
 * `fields` - (Optional) list of fields to return for each Cast
@@ -114,14 +114,14 @@ Fetching the welds is the best way to fetch the data submitted to a given workfl
 
 ### Anvil.get_current_user
 
-Returns the currently logged in user. You can generally get a lot of what you 
+Returns the currently logged in user. You can generally get a lot of what you
 may need from this query.
 
 ### Anvil.download_documents
 
-Retrieves zip file data from the API with a given docoument eid. 
+Retrieves zip file data from the API with a given docoument eid.
 
-When all parties have signed an Etch Packet, you can fetch the completed 
+When all parties have signed an Etch Packet, you can fetch the completed
 documents in zip form with this API call.
 
 * `document_group_eid` - The eid of the document group you wish to download.
@@ -130,8 +130,8 @@ documents in zip form with this API call.
 
 Generates a signing URL for a given signature process.
 
-By default, we will solicit all signatures via email. However, if you'd like 
-to embed the signature process into one of your own flows we support this as 
+By default, we will solicit all signatures via email. However, if you'd like
+to embed the signature process into one of your own flows we support this as
 well.
 
 * `signer_eid` - eid of the signer. This can be found in the response of the

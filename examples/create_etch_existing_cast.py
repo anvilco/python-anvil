@@ -67,7 +67,7 @@ def main():
         # URL of where the signer will be redirected after signing.
         # The URL will also have certain URL params added on, so the page
         # can be customized based on the signing action.
-        redirect_url="https://www.google.com"
+        redirect_url="https://www.google.com",
     )
 
     # Add your signer.

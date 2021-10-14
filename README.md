@@ -8,7 +8,7 @@ written in the Python programming language.
 
 Anvil is a suite of tools for integrating document-based workflows and PDFs within your application:
 
-1. Anvil Workflows converts your PDF forms into simple, intuitive websites that 
+1. Anvil Workflows converts your PDF forms into simple, intuitive websites that
    fill the PDFs and gather signatures for you.
 2. Anvil PDF Filling API allows you to fill any PDF with JSON data.
 3. Anvil PDF Generation API allows you to create new PDFs.
@@ -39,4 +39,3 @@ or add it to your [Poetry](https://python-poetry.org/) project:
 ```text
 $ poetry add python-anvil
 ```
-

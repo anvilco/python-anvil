@@ -14,7 +14,7 @@ In general, adding `--help` after a command will display more information on how
 ```shell
 # The CLI commands will use the environment variable "ANVIL_API_KEY" for all
 # Anvil API requests.
-$ ANVIL_API_KEY=MY_GENERATED_KEY anvil 
+$ ANVIL_API_KEY=MY_GENERATED_KEY anvil
 Usage: anvil [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -42,4 +42,3 @@ Options:
   -i, --input TEXT  Filename of input CSV that provides data  [required]
   --help            Show this message and exit.
 ```
-
