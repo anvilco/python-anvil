@@ -112,19 +112,20 @@ def weld(ctx, eid, list_all):
 
 
 @cli.command()
-@click.option("-l", "--list", "list_all", help="List all available casts", is_flag=True)
+@click.option("-l", "--list", "list_templates", help="List available casts marked as templates", is_flag=True)
+@click.option("-a", "--all", "list_all", help="List all casts, even non-templates", is_flag=True)
 @click.argument("eid", default="")
 @click.pass_context
-def cast(ctx, eid, list_all):
+def cast(ctx, eid, list_all, list_templates):
     """Fetch Cast data given a Cast eid."""
     anvil = ctx.obj["anvil"]
     debug = ctx.obj["debug"]
 
-    if not list_all and not eid:
-        raise AssertionError("Cast eid or --list option required")
+    if not eid and not (list_templates or list_all):
+        raise AssertionError("Cast eid or --list/--all option required")
 
-    if list_all:
-        res = anvil.get_casts(debug=debug)
+    if list_all or list_templates:
+        res = anvil.get_casts(debug=debug, show_all=list_all)
 
         if contains_headers(res):
             res, headers = process_response(res)
@@ -146,6 +147,10 @@ def cast(ctx, eid, list_all):
 
         def get_field_info(cc):
             return tabulate(cc.get("fields", []))
+
+        if not res:
+            click.echo(f"Cast with eid: {eid} not found")
+            return
 
         table_data = [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]]
         click.echo(tabulate(table_data, tablefmt="pretty", headers=res.keys()))
