@@ -236,10 +236,12 @@ def describe_api():
         @mock.patch('python_anvil.api.GraphqlRequest.post')
         def test_create_etch_packet_json(m_request_post, m_create_unique, anvil):
             m_create_unique.return_value = "signer-mock-generated"
-            anvil.create_etch_packet(
-                json=json.dumps(payloads.EXPECTED_ETCH_TEST_PAYLOAD_JSON)
-            )
+            # We are currently removing `None`s from the payload, so do that here too.
+            payload = {
+                k: v
+                for k, v in payloads.EXPECTED_ETCH_TEST_PAYLOAD_JSON.items()
+                if v is not None
+            }
+            anvil.create_etch_packet(json=json.dumps(payload))
             assert m_request_post.call_count == 1
-            assert (
-                payloads.EXPECTED_ETCH_TEST_PAYLOAD_JSON in m_request_post.call_args[0]
-            )
+            assert payload in m_request_post.call_args[0]

@@ -20,7 +20,8 @@ def main():
         # URL where Anvil will send POST requests when server events happen.
         # Take a look at https://www.useanvil.com/docs/api/e-signatures#webhook-notifications
         # for other details on how to configure webhooks on your account.
-        # You can also use sites like webhook.site, requestbin.com or ngrok to test webhooks.
+        # You can also use sites like webhook.site, requestbin.com or ngrok to
+        # test webhooks.
         # webhook_url="https://my.webhook.example.com/etch-events/
     )
 
