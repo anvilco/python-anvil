@@ -1,3 +1,13 @@
+# 1.1.0 (2021-11-15)
+
+- Added support for `webhook_url` on Etch packets. Please see the `CreateEtchPacketPayload` class
+  and [Anvil API docs](https://www.useanvil.com/docs/api/e-signatures#webhook-notifications) for more info.
+- Better support for extra (unsupported) fields in all models. Previously fields not defined in models would be
+  stripped, or would raise a runtime error. Additional fields will no longer be stripped and will be used in JSON
+  payloads as you may expect. Note that, though this is now supported, the Anvil API will return an error for any
+  unsupported fields.
+- Updated documentation.
+
 # 1.0.0 (2021-10-14)
 
 - **[BREAKING CHANGE]** `dataclasses-json` library removed and replaced
