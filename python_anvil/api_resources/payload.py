@@ -153,3 +153,4 @@ class CreateEtchPacketPayload(BaseModel):
     is_test: Optional[bool] = True
     data: Optional[CreateEtchFilePayload] = None
     signature_page_options: Optional[Dict[Any, Any]] = None
+    webhook_url: Optional[str] = Field(None, alias="webhookURL")
