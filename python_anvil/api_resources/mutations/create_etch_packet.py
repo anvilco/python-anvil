@@ -187,7 +187,7 @@ class CreateEtchPacket(BaseQuery):
                 )
         return self.file_payloads
 
-    def create_payload(self):
+    def create_payload(self) -> CreateEtchPacketPayload:
         """Create a payload based on data set on the class instance.
 
         Check `api_resources.payload.CreateEtchPacketPayload` for full payload

@@ -8,6 +8,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     BaseModel as _BaseModel,
     Field,
     validator,
+    Extra,
 )
 from typing import Any, Dict, List, Literal, Optional, Union
 
@@ -29,6 +30,11 @@ class BaseModel(_BaseModel):
 
         alias_generator = underscore_to_camel
         allow_population_by_field_name = True
+
+        # Allow extra fields even if it is not defined. This will allow models
+        # to be more flexible if features are added in the Anvil API, but
+        # explicit support hasn't been added yet to this library.
+        extra = Extra.allow
 
 
 class EmbeddedLogo(BaseModel):
