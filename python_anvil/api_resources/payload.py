@@ -6,9 +6,9 @@ import re
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     BaseModel as _BaseModel,
+    Extra,
     Field,
     validator,
-    Extra,
 )
 from typing import Any, Dict, List, Literal, Optional, Union
 
