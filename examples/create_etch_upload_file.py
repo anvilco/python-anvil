@@ -119,7 +119,8 @@ def main():
     # payload.aNewFeature = True
 
     # Create your packet
-    # If overriding/adding new fields, use the modified payload from `packet.create_payload()`
+    # If overriding/adding new fields, use the modified payload from
+    # `packet.create_payload()`
     res = anvil.create_etch_packet(payload=packet, include_headers=True)
     print(res)
 

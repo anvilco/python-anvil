@@ -153,10 +153,10 @@ for more details the creation process.
 
 ### Data Types
 
-This package uses `dataclass_json` heavily to serialize and validate data.
+This package uses `pydantic` heavily to serialize and validate data.
 These dataclasses exist in `python_anvil/api_resources/payload.py`.
 
-Please see [dataclass_json's docs](https://lidatong.github.io/dataclasses-json/) for more details on how to use these
+Please see [pydantic's docs](https://pydantic-docs.helpmanual.io/) for more details on how to use these
 dataclass instances.
 
 
@@ -184,4 +184,28 @@ headers = res["headers"]
 
 # No headers
 res = anvil.fill_pdf("some_template_id", payload, include_headers=False)
+```
+
+### Using fields that are not yet supported
+
+There may be times when the Anvil API has new features or options, but explicit support hasn't yet been added to this
+library. As of version 1.1 of `python-anvil`, extra fields are supported on all model objects.
+
+For example:
+
+```python
+from python_anvil.api_resources.payload import EtchSigner, SignerField
+
+# Use `EtchSigner`
+signer = EtchSigner(
+  name="Taylor Doe",
+  email="tdoe@example.com",
+  fields=[SignerField(file_id="file1", field_id="sig1")]
+)
+
+# Previously, adding this next field would raise an error, or would be removed from the resulting JSON payload, but this
+# is now supported.
+# NOTE: the field name should be the _exact_ field name needed in JSON. This will usually be camel-case (myVariable) and
+# not the typical PEP 8 standard snake case (my_variable).
+signer.newFeature = True
 ```
