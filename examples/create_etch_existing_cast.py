@@ -47,9 +47,11 @@ def main():
         name="Morgan",
         email="morgan@example.com",
         # Fields where the signer needs to sign.
+        # Check your cast fields via the CLI (`anvil cast [cast_eid]`) or the
+        # PDF Templates section on the Anvil app.
         # This basically says: "In the 'introPages' file (defined as
         # `pdf_template` above), assign the signature field with cast id of
-        # "def456" to this signer. You can add multiple signer fields here.
+        # 'def456' to this signer." You can add multiple signer fields here.
         fields=[
             SignerField(
                 file_id="introPages",
@@ -85,7 +87,14 @@ def main():
     # Add your file(s)
     packet.add_file(pdf_template)
 
+    # If needed, you can also override or add additional payload fields this way.
+    # This is useful if the Anvil API has new features, but `python-anvil` has not
+    # yet been updated to support it.
+    # payload = packet.create_payload()
+    # payload.aNewFeature = True
+
     # Create your packet
+    # If overriding/adding new fields, use the modified payload from `packet.create_payload()`
     res = anvil.create_etch_packet(payload=packet)
     print(res)
 

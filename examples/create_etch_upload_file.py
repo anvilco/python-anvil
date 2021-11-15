@@ -76,6 +76,9 @@ def main():
         # Fields where the signer needs to sign.
         # Check your cast fields via the CLI (`anvil cast [cast_eid]`) or the
         # PDF Templates section on the Anvil app.
+        # This basically says: "In the 'myNewFile' file (defined in
+        # `file1` above), assign the signature field with cast id of
+        # 'sign1' to this signer." You can add multiple signer fields here.
         fields=[
             SignerField(
                 # this is the `id` in the `DocumentUpload` object above
@@ -109,6 +112,14 @@ def main():
     # Add files to your payload
     packet.add_file(file1)
 
+    # If needed, you can also override or add additional payload fields this way.
+    # This is useful if the Anvil API has new features, but `python-anvil` has not
+    # yet been updated to support it.
+    # payload = packet.create_payload()
+    # payload.aNewFeature = True
+
+    # Create your packet
+    # If overriding/adding new fields, use the modified payload from `packet.create_payload()`
     res = anvil.create_etch_packet(payload=packet, include_headers=True)
     print(res)
 
