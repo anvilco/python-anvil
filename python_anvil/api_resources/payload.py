@@ -6,6 +6,7 @@ import re
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     BaseModel as _BaseModel,
+    Extra,
     Field,
     validator,
 )
@@ -29,6 +30,11 @@ class BaseModel(_BaseModel):
 
         alias_generator = underscore_to_camel
         allow_population_by_field_name = True
+
+        # Allow extra fields even if it is not defined. This will allow models
+        # to be more flexible if features are added in the Anvil API, but
+        # explicit support hasn't been added yet to this library.
+        extra = Extra.allow
 
 
 class EmbeddedLogo(BaseModel):
@@ -153,3 +159,4 @@ class CreateEtchPacketPayload(BaseModel):
     is_test: Optional[bool] = True
     data: Optional[CreateEtchFilePayload] = None
     signature_page_options: Optional[Dict[Any, Any]] = None
+    webhook_url: Optional[str] = Field(None, alias="webhookURL")

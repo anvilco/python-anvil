@@ -17,6 +17,12 @@ def main():
     packet = CreateEtchPacket(
         name="Etch packet with existing template",
         signature_email_subject="Please sign these forms",
+        # URL where Anvil will send POST requests when server events happen.
+        # Take a look at https://www.useanvil.com/docs/api/e-signatures#webhook-notifications
+        # for other details on how to configure webhooks on your account.
+        # You can also use sites like webhook.site, requestbin.com or ngrok to
+        # test webhooks.
+        # webhook_url="https://my.webhook.example.com/etch-events/
     )
 
     # You can reference an existing PDF Template from your Anvil account
@@ -41,9 +47,11 @@ def main():
         name="Morgan",
         email="morgan@example.com",
         # Fields where the signer needs to sign.
+        # Check your cast fields via the CLI (`anvil cast [cast_eid]`) or the
+        # PDF Templates section on the Anvil app.
         # This basically says: "In the 'introPages' file (defined as
         # `pdf_template` above), assign the signature field with cast id of
-        # "def456" to this signer. You can add multiple signer fields here.
+        # 'def456' to this signer." You can add multiple signer fields here.
         fields=[
             SignerField(
                 file_id="introPages",
@@ -55,19 +63,22 @@ def main():
         # It can also be set to "embedded" which will _not_ send emails, and
         # you will need to handle sending the signer URLs manually in some way.
         signer_type="email",
+        #
         # You can also change how signatures will be collected.
         # "draw" will allow the signer to draw their signature
         # "text" will insert a text version of the signer's name into the
         # signature field.
-        signature_mode="draw",
+        # signature_mode="draw",
+        #
         # Whether or not to the signer is required to click each signature
         # field manually. If `False`, the PDF will be signed once the signer
         # accepts the PDF without making the user go through the PDF.
-        accept_each_field=False,
+        # accept_each_field=False,
+        #
         # URL of where the signer will be redirected after signing.
         # The URL will also have certain URL params added on, so the page
         # can be customized based on the signing action.
-        redirect_url="https://www.google.com",
+        # redirect_url="https://www.google.com",
     )
 
     # Add your signer.
@@ -76,7 +87,15 @@ def main():
     # Add your file(s)
     packet.add_file(pdf_template)
 
+    # If needed, you can also override or add additional payload fields this way.
+    # This is useful if the Anvil API has new features, but `python-anvil` has not
+    # yet been updated to support it.
+    # payload = packet.create_payload()
+    # payload.aNewFeature = True
+
     # Create your packet
+    # If overriding/adding new fields, use the modified payload from
+    # `packet.create_payload()`
     res = anvil.create_etch_packet(payload=packet)
     print(res)
 

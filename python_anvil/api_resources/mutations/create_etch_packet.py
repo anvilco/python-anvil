@@ -85,6 +85,7 @@ class CreateEtchPacket(BaseQuery):
         is_draft: bool = False,
         is_test: bool = True,
         payload: Optional[CreateEtchPacketPayload] = None,
+        webhook_url: Optional[str] = None,
     ):
         # name and signature_email_subject are required when payload
         # is not present.
@@ -103,6 +104,7 @@ class CreateEtchPacket(BaseQuery):
         self.is_draft = is_draft
         self.is_test = is_test
         self.payload = payload
+        self.webhook_url = webhook_url
 
     @classmethod
     def create_from_dict(cls, payload: dict):
@@ -185,7 +187,7 @@ class CreateEtchPacket(BaseQuery):
                 )
         return self.file_payloads
 
-    def create_payload(self):
+    def create_payload(self) -> CreateEtchPacketPayload:
         """Create a payload based on data set on the class instance.
 
         Check `api_resources.payload.CreateEtchPacketPayload` for full payload
@@ -206,4 +208,5 @@ class CreateEtchPacket(BaseQuery):
             data=CreateEtchFilePayload(payloads=self.get_file_payloads()),
             signature_email_subject=self.signature_email_subject,
             signature_page_options=self.signature_page_options or {},
+            webhook_url=self.webhook_url,
         )
