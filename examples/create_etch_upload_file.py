@@ -25,6 +25,11 @@ def main():
     packet = CreateEtchPacket(
         name="Etch packet with uploaded file",
         signature_email_subject="Please sign these forms",
+        # URL where Anvil will send POST requests when server events happen.
+        # Take a look at https://www.useanvil.com/docs/api/e-signatures#webhook-notifications
+        # for other details on how to configure webhooks on your account.
+        # You can also use sites like webhook.site, requestbin.com or ngrok to test webhooks.
+        # webhook_url="https://my.webhook.example.com/etch-events/
     )
 
     # Get your file(s) ready to sign.
@@ -79,6 +84,22 @@ def main():
             )
         ],
         signer_type="embedded",
+        #
+        # You can also change how signatures will be collected.
+        # "draw" will allow the signer to draw their signature
+        # "text" will insert a text version of the signer's name into the
+        # signature field.
+        # signature_mode="draw",
+        #
+        # Whether or not to the signer is required to click each signature
+        # field manually. If `False`, the PDF will be signed once the signer
+        # accepts the PDF without making the user go through the PDF.
+        # accept_each_field=False,
+        #
+        # URL of where the signer will be redirected after signing.
+        # The URL will also have certain URL params added on, so the page
+        # can be customized based on the signing action.
+        # redirect_url="https://www.google.com",
     )
 
     # Add your signer.
