@@ -68,7 +68,7 @@ freezegun = "*"
 coveragespace = {git = "https://github.com/jacebrowning/coverage-space-cli.git", rev = "c167484787a223227b1ad5393300f8ca2bafe7a2"}
 
 # Documentation
-mkdocs = "1.2.2"
+mkdocs = "1.2.3"
 pygments = "^2.5.2"
 
 # Tooling
