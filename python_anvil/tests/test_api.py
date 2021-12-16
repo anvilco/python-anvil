@@ -260,7 +260,7 @@ def describe_api():
                 if v is not None
             }
             cep = CreateEtchPacketPayload.parse_obj(payload)
-            cep.newFeature = True
+            cep.newFeature = True  # type: ignore[attr-defined]
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
             assert (

@@ -1,7 +1,7 @@
 [tool.poetry]
 
 name = "python_anvil"
-version = "1.1.0"
+version = "1.2.0"
 description = "Anvil API"
 
 license = "MIT"
@@ -49,12 +49,12 @@ pydantic = "^1.8.2"
 
 # Formatters
 black = "=21.9b0"
-isort = "=5.9.3"
+isort = "=5.10.1"
 
 # Linters
 mypy = "*"
 pydocstyle = "*"
-pylint = "2.11.1"
+pylint = "2.12.2"
 
 # Testing
 pytest = "6.2.5"
@@ -68,7 +68,7 @@ freezegun = "*"
 coveragespace = {git = "https://github.com/jacebrowning/coverage-space-cli.git", rev = "c167484787a223227b1ad5393300f8ca2bafe7a2"}
 
 # Documentation
-mkdocs = "1.2.2"
+mkdocs = "1.2.3"
 pygments = "^2.5.2"
 
 # Tooling
@@ -80,7 +80,7 @@ pync = { version = "*", platform = "darwin" }
 ipython = "^7.12.0"
 pyinotify = {version = "^0.9.6", optional = true}
 tox = "^3.21.2"
-pre-commit = "^2.15.0"
+pre-commit = "^2.16.0"
 
 [tool.poetry.scripts]
 
