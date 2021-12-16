@@ -1,3 +1,8 @@
+# 1.2.0 (2021-12-15)
+
+- Added `py.typed` for better mypy support.
+- Updated a number of dev dependencies.
+
 # 1.1.0 (2021-11-15)
 
 - Added support for `webhook_url` on Etch packets. Please see the `CreateEtchPacketPayload` class
