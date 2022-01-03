@@ -202,6 +202,8 @@ class CreateEtchPacket(BaseQuery):
             raise TypeError("`name` and `signature_email_subject` cannot be None")
 
         return CreateEtchPacketPayload(
+            is_test=self.is_test,
+            is_draft=self.is_draft,
             name=self.name,
             signers=self.signers,
             files=self.files,
