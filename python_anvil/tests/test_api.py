@@ -212,6 +212,22 @@ def describe_api():
             assert expected_data in m_request_post.call_args[0]
 
         @mock.patch('python_anvil.api.GraphqlRequest.post')
+        def test_create_etch_packet_passes_options(m_request_post, anvil):
+            payload = CreateEtchPacket(
+                is_test=False,
+                is_draft=True,
+                name="Packet name",
+                signature_email_subject="The subject",
+            )
+            new_expected = dict(**expected_data)
+            new_expected["isTest"] = False
+            new_expected["isDraft"] = True
+            anvil.create_etch_packet(payload)
+
+            assert m_request_post.call_count == 1
+            assert new_expected in m_request_post.call_args[0]
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post')
         def test_create_etch_packet_valid_dict_type(m_request_post, anvil):
             anvil.create_etch_packet(
                 dict(name="Packet name", signature_email_subject="The subject")
