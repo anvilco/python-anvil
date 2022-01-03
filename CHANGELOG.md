@@ -1,3 +1,8 @@
+# 1.2.1 (2022-01-03)
+
+- Fixed issue with Etch packet `is_test` and `is_draft` options not properly applying to the final GraphQL mutation when
+  using `CreateEtchPacket.create_payload`.
+
 # 1.2.0 (2021-12-15)
 
 - Added `py.typed` for better mypy support.
