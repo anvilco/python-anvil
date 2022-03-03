@@ -50,6 +50,8 @@ mutation CreateEtchPacket (
     $signaturePageOptions: JSON,
     $signers: [JSON!],
     $webhookURL: String,
+    $replyToName: String,
+    $replyToEmail: String,
     $data: JSON,
   ) {{
     createEtchPacket (
@@ -63,6 +65,8 @@ mutation CreateEtchPacket (
       signaturePageOptions: $signaturePageOptions,
       signers: $signers,
       webhookURL: $webhookURL,
+      replyToName: $replyToName,
+      replyToEmail: $replyToEmail,
       data: $data
     )
         {query}
@@ -78,6 +82,7 @@ class CreateEtchPacket(BaseQuery):
         self,
         name: Optional[str] = None,
         signature_email_subject: Optional[str] = None,
+        signature_email_body: Optional[str] = None,
         signers: Optional[List[EtchSigner]] = None,
         files: Optional[List[Union[DocumentUpload, EtchCastRef]]] = None,
         file_payloads: Optional[dict] = None,
@@ -86,10 +91,11 @@ class CreateEtchPacket(BaseQuery):
         is_test: bool = True,
         payload: Optional[CreateEtchPacketPayload] = None,
         webhook_url: Optional[str] = None,
+        reply_to_name: Optional[str] = None,
+        reply_to_email: Optional[str] = None,
     ):
-        # name and signature_email_subject are required when payload
-        # is not present.
-        if not payload and not all([name, signature_email_subject]):
+        # `name` is required when `payload` is not present.
+        if not payload and not name:
             raise TypeError(
                 "Missing 2 required positional arguments: 'name' and "
                 "'signature_email_subject'"
@@ -97,6 +103,7 @@ class CreateEtchPacket(BaseQuery):
 
         self.name = name
         self.signature_email_subject = signature_email_subject
+        self.signature_email_body = signature_email_body
         self.signature_page_options = signature_page_options
         self.signers = signers or []
         self.files = files or []
@@ -105,6 +112,8 @@ class CreateEtchPacket(BaseQuery):
         self.is_test = is_test
         self.payload = payload
         self.webhook_url = webhook_url
+        self.reply_to_name = reply_to_name
+        self.reply_to_email = reply_to_email
 
     @classmethod
     def create_from_dict(cls, payload: dict):
@@ -198,7 +207,7 @@ class CreateEtchPacket(BaseQuery):
         if self.payload:
             return self.payload
 
-        if not self.name or not self.signature_email_subject:
+        if not self.name:
             raise TypeError("`name` and `signature_email_subject` cannot be None")
 
         return CreateEtchPacketPayload(
@@ -209,6 +218,9 @@ class CreateEtchPacket(BaseQuery):
             files=self.files,
             data=CreateEtchFilePayload(payloads=self.get_file_payloads()),
             signature_email_subject=self.signature_email_subject,
+            signature_email_body=self.signature_email_body,
             signature_page_options=self.signature_page_options or {},
             webhook_url=self.webhook_url,
+            reply_to_email=self.reply_to_email,
+            reply_to_name=self.reply_to_name,
         )
