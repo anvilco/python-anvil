@@ -23,14 +23,24 @@ def main():
 
     # Create an instance of the builder
     packet = CreateEtchPacket(
-        name="Etch packet with uploaded file",
+        name="Etch packet with existing template",
+        #
+        # Optional changes to email subject and body content
         signature_email_subject="Please sign these forms",
+        signature_email_body="This form requires information from your driver's "
+        "license. Please have that available.",
+        #
         # URL where Anvil will send POST requests when server events happen.
         # Take a look at https://www.useanvil.com/docs/api/e-signatures#webhook-notifications
         # for other details on how to configure webhooks on your account.
         # You can also use sites like webhook.site, requestbin.com or ngrok to
         # test webhooks.
-        # webhook_url="https://my.webhook.example.com/etch-events/
+        # webhook_url="https://my.webhook.example.com/etch-events/",
+        #
+        # Email overrides for the "reply-to" email header for signer emails.
+        # By default, this will go to `Anvil <hello@useanvil.com>`.
+        # reply_to_email="my-org=email@example.com",
+        # reply_to_name="My Name",
     )
 
     # Get your file(s) ready to sign.
