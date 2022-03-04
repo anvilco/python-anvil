@@ -30,8 +30,9 @@ def main():
         # webhook_url="https://my.webhook.example.com/etch-events/",
         #
         # Email overrides for the "reply-to" email header for signer emails.
-        # By default, this will go to `Anvil <hello@useanvil.com>`.
-        # reply_to_email="my-org=email@example.com",
+        # If used, both `reply_to_email` and `reply_to_name` are required.
+        # By default, this will point to your organization support email.
+        # reply_to_email="my-org-email@example.com",
         # reply_to_name="My Name",
     )
 
