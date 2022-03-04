@@ -152,11 +152,14 @@ class CreateEtchPacketPayload(BaseModel):
     """
 
     name: str
-    signature_email_subject: str
     signers: List[EtchSigner]
     files: List[Union[DocumentUpload, EtchCastRef]]
+    signature_email_subject: Optional[str] = None
+    signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
     is_test: Optional[bool] = True
     data: Optional[CreateEtchFilePayload] = None
     signature_page_options: Optional[Dict[Any, Any]] = None
     webhook_url: Optional[str] = Field(None, alias="webhookURL")
+    reply_to_name: Optional[Any] = None
+    reply_to_email: Optional[Any] = None
