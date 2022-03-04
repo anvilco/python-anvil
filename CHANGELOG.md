@@ -1,3 +1,10 @@
+# 1.3.0 (2022-03-04)
+
+- Fixed optional field `CreateEtchPacket.signature_email_subject` being required. This is now truly optional.
+- Added support for `CreateEtchPacket.signature_email_body`.
+- Added support for `CreateEtchPacket.replyToName` and `CreateEtchPacket.replyToEmail` which customizes the "Reply-To"
+  header in Etch packet emails.
+
 # 1.2.1 (2022-01-03)
 
 - Fixed issue with Etch packet `is_test` and `is_draft` options not properly applying to the final GraphQL mutation when
