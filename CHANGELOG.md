@@ -1,3 +1,8 @@
+# 1.3.1 (2022-03-18)
+
+- Updated `click` package dependency to `^8.0`
+- Update other minor dependencies. [See full list here](https://github.com/anvilco/python-anvil/pull/31).
+
 # 1.3.0 (2022-03-04)
 
 - Fixed optional field `CreateEtchPacket.signature_email_subject` being required. This is now truly optional.
