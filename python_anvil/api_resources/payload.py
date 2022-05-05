@@ -158,6 +158,7 @@ class CreateEtchPacketPayload(BaseModel):
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
     is_test: Optional[bool] = True
+    merge_pdfs: Optional[bool] = Field(None, alias="mergePDFs")
     data: Optional[CreateEtchFilePayload] = None
     signature_page_options: Optional[Dict[Any, Any]] = None
     webhook_url: Optional[str] = Field(None, alias="webhookURL")

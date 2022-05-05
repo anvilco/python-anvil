@@ -44,6 +44,7 @@ mutation CreateEtchPacket (
     $files: [EtchFile!],
     $isDraft: Boolean,
     $isTest: Boolean,
+    $mergePDFs: Boolean,
     $signatureEmailSubject: String,
     $signatureEmailBody: String,
     $signatureProvider: String,
@@ -59,6 +60,7 @@ mutation CreateEtchPacket (
       files: $files,
       isDraft: $isDraft,
       isTest: $isTest,
+      mergePDFs: $mergePDFs,
       signatureEmailSubject: $signatureEmailSubject,
       signatureEmailBody: $signatureEmailBody,
       signatureProvider: $signatureProvider,
@@ -93,6 +95,7 @@ class CreateEtchPacket(BaseQuery):
         webhook_url: Optional[str] = None,
         reply_to_name: Optional[str] = None,
         reply_to_email: Optional[str] = None,
+        merge_pdfs: Optional[bool] = None,
     ):
         # `name` is required when `payload` is not present.
         if not payload and not name:
@@ -114,6 +117,7 @@ class CreateEtchPacket(BaseQuery):
         self.webhook_url = webhook_url
         self.reply_to_name = reply_to_name
         self.reply_to_email = reply_to_email
+        self.merge_pdfs = merge_pdfs
 
     @classmethod
     def create_from_dict(cls, payload: dict):
@@ -223,4 +227,5 @@ class CreateEtchPacket(BaseQuery):
             webhook_url=self.webhook_url,
             reply_to_email=self.reply_to_email,
             reply_to_name=self.reply_to_name,
+            merge_pdfs=self.merge_pdfs,
         )
