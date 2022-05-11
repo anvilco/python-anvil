@@ -34,6 +34,11 @@ def main():
         # By default, this will point to your organization support email.
         # reply_to_email="my-org-email@example.com",
         # reply_to_name="My Name",
+        #
+        # Merge all PDFs into one. Use this if you have many PDF templates
+        # and/or files, but want the final downloaded package to be only
+        # 1 PDF file.
+        # merge_pdfs=True,
     )
 
     # You can reference an existing PDF Template from your Anvil account
