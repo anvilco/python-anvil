@@ -1,3 +1,8 @@
+# 1.4.0 (2022-05-10)
+
+- Updated a number of packages to fix linter and pre-commit issues
+- Added support for `CreateEtchPacket.merge_pdfs`.
+
 # 1.3.1 (2022-03-18)
 
 - Updated `click` package dependency to `^8.0`
