@@ -1,18 +1,13 @@
-from dataclasses import dataclass
-
-from dataclasses_json import dataclass_json
 from typing import Any, List
 
+from .base import BaseModel
 
-@dataclass_json
-@dataclass
+
 class CastFields:
     fields: List[Any]
 
 
-@dataclass_json
-@dataclass
-class Cast:
+class Cast(BaseModel):
     eid: str
     title: str
     fieldInfo: CastFields

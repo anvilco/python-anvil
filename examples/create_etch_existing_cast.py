@@ -1,6 +1,4 @@
 # pylint: disable=duplicate-code
-# NOTE: The pylint disable above doesn't actually work (yet?)
-# SEE: https://github.com/PyCQA/pylint/issues/214
 
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
@@ -34,6 +32,11 @@ def main():
         # By default, this will point to your organization support email.
         # reply_to_email="my-org-email@example.com",
         # reply_to_name="My Name",
+        #
+        # Merge all PDFs into one. Use this if you have many PDF templates
+        # and/or files, but want the final downloaded package to be only
+        # 1 PDF file.
+        # merge_pdfs=True,
     )
 
     # You can reference an existing PDF Template from your Anvil account
