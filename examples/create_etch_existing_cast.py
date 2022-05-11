@@ -1,6 +1,4 @@
 # pylint: disable=duplicate-code
-# NOTE: The pylint disable above doesn't actually work (yet?)
-# SEE: https://github.com/PyCQA/pylint/issues/214
 
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
