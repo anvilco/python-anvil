@@ -1,3 +1,7 @@
+# 1.4.1 (2022-05-11)
+
+- Updated `mkdocs` dependency to fix issue with Read the Docs.
+
 # 1.4.0 (2022-05-10)
 
 - Updated a number of packages to fix linter and pre-commit issues
