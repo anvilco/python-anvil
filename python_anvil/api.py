@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
@@ -256,8 +256,8 @@ class Anvil:
 
     def forge_submit(
         self,
-        forge_eid: str = None,
-        payload: Optional[Dict[str, any]] = None,
+        forge_eid: Optional[Text] = None,
+        payload: Optional[Dict[Text, Text]] = None,
         json=None,
         **kwargs,
     ):

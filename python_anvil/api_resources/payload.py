@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseModel
 
+
 if sys.version_info >= (3, 8):
     from typing import Literal  # pylint: disable=no-name-in-module
 else:

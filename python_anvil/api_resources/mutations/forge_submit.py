@@ -1,7 +1,8 @@
-from typing import Dict
+from typing import AnyStr, Dict, Text
 
-from python_anvil.api_resources.mutations import BaseQuery
+from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import ForgeSubmitPayload
+
 
 DEFAULT_RESPONSE_QUERY = """
 {
@@ -66,12 +67,12 @@ class ForgeSubmit(BaseQuery):
     mutation = FORGE_SUBMIT
     mutation_res_query = DEFAULT_RESPONSE_QUERY
 
-    def __init__(self, forge_eid: str, payload: Dict[any, any]):
+    def __init__(self, forge_eid: Text, payload: Dict[Text, Text]):
         self.forge_eid = forge_eid
         self.payload = payload
 
     @classmethod
-    def create_from_json(cls, json):
+    def create_from_json(cls, json: AnyStr):
         # Parse the data through the model class to validate and pass it back
         # as variables in this class.
         data = ForgeSubmitPayload.parse_raw(json, content_type="application/json")
