@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Union
 
 from .base import BaseModel
 
-
 if sys.version_info >= (3, 8):
     from typing import Literal  # pylint: disable=no-name-in-module
 else:
@@ -143,3 +142,8 @@ class CreateEtchPacketPayload(BaseModel):
     webhook_url: Optional[str] = Field(None, alias="webhookURL")
     reply_to_name: Optional[Any] = None
     reply_to_email: Optional[Any] = None
+
+
+class ForgeSubmitPayload(BaseModel):
+    forge_eid: str
+    payload: Dict[str, Any]

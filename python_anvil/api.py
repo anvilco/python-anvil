@@ -253,3 +253,35 @@ class Anvil:
         """Retrieve all completed documents in zip form."""
         api = PlainRequest(client=self.client)
         return api.get(f"document-group/{document_group_eid}.zip", **kwargs)
+
+    def forge_submit(
+        self,
+        forge_eid: str = None,
+        payload: Optional[Dict[str, any]] = None,
+        json=None,
+        **kwargs,
+    ):
+        """Create a Webform (forge) submission via a graphql mutation."""
+        if not any([json, payload, forge_eid]):
+            raise TypeError(
+                'Arguments `json` or both `forge_eid` and `payload` are required'
+            )
+
+        mutation = None
+
+        if json:
+            mutation = ForgeSubmit.create_from_json(json)
+
+        if forge_eid and payload:
+            mutation = ForgeSubmit(forge_eid, payload)
+
+        if not mutation:
+            raise ValueError(
+                "`forge_eid` and `payload` are both required if not providing `json`."
+            )
+
+        return self.mutate(
+            mutation,
+            variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
+            **kwargs,
+        )
