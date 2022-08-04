@@ -1,5 +1,5 @@
 # pylint: disable=too-many-instance-attributes
-from typing import Any, Dict, List, Optional, Union, TypeVar
+from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
@@ -11,8 +11,6 @@ from python_anvil.api_resources.payload import (
 )
 from python_anvil.utils import create_unique_id
 
-# Create a generic variable that can be 'Parent', or any subclass.
-T = TypeVar("T", bound="Parent")
 
 DEFAULT_RESPONSE_QUERY = """{
   id
@@ -122,7 +120,7 @@ class CreateEtchPacket(BaseQuery):
         self.merge_pdfs = merge_pdfs
 
     @classmethod
-    def create_from_dict(cls, payload: dict) -> T:
+    def create_from_dict(cls, payload: Dict) -> 'CreateEtchPacket':
         """Create a new instance of `CreateEtchPacket` from a dict payload."""
         try:
             mutation = cls(

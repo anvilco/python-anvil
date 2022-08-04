@@ -1,8 +1,9 @@
-from typing import AnyStr, Dict, Text, Any, Union, Optional
+from typing import Any, AnyStr, Dict, Optional, Text, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.mutations.helpers import get_payload_attrs
 from python_anvil.api_resources.payload import ForgeSubmitPayload
+
 
 DEFAULT_RESPONSE_QUERY = """
 {

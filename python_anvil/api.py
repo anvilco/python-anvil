@@ -1,12 +1,12 @@
 from logging import getLogger
-from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union, Any
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
     CreateEtchPacketPayload,
     FillPDFPayload,
-    GeneratePDFPayload,
     ForgeSubmitPayload,
+    GeneratePDFPayload,
 )
 from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
