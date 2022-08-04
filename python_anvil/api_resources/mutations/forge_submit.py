@@ -1,8 +1,8 @@
-from typing import AnyStr, Dict, Text
+from typing import AnyStr, Dict, Text, Any, Union, Optional
 
 from python_anvil.api_resources.mutations.base import BaseQuery
+from python_anvil.api_resources.mutations.helpers import get_payload_attrs
 from python_anvil.api_resources.payload import ForgeSubmitPayload
-
 
 DEFAULT_RESPONSE_QUERY = """
 {
@@ -67,16 +67,62 @@ class ForgeSubmit(BaseQuery):
     mutation = FORGE_SUBMIT
     mutation_res_query = DEFAULT_RESPONSE_QUERY
 
-    def __init__(self, forge_eid: Text, payload: Dict[Text, Text]):
-        self.forge_eid = forge_eid
+    def __init__(
+        self,
+        payload: Union[Dict[Text, Any], ForgeSubmitPayload],
+        forge_eid: Optional[Text] = None,
+        weld_data_eid: Optional[Text] = None,
+        submission_eid: Optional[Text] = None,
+        is_test: Optional[bool] = None,
+        **kwargs,
+    ):
+        """
+        :param forge_eid:
+        :param payload:
+        :param weld_data_eid:
+        :param submission_eid:
+        :param is_test:
+        :param kwargs: kwargs may contain other fields defined in
+              `ForgeSubmitPayload` if not explicitly in the `__init__` args.
+        """
+        if not forge_eid and not isinstance(payload, ForgeSubmitPayload):
+            raise ValueError(
+                "`forge_eid` is required if `payload` is not a "
+                "`ForgeSubmitPayload` instance"
+            )
+
         self.payload = payload
+        self.forge_eid = forge_eid
+        self.weld_data_eid = weld_data_eid
+        self.submission_eid = submission_eid
+        self.is_test = is_test
+
+        # Get other attrs from the model and set on the instance
+        model_attrs = get_payload_attrs(ForgeSubmitPayload)
+        for attr in model_attrs:
+            if attr in kwargs:
+                setattr(self, attr, kwargs[attr])
 
     @classmethod
-    def create_from_json(cls, json: AnyStr):
+    def create_from_dict(cls, payload: Dict[Text, Any]):
         # Parse the data through the model class to validate and pass it back
         # as variables in this class.
-        data = ForgeSubmitPayload.parse_raw(json, content_type="application/json")
-        return cls(**data.dict())
+        return cls(**{k: v for k, v in payload.items()})
 
     def create_payload(self):
-        return ForgeSubmitPayload(forge_eid=self.forge_eid, payload=self.payload)
+        # If provided a payload and no forge_eid, we'll assume that it's the
+        # full thing. Return that instead.
+        if not self.forge_eid and self.payload:
+            return self.payload
+
+        model_attrs = get_payload_attrs(ForgeSubmitPayload)
+
+        for_payload = {}
+        print(model_attrs)
+        for attr in model_attrs:
+            obj = getattr(self, attr, None)
+            print(attr, obj)
+            if obj is not None:
+                for_payload[attr] = obj
+
+        return ForgeSubmitPayload(**for_payload)

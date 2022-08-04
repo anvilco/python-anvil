@@ -4,8 +4,8 @@ import sys
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import Field, validator  # pylint: disable=no-name-in-module
-from typing import Any, Dict, List, Optional, Union
+from pydantic import Field, validator, HttpUrl  # pylint: disable=no-name-in-module
+from typing import Any, Dict, List, Optional, Union, Text
 
 from .base import BaseModel
 
@@ -124,7 +124,8 @@ class CreateEtchFilePayload(BaseModel):
 
 
 class CreateEtchPacketPayload(BaseModel):
-    """Payload for createEtchPacket.
+    """
+    Payload for createEtchPacket.
 
     See the full packet payload defined here:
     https://www.useanvil.com/docs/api/e-signatures#tying-it-all-together
@@ -146,5 +147,25 @@ class CreateEtchPacketPayload(BaseModel):
 
 
 class ForgeSubmitPayload(BaseModel):
-    forge_eid: str
-    payload: Dict[str, Any]
+    """
+    Payload for forgeSubmit.
+
+    See full payload defined here:
+    https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations
+    """
+
+    forge_eid: Text
+    payload: Dict[Text, Any]
+    weld_data_eid: Optional[Text] = None
+    submission_eid: Optional[Text] = None
+    # Defaults to True when not provided/is None
+    enforce_payload_valid_on_create: Optional[bool] = None
+    current_step: Optional[int] = None
+    complete: Optional[bool] = None
+    # Note that if using a development API key, this will be forced to `True`
+    # even when `False` is used in the payload.
+    is_test: Optional[bool] = True
+    timezone: Optional[Text] = None
+    webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
+    group_array_id: Optional[Text] = None
+    group_array_index: Optional[int] = None

@@ -1,11 +1,12 @@
 from logging import getLogger
-from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union, Any
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
     CreateEtchPacketPayload,
     FillPDFPayload,
     GeneratePDFPayload,
+    ForgeSubmitPayload,
 )
 from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
@@ -37,7 +38,12 @@ class Anvil:
     def __init__(self, api_key=None, environment='dev'):
         self.client = HTTPClient(api_key=api_key, environment=environment)
 
-    def query(self, query: str, variables: Optional[str] = None, **kwargs):
+    def query(
+        self,
+        query: str,
+        variables: Union[Optional[Text], Dict[Text, Any]] = None,
+        **kwargs,
+    ):
         gql = GraphqlRequest(client=self.client)
         return gql.post(query, variables=variables, **kwargs)
 
@@ -187,6 +193,10 @@ class Anvil:
                     eid
                     slug
                     title
+                    forges {
+                      eid
+                      name
+                    }
                   }
                 }
               }
@@ -256,28 +266,26 @@ class Anvil:
 
     def forge_submit(
         self,
-        forge_eid: Optional[Text] = None,
-        payload: Optional[Dict[Text, Text]] = None,
+        payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
     ):
         """Create a Webform (forge) submission via a graphql mutation."""
-        if not any([json, payload, forge_eid]):
-            raise TypeError(
-                'Arguments `json` or both `forge_eid` and `payload` are required'
-            )
-
-        mutation = None
+        if not any([json, payload]):
+            raise TypeError('One of arguments `json` or `payload` are required')
 
         if json:
-            mutation = ForgeSubmit.create_from_json(json)
+            payload = ForgeSubmitPayload.parse_raw(
+                json, content_type="application/json"
+            )
 
-        if forge_eid and payload:
-            mutation = ForgeSubmit(forge_eid, payload)
-
-        if not mutation:
+        if isinstance(payload, dict):
+            mutation = ForgeSubmit.create_from_dict(payload)
+        elif isinstance(payload, ForgeSubmitPayload):
+            mutation = ForgeSubmit(payload=payload)
+        else:
             raise ValueError(
-                "`forge_eid` and `payload` are both required if not providing `json`."
+                "`payload` must be a valid ForgeSubmitPayload instance or dict"
             )
 
         return self.mutate(
