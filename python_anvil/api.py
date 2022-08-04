@@ -210,6 +210,38 @@ class Anvil:
 
         return _get_return(res, get_data=get_data)
 
+    def get_weld(self, eid: Text, **kwargs):
+        res = self.query(
+            """
+            query WeldQuery(
+                #$organizationSlug: String!,
+                #$slug: String!
+                $eid: String!
+            ) {
+                weld(
+                    #organizationSlug: $organizationSlug,
+                    #slug: $slug
+                    eid: $eid
+                ) {
+                    eid
+                    slug
+                    name
+                    forges {
+                        eid
+                        name
+                        slug
+                    }
+                }
+            }""",
+            variables=dict(eid=eid),
+            **kwargs,
+        )
+
+        def get_data(r):
+            return r["data"]["weld"]
+
+        return _get_return(res, get_data=get_data)
+
     def create_etch_packet(
         self,
         payload: Optional[

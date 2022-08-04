@@ -103,12 +103,15 @@ def weld(ctx, eid, list_all):
             if debug:
                 click.echo(headers)
 
-        data = [(w["eid"], w.get("slug"), w.get("title")) for w in res]
+        data = [(w["eid"], w.get("slug"), w.get("title"), w.get("forges")) for w in res]
         click.echo(tabulate(data, tablefmt="pretty", headers=["eid", "slug", "title"]))
         return
 
     if not eid:
         raise Exception("You need to pass in a weld eid")
+
+    res = anvil.get_weld(eid)
+    print(res)
 
 
 @cli.command()

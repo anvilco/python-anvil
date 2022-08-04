@@ -1,4 +1,4 @@
-from typing import Any, AnyStr, Dict, Optional, Text, Union
+from typing import Any, Dict, Optional, Text, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.mutations.helpers import get_payload_attrs
@@ -108,7 +108,7 @@ class ForgeSubmit(BaseQuery):
     def create_from_dict(cls, payload: Dict[Text, Any]):
         # Parse the data through the model class to validate and pass it back
         # as variables in this class.
-        return cls(**{k: v for k, v in payload.items()})
+        return cls(**payload)
 
     def create_payload(self):
         # If provided a payload and no forge_eid, we'll assume that it's the

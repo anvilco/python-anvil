@@ -4,8 +4,8 @@ import sys
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import Field, validator, HttpUrl  # pylint: disable=no-name-in-module
-from typing import Any, Dict, List, Optional, Union, Text
+from pydantic import Field, HttpUrl, validator  # pylint: disable=no-name-in-module
+from typing import Any, Dict, List, Optional, Text, Union
 
 from .base import BaseModel
 
