@@ -119,10 +119,8 @@ class ForgeSubmit(BaseQuery):
         model_attrs = get_payload_attrs(ForgeSubmitPayload)
 
         for_payload = {}
-        print(model_attrs)
         for attr in model_attrs:
             obj = getattr(self, attr, None)
-            print(attr, obj)
             if obj is not None:
                 for_payload[attr] = obj
 
