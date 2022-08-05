@@ -9,6 +9,7 @@ DEFAULT_RESPONSE_QUERY = """
 {
   id
   eid
+  status
   resolvedPayload
   currentStep
   completedAt
@@ -23,6 +24,7 @@ DEFAULT_RESPONSE_QUERY = """
   weldData {
     id
     eid
+    status
     isTest
     isComplete
     agents
