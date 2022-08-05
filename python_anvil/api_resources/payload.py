@@ -4,8 +4,13 @@ import sys
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import Field, validator  # pylint: disable=no-name-in-module
-from typing import Any, Dict, List, Optional, Union
+from pydantic import (  # pylint: disable=no-name-in-module
+    Field,
+    HttpUrl,
+    root_validator,
+    validator,
+)
+from typing import Any, Dict, List, Optional, Text, Union
 
 from .base import BaseModel
 
@@ -124,7 +129,8 @@ class CreateEtchFilePayload(BaseModel):
 
 
 class CreateEtchPacketPayload(BaseModel):
-    """Payload for createEtchPacket.
+    """
+    Payload for createEtchPacket.
 
     See the full packet payload defined here:
     https://www.useanvil.com/docs/api/e-signatures#tying-it-all-together
@@ -143,3 +149,39 @@ class CreateEtchPacketPayload(BaseModel):
     webhook_url: Optional[str] = Field(None, alias="webhookURL")
     reply_to_name: Optional[Any] = None
     reply_to_email: Optional[Any] = None
+
+
+class ForgeSubmitPayload(BaseModel):
+    """
+    Payload for forgeSubmit.
+
+    See full payload defined here:
+    https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations
+    """
+
+    forge_eid: Text
+    payload: Dict[Text, Any]
+    weld_data_eid: Optional[Text] = None
+    submission_eid: Optional[Text] = None
+    # Defaults to True when not provided/is None
+    enforce_payload_valid_on_create: Optional[bool] = None
+    current_step: Optional[int] = None
+    complete: Optional[bool] = None
+    # Note that if using a development API key, this will be forced to `True`
+    # even when `False` is used in the payload.
+    is_test: Optional[bool] = True
+    timezone: Optional[Text] = None
+    webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
+    group_array_id: Optional[Text] = None
+    group_array_index: Optional[int] = None
+
+    @root_validator
+    def wd_submission_both_required(cls, values):
+        both_required = ["weld_data_eid", "submission_eid"]
+        picked = [k for k in both_required if k in values and values[k] is not None]
+        if len(picked) == 1:
+            raise ValueError(
+                "Both `weld_data_eid` and `submission_eid` are "
+                "required if either are provided."
+            )
+        return values

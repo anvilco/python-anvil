@@ -120,7 +120,7 @@ class CreateEtchPacket(BaseQuery):
         self.merge_pdfs = merge_pdfs
 
     @classmethod
-    def create_from_dict(cls, payload: dict):
+    def create_from_dict(cls, payload: Dict) -> 'CreateEtchPacket':
         """Create a new instance of `CreateEtchPacket` from a dict payload."""
         try:
             mutation = cls(

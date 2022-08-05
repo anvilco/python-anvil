@@ -150,6 +150,15 @@ for more details the creation process.
   `CreateEtchPacket` and `CreateEtchPacketPayload`.
 * `json` - Raw JSON payload of the etch packet
 
+### Anvil.forge_submit
+
+Creates an Anvil submission
+object. [See documentation](https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations) for
+more details.
+
+* `payload` - Payload to use for the submission. Accepted types are `dict`,
+  `ForgeSubmit` and `ForgeSubmitPayload`.
+* `json` - Raw JSON payload of the `forgeSubmit` mutation.
 
 ### Data Types
 

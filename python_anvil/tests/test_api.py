@@ -1,10 +1,14 @@
 # pylint: disable=unused-variable,unused-argument,too-many-statements
 import json
 import pytest
+from pydantic import ValidationError
 from unittest import mock
 
 from python_anvil.api import Anvil, CreateEtchPacket
-from python_anvil.api_resources.payload import CreateEtchPacketPayload
+from python_anvil.api_resources.payload import (
+    CreateEtchPacketPayload,
+    ForgeSubmitPayload,
+)
 
 from ..api_resources.payload import FillPDFPayload
 from . import payloads
@@ -284,3 +288,68 @@ def describe_api():
                 == m_request_post.call_args[0][1]
             )
             assert "newFeature" in m_request_post.call_args[0][1]
+
+    def describe_forge_submit():
+        expected_data = {
+            "forgeEid": "forge1234",
+            "payload": {"field1": "Some data"},
+            "isTest": True,
+        }
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        def test_invalid_payload(m_request_post, anvil):
+            with pytest.raises(TypeError):
+                anvil.forge_submit({})
+                assert m_request_post.call_count == 0
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        def test_minimum_valid_data_forge_eid(m_request_post, anvil):
+            payload = ForgeSubmitPayload(
+                forge_eid="forge1234", payload=dict(field1="Some data")
+            )
+            anvil.forge_submit(payload=payload)
+            assert m_request_post.call_count == 1
+            assert expected_data in m_request_post.call_args[0]
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        def test_invalid_wd_submission(m_request_post, anvil):
+            with pytest.raises(ValidationError):
+                payload = dict(
+                    forge_eid="forge1234",
+                    # weld_data_eid and submission_eid must be provided
+                    # if one exists.
+                    weld_data_eid="wd1234",
+                    payload=dict(field1="Updated data"),
+                )
+                anvil.forge_submit(payload=payload)
+                assert m_request_post.call_count == 0
+
+            with pytest.raises(ValidationError):
+                payload = dict(
+                    forge_eid="forge1234",
+                    # weld_data_eid and submission_eid must be provided
+                    # if one exists.
+                    submission_eid="sub1234",
+                    payload=dict(field1="Updated data"),
+                )
+                anvil.forge_submit(payload=payload)
+                assert m_request_post.call_count == 0
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        def test_minimum_valid_data_submission(m_request_post, anvil):
+            payload = ForgeSubmitPayload(
+                forge_eid="forge1234",
+                submission_eid="sub1234",
+                weld_data_eid="wd1234",
+                payload=dict(field1="Updated data"),
+            )
+            expected_data.update(
+                {
+                    "submissionEid": "sub1234",
+                    "weldDataEid": "wd1234",
+                    "payload": {"field1": "Updated data"},
+                }
+            )
+            anvil.forge_submit(payload=payload)
+            assert m_request_post.call_count == 1
+            assert expected_data in m_request_post.call_args[0]

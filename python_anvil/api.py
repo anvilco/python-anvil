@@ -1,10 +1,11 @@
 from logging import getLogger
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .api_resources.mutations import *
 from .api_resources.payload import (
     CreateEtchPacketPayload,
     FillPDFPayload,
+    ForgeSubmitPayload,
     GeneratePDFPayload,
 )
 from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
@@ -37,7 +38,12 @@ class Anvil:
     def __init__(self, api_key=None, environment='dev'):
         self.client = HTTPClient(api_key=api_key, environment=environment)
 
-    def query(self, query: str, variables: Optional[str] = None, **kwargs):
+    def query(
+        self,
+        query: str,
+        variables: Union[Optional[Text], Dict[Text, Any]] = None,
+        **kwargs,
+    ):
         gql = GraphqlRequest(client=self.client)
         return gql.post(query, variables=variables, **kwargs)
 
@@ -187,6 +193,10 @@ class Anvil:
                     eid
                     slug
                     title
+                    forges {
+                      eid
+                      name
+                    }
                   }
                 }
               }
@@ -197,6 +207,38 @@ class Anvil:
         def get_data(r):
             orgs = r["data"]["currentUser"]["organizations"]
             return [item for org in orgs for item in org["welds"]]
+
+        return _get_return(res, get_data=get_data)
+
+    def get_weld(self, eid: Text, **kwargs):
+        res = self.query(
+            """
+            query WeldQuery(
+                #$organizationSlug: String!,
+                #$slug: String!
+                $eid: String!
+            ) {
+                weld(
+                    #organizationSlug: $organizationSlug,
+                    #slug: $slug
+                    eid: $eid
+                ) {
+                    eid
+                    slug
+                    name
+                    forges {
+                        eid
+                        name
+                        slug
+                    }
+                }
+            }""",
+            variables=dict(eid=eid),
+            **kwargs,
+        )
+
+        def get_data(r):
+            return r["data"]["weld"]
 
         return _get_return(res, get_data=get_data)
 
@@ -253,3 +295,33 @@ class Anvil:
         """Retrieve all completed documents in zip form."""
         api = PlainRequest(client=self.client)
         return api.get(f"document-group/{document_group_eid}.zip", **kwargs)
+
+    def forge_submit(
+        self,
+        payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
+        json=None,
+        **kwargs,
+    ):
+        """Create a Webform (forge) submission via a graphql mutation."""
+        if not any([json, payload]):
+            raise TypeError('One of arguments `json` or `payload` are required')
+
+        if json:
+            payload = ForgeSubmitPayload.parse_raw(
+                json, content_type="application/json"
+            )
+
+        if isinstance(payload, dict):
+            mutation = ForgeSubmit.create_from_dict(payload)
+        elif isinstance(payload, ForgeSubmitPayload):
+            mutation = ForgeSubmit(payload=payload)
+        else:
+            raise ValueError(
+                "`payload` must be a valid ForgeSubmitPayload instance or dict"
+            )
+
+        return self.mutate(
+            mutation,
+            variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
+            **kwargs,
+        )
