@@ -1,3 +1,7 @@
+# 1.5.0 (2022-08-05)
+
+- Added support for `ForgeSubmit` mutation.
+
 # 1.4.1 (2022-05-11)
 
 - Updated `mkdocs` dependency to fix issue with Read the Docs.
