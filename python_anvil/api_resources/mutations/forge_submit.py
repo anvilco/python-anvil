@@ -9,7 +9,7 @@ DEFAULT_RESPONSE_QUERY = """
 {
   id
   eid
-  payloadValue
+  resolvedPayload
   currentStep
   completedAt
   createdAt
