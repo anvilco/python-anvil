@@ -4,7 +4,12 @@ import sys
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import Field, HttpUrl, validator  # pylint: disable=no-name-in-module
+from pydantic import (  # pylint: disable=no-name-in-module
+    Field,
+    HttpUrl,
+    root_validator,
+    validator,
+)
 from typing import Any, Dict, List, Optional, Text, Union
 
 from .base import BaseModel
@@ -169,3 +174,14 @@ class ForgeSubmitPayload(BaseModel):
     webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
     group_array_id: Optional[Text] = None
     group_array_index: Optional[int] = None
+
+    @root_validator
+    def wd_submission_both_required(cls, values):
+        both_required = ["weld_data_eid", "submission_eid"]
+        picked = [k for k in both_required if k in values and values[k] is not None]
+        if len(picked) == 1:
+            raise ValueError(
+                "Both `weld_data_eid` and `submission_eid` are "
+                "required if either are provided."
+            )
+        return values
