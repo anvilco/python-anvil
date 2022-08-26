@@ -5,6 +5,7 @@ from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
     CreateEtchFilePayload,
     CreateEtchPacketPayload,
+    DocumentMarkup,
     DocumentUpload,
     EtchCastRef,
     EtchSigner,
@@ -86,7 +87,9 @@ class CreateEtchPacket(BaseQuery):
         signature_email_subject: Optional[str] = None,
         signature_email_body: Optional[str] = None,
         signers: Optional[List[EtchSigner]] = None,
-        files: Optional[List[Union[DocumentUpload, EtchCastRef]]] = None,
+        files: Optional[
+            List[Union[DocumentUpload, EtchCastRef, DocumentMarkup]]
+        ] = None,
         file_payloads: Optional[dict] = None,
         signature_page_options: Optional[Dict[Any, Any]] = None,
         is_draft: bool = False,
@@ -172,7 +175,7 @@ class CreateEtchPacket(BaseQuery):
 
         self.signers.append(data)
 
-    def add_file(self, file: Union[DocumentUpload, EtchCastRef]):
+    def add_file(self, file: Union[DocumentUpload, EtchCastRef, DocumentMarkup]):
         """Add file to a pending list of Upload objects.
 
         Files will not be uploaded when running this method. The will be

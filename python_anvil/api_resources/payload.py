@@ -105,6 +105,18 @@ class Base64Upload(BaseModel):
     mimetype: str = "application/pdf"
 
 
+class DocumentMarkup(BaseModel):
+    """Dataclass representing a document with HTML/CSS markup."""
+
+    id: str
+    title: str
+    filename: str
+    markup: Dict[Literal["html", "css"], str]
+    fields: Optional[List[SignatureField]] = None
+    font_size: int = 14
+    text_color: str = "#000000"
+
+
 class DocumentUpload(BaseModel):
     """Dataclass representing an uploaded document."""
 
@@ -138,7 +150,7 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
-    files: List[Union[DocumentUpload, EtchCastRef]]
+    files: List[Union[DocumentUpload, EtchCastRef, DocumentMarkup]]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
