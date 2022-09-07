@@ -3,7 +3,7 @@
 All methods assume that a valid API key is already available. Please take a look
 at [Anvil API Basics](https://www.useanvil.com/docs/api/basics) for more details on how to get your key.
 
-### Anvil() constructor
+### `Anvil` constructor
 
 * `api_key` - Your Anvil API key, either development or production
 * `environment` (default: `'dev'`) - The type of key being used. This affects how the library sets rate limits on API
