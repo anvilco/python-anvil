@@ -3,8 +3,9 @@
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
 from python_anvil.api_resources.payload import (
-    DocumentMarkup,
+    DocumentMarkdown,
     EtchSigner,
+    MarkdownContent,
     SignatureField,
     SignerField,
 )
@@ -48,31 +49,31 @@ def main():
     # For this example, a PDF will not be uploaded. We'll create and style the
     # document with HTML and CSS and add signing fields based on coordinates.
 
-    # Define the document with HTML/CSS
-    file1 = DocumentMarkup(
-        id="myNewFile",
-        title="Please sign this important form",
-        filename="markup.pdf",
-        markup={
-            "html": """
-                <div class="first">This document is created with HTML.</div>
-                <br />
-                <br />
-                <br />
-                <div>We can also define signing fields with text tags</div>
-                <div>{{ signature : First signature : textTag : textTag }}</div>
-            """,
-            "css": """"body{ color: red; }  div.first { color: blue; } """,
-        },
+    # Define the document with Markdown
+    file1 = DocumentMarkdown(
+        id="markdownFile",
+        filename="markdown.pdf",
+        title="Sign this markdown file",
         fields=[
+            # This is markdown content
+            MarkdownContent(
+                table=dict(
+                    rows=[
+                        ['Description', 'Quantity', 'Price'],
+                        ['3x Roof Shingles', '15', '$60.00'],
+                        ['5x Hardwood Plywood', '10', '$300.00'],
+                        ['80x Wood Screws', '80', '$45.00'],
+                    ],
+                )
+            ),
             SignatureField(
+                page_num=0,
                 id="sign1",
                 type="signature",
-                page_num=0,
                 # The position and size of the field. The coordinates provided here
                 # (x=300, y=300) is the top-left of the rectangle.
                 rect=dict(x=300, y=300, width=250, height=30),
-            )
+            ),
         ],
     )
 
@@ -89,15 +90,9 @@ def main():
         fields=[
             SignerField(
                 # this is the `id` in the `DocumentUpload` object above
-                file_id="myNewFile",
+                file_id="markdownFile",
                 # This is the signing field id in the `SignatureField` above
                 field_id="sign1",
-            ),
-            SignerField(
-                # this is the `id` in the `DocumentUpload` object above
-                file_id="myNewFile",
-                # This is the signing field id in the `SignatureField` above
-                field_id="textTag",
             ),
         ],
         signer_type="embedded",

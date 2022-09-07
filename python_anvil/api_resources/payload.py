@@ -105,14 +105,74 @@ class Base64Upload(BaseModel):
     mimetype: str = "application/pdf"
 
 
+class TableColumnAlignment(BaseModel):
+    align: Optional[Literal["left", "center", "right"]] = None
+    width: Optional[str] = None
+
+
+# https://www.useanvil.com/docs/api/generate-pdf#table
+class MarkdownTable(BaseModel):
+    rows: List[List[str]]
+
+    # defaults to `True` if not provided.
+    # set to false for no header row on the table
+    first_row_headers: Optional[bool] = None
+
+    # defaults to `False` if not provided.
+    # set to true to display gridlines in-between rows or columns
+    row_grid_lines: Optional[bool] = True
+    column_grid_lines: Optional[bool] = False
+
+    # defaults to 'top' if not provided.
+    # adjust vertical alignment of table text
+    # accepts 'top', 'center', or 'bottom'
+    vertical_align: Optional[Literal["top", "center", "bottom"]] = "center"
+
+    # (optional) columnOptions - An array of columnOption objects.
+    # You do not need to specify all columns. Accepts an
+    # empty object indicating no overrides on the
+    # specified column.
+    #
+    # Supported keys for columnOption:
+    # align (optional) - adjust horizontal alignment of table text
+    # accepts 'left', 'center', or 'right'; defaults to 'left'
+    # width (optional) - adjust the width of the column
+    # accepts width in pixels or as percentage of the table width
+    column_options: Optional[List[TableColumnAlignment]] = None
+
+
+# https://www.useanvil.com/docs/api/object-references/#verbatimfield
+class MarkdownContent(BaseModel):
+    label: Optional[str] = None
+    heading: Optional[str] = None
+    content: Optional[str] = None
+    table: Optional[MarkdownTable] = None
+    font_size: int = 14
+    text_color: str = "#000000"
+
+
 class DocumentMarkup(BaseModel):
     """Dataclass representing a document with HTML/CSS markup."""
 
     id: str
-    title: str
     filename: str
     markup: Dict[Literal["html", "css"], str]
     fields: Optional[List[SignatureField]] = None
+    title: Optional[str] = None
+    font_size: int = 14
+    text_color: str = "#000000"
+
+
+class DocumentMarkdown(BaseModel):
+    """Dataclass representing a document with Markdown."""
+
+    id: str
+    filename: str
+    # NOTE: Order matters here in the Union[].
+    # If `SignatureField` is not first, the types are similar enough that it
+    # will use `MarkdownContent` instead.
+    fields: Optional[List[Union[SignatureField, MarkdownContent]]] = None
+    title: Optional[str] = None
     font_size: int = 14
     text_color: str = "#000000"
 
@@ -150,7 +210,7 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
-    files: List[Union[DocumentUpload, EtchCastRef, DocumentMarkup]]
+    files: List[Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False

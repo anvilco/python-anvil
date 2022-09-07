@@ -93,7 +93,7 @@ class Anvil:
             **kwargs,
         )
 
-    def generate_pdf(self, payload: Union[AnyStr, Dict], **kwargs):
+    def generate_pdf(self, payload: Union[AnyStr, Dict, GeneratePDFPayload], **kwargs):
         if not payload:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
@@ -103,10 +103,12 @@ class Anvil:
             data = GeneratePDFPayload.parse_raw(
                 payload, content_type="application/json"
             )
+        elif isinstance(payload, GeneratePDFPayload):
+            data = payload
         else:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
-        # Any data errors would come from here..
+        # Any data errors would come from here
         api = RestRequest(client=self.client)
         return api.post(
             "generate-pdf", data=data.dict(by_alias=True, exclude_none=True), **kwargs
