@@ -80,6 +80,8 @@ class ForgeSubmit(BaseQuery):
         **kwargs,
     ):
         """
+        Create a forgeSubmit query.
+
         :param forge_eid:
         :param payload:
         :param weld_data_eid:

@@ -32,12 +32,12 @@ General API documentation: [Anvil API docs](https://www.useanvil.com/docs)
 
 Install it directly into an activated virtual environment:
 
-```text
+```shell
 $ pip install python-anvil
 ```
 
 or add it to your [Poetry](https://python-poetry.org/) project:
 
-```text
+```shell
 $ poetry add python-anvil
 ```
