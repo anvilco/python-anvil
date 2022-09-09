@@ -35,6 +35,12 @@ class Anvil:
         >> pdf_data = anvil.fill_pdf("the_template_id", payload)
     """
 
+    # Version number to use for latest versions (usually drafts)
+    VERSION_LATEST = -1
+    # Version number to use for the latest published version.
+    # This is the default when a version is not provided.
+    VERSION_LATEST_PUBLISHED = -2
+
     def __init__(self, api_key=None, environment='dev'):
         self.client = HTTPClient(api_key=api_key, environment=environment)
 
