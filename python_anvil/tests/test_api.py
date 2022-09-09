@@ -79,6 +79,36 @@ def describe_api():
                 include_headers=True,
             )
 
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_with_version(m_request_post, anvil):
+            payload = {"data": {"one": "One string"}}
+            anvil.fill_pdf(
+                "some_template",
+                payload=payload,
+                include_headers=True,
+                version_number=Anvil.VERSION_LATEST,
+            )
+            m_request_post.assert_called_once_with(
+                "fill/some_template.pdf",
+                {"data": {"one": "One string"}},
+                include_headers=True,
+                params={"versionNumber": Anvil.VERSION_LATEST},
+            )
+
+        @mock.patch('python_anvil.api.RestRequest.post')
+        def test_with_params(m_request_post, anvil):
+            payload = {"data": {"one": "One string"}}
+            params = {"arbirtrary": "Param"}
+            anvil.fill_pdf(
+                "some_template", payload=payload, include_headers=True, params=params
+            )
+            m_request_post.assert_called_once_with(
+                "fill/some_template.pdf",
+                {"data": {"one": "One string"}},
+                include_headers=True,
+                params=params,
+            )
+
     def describe_generate_pdf():
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_dict_payload(m_request_post, anvil):

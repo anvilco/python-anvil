@@ -95,16 +95,14 @@ class Anvil:
                 "fields are set. "
             ) from e
 
-        params = None
         version_number = kwargs.pop("version_number", None)
         if version_number:
-            params = dict(versionNumber=version_number)
+            kwargs["params"] = dict(versionNumber=version_number)
 
         api = RestRequest(client=self.client)
         return api.post(
             f"fill/{template_id}.pdf",
             data.dict(by_alias=True, exclude_none=True) if data else {},
-            params=params,
             **kwargs,
         )
 
