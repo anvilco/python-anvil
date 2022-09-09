@@ -63,10 +63,13 @@ class Anvil:
         Use the casts graphql query to get a list of available templates you
         can use for this request.
 
-        :param template_id: eid of an existing template/cast.
+        :param template_id: eid of an existing template/cast
         :type template_id: str
         :param payload: payload in the form of a dict or JSON data
         :type payload: dict|str
+        :param kwargs.version_number: specific template version number to use. If
+            not provided, the latest _published_ version will be used.
+        :type kwargs.version_number: int
         """
         try:
             if isinstance(payload, dict):
@@ -86,10 +89,16 @@ class Anvil:
                 "fields are set. "
             ) from e
 
+        params = None
+        version_number = kwargs.pop("version_number", None)
+        if version_number:
+            params = dict(versionNumber=version_number)
+
         api = RestRequest(client=self.client)
         return api.post(
             f"fill/{template_id}.pdf",
             data.dict(by_alias=True, exclude_none=True) if data else {},
+            params=params,
             **kwargs,
         )
 
