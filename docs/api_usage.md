@@ -34,6 +34,13 @@ Data to embed into the PDF. Supported `payload` types are:
   sure all required data is set.
 * `FillPDFPayload` - dataclass (see: [Data Types](#data-types))
 
+**version_number: Optional[int]**
+
+Version of the PDF template to use. By default, the request will use the latest published version.
+
+You can also use the constants `Anvil.VERSION_LATEST_PUBLISHED` and `Anvil.VERSION_LATEST`
+instead of providing a specific version number.
+
 Example:
 
 ```python
@@ -46,6 +53,14 @@ data = {
     "data": {"textField": "Some data"}
 }
 response = anvil.fill_pdf("some_template", data)
+
+# A version number can also be passed in. This will retrieve a specific
+# version of the PDF to be filled if you don't want the current version
+# to be used.
+# You can also use the constant `Anvil.VERSION_LATEST` to fill a PDF that has not
+# been published yet. Use this if you'd like to fill out a draft version of
+# your template/PDF.
+response = anvil.fill_pdf("some_template", data, version_number=Anvil.VERSION_LATEST)
 ```
 
 ### Anvil.generate_pdf
