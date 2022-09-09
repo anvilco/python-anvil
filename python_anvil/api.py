@@ -35,6 +35,12 @@ class Anvil:
         >> pdf_data = anvil.fill_pdf("the_template_id", payload)
     """
 
+    # Version number to use for latest versions (usually drafts)
+    VERSION_LATEST = -1
+    # Version number to use for the latest published version.
+    # This is the default when a version is not provided.
+    VERSION_LATEST_PUBLISHED = -2
+
     def __init__(self, api_key=None, environment='dev'):
         self.client = HTTPClient(api_key=api_key, environment=environment)
 
@@ -63,10 +69,13 @@ class Anvil:
         Use the casts graphql query to get a list of available templates you
         can use for this request.
 
-        :param template_id: eid of an existing template/cast.
+        :param template_id: eid of an existing template/cast
         :type template_id: str
         :param payload: payload in the form of a dict or JSON data
         :type payload: dict|str
+        :param kwargs.version_number: specific template version number to use. If
+            not provided, the latest _published_ version will be used.
+        :type kwargs.version_number: int
         """
         try:
             if isinstance(payload, dict):
@@ -85,6 +94,10 @@ class Anvil:
                 "`payload` validation failed. Please make sure all required "
                 "fields are set. "
             ) from e
+
+        version_number = kwargs.pop("version_number", None)
+        if version_number:
+            kwargs["params"] = dict(versionNumber=version_number)
 
         api = RestRequest(client=self.client)
         return api.post(

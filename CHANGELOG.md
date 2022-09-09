@@ -1,4 +1,8 @@
-# 1.5.0 (2022-09-07)
+# 1.7.0 (2022-09-09)
+
+- Added support for `version_number` in PDF Fill requests.
+
+# 1.6.0 (2022-09-07)
 
 - Added support for HTML/CSS and Markdown in `CreateEtchPacket`. [See examples here](https://www.useanvil.com/docs/api/e-signatures#generating-a-pdf-from-html-and-css).
 

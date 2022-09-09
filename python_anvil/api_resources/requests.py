@@ -68,8 +68,9 @@ class BaseAnvilHttpRequest(AnvilRequest):
 
     def post(self, url, data=None, **kwargs):
         retry = kwargs.pop("retry", True)
+        params = kwargs.pop("params", None)
         content, status_code, headers = self._request(
-            "POST", url, json=data, retry=retry
+            "POST", url, json=data, retry=retry, params=params
         )
         return self.process_response(content, status_code, headers, **kwargs)
 
