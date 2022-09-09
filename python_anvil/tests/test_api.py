@@ -98,7 +98,7 @@ def describe_api():
         @mock.patch('python_anvil.api.RestRequest.post')
         def test_with_params(m_request_post, anvil):
             payload = {"data": {"one": "One string"}}
-            params = {"arbirtrary": "Param"}
+            params = {"arbitrary": "Param"}
             anvil.fill_pdf(
                 "some_template", payload=payload, include_headers=True, params=params
             )
