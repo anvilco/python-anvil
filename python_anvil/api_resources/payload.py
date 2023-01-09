@@ -1,6 +1,7 @@
 # pylint: disable=no-self-argument,no-self-use
 
 import sys
+from io import BufferedIOBase
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
@@ -9,6 +10,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     HttpUrl,
     root_validator,
     validator,
+    FilePath,
 )
 from typing import Any, Dict, List, Optional, Text, Union
 
@@ -182,11 +184,14 @@ class DocumentUpload(BaseModel):
 
     id: str
     title: str
-    # A GraphQLUpload or Base64Upload, but using Bas64Upload for now
-    file: Base64Upload
+    # A GraphQLUpload or Base64Upload
+    file: "UploadableFile"
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
+
+    class Config:
+        arbitrary_types_allowed = True
 
 
 class EtchCastRef(BaseModel):
@@ -210,7 +215,7 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
-    files: List[Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]]
+    files: List["AttachableEtchFile"]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
@@ -257,3 +262,15 @@ class ForgeSubmitPayload(BaseModel):
                 "required if either are provided."
             )
         return values
+
+
+UploadableFile = Union[Base64Upload, FilePath, BufferedIOBase]
+AttachableEtchFile = Union[
+    DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
+]
+
+# Classes below use types wrapped in quotes avoid a circular dependency/weird
+# variable assignment locations with the aliases above. We need to manually
+# update the refs for them to point to the right things.
+DocumentUpload.update_forward_refs()
+CreateEtchPacketPayload.update_forward_refs()
