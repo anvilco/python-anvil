@@ -62,6 +62,7 @@ class HTTPClient:
         auth=None,
         params=None,
         retry=True,
+        files=None,
         **kwargs,
     ) -> requests.Response:
         for _ in range(5):
@@ -73,6 +74,7 @@ class HTTPClient:
                 data=data,
                 auth=auth,
                 params=params,
+                files=files,
                 **kwargs,
             )
 
@@ -107,6 +109,7 @@ class HTTPClient:
         auth=None,
         params=None,
         retry=True,
+        files=None,
         **kwargs,
     ):
         """Make an HTTP request.
@@ -117,7 +120,8 @@ class HTTPClient:
         :param data:
         :param auth:
         :param params:
-        :param retry: Whether or not to retry on any rate-limited requests
+        :param files:
+        :param retry: Whether to retry on any rate-limited requests
         :param kwargs:
         :return:
         """
@@ -134,6 +138,7 @@ class HTTPClient:
                 auth=auth,
                 params=params,
                 retry=retry,
+                files=files,
                 **kwargs,
             )
 

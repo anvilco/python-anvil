@@ -5,11 +5,9 @@ from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
     CreateEtchFilePayload,
     CreateEtchPacketPayload,
-    DocumentMarkdown,
-    DocumentMarkup,
     DocumentUpload,
-    EtchCastRef,
     EtchSigner,
+    AttachableEtchFile,
 )
 from python_anvil.utils import create_unique_id
 
@@ -88,9 +86,7 @@ class CreateEtchPacket(BaseQuery):
         signature_email_subject: Optional[str] = None,
         signature_email_body: Optional[str] = None,
         signers: Optional[List[EtchSigner]] = None,
-        files: Optional[
-            List[Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]]
-        ] = None,
+        files: Optional[List[AttachableEtchFile]] = None,
         file_payloads: Optional[dict] = None,
         signature_page_options: Optional[Dict[Any, Any]] = None,
         is_draft: bool = False,
@@ -176,12 +172,10 @@ class CreateEtchPacket(BaseQuery):
 
         self.signers.append(data)
 
-    def add_file(
-        self, file: Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]
-    ):
+    def add_file(self, file: AttachableEtchFile):
         """Add file to a pending list of Upload objects.
 
-        Files will not be uploaded when running this method. The will be
+        Files will not be uploaded when running this method. They will be
         uploaded when the mutation actually runs.
         """
         self.files.append(file)

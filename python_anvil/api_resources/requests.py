@@ -87,9 +87,25 @@ class GraphqlRequest(AnvilRequest):
     def post(self, query, variables=None, **kwargs):
         return self.run_query("POST", query, variables=variables, **kwargs)
 
-    def run_query(self, method, query, variables=None, **kwargs):
-        data = {"query": query}
-        if variables:
+    def post_multipart(self, files=None, **kwargs):
+        return self.run_query("POST", None, files=files, is_multipart=True, **kwargs)
+
+    def run_query(
+        self, method, query, variables=None, files=None, is_multipart=False, **kwargs
+    ):
+        if not query and not files:
+            raise AssertionError(
+                "Either `query` or `files` must be passed in " "to this method."
+            )
+        data = {}
+
+        if query:
+            data["query"] = query
+
+        if files and is_multipart:
+            # Make sure `data` is nothing when we're doing a multipart request.
+            data = None
+        elif variables:
             data["variables"] = variables
 
         # Optional debug kwargs.
@@ -106,6 +122,7 @@ class GraphqlRequest(AnvilRequest):
             # current API implementation.
             # The current library for graphql query generation doesn't do this(?)
             json=data,
+            files=files,
             parse_json=True,
             **kwargs,
         )
