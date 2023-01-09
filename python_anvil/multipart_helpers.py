@@ -74,11 +74,10 @@ def get_extractable_files_from_payload(
     return cur_files, False
 
 
-def get_files(mutation, variables):
+def get_multipart_payload(mutation, variables):
     def is_match(item):
         return isinstance(item, Path) or isinstance(item, BufferedIOBase)
 
-    variables = mutation.create_payload().dict(by_alias=True, exclude_none=True)
     multipart_map, _ = get_extractable_files_from_payload(variables, is_match=is_match)
     to_upload = {}
 
@@ -101,7 +100,7 @@ def get_files(mutation, variables):
         # `key` here is most likely going to be a list index (int), but
         # `requests` will expect an actual string when it constructs the
         # multipart request. We make sure this is a string here.
-        actual_key = key
+        actual_key = str(key)
 
         # This is already a file-like thing, pass it directly to `requests`.
         if isinstance(file_or_path, BufferedIOBase):
@@ -113,3 +112,5 @@ def get_files(mutation, variables):
 
         mimetype, _ = mimetypes.guess_type(file_part.name)
         files[actual_key] = ('what.pdf', file_part, mimetype)
+
+    return files

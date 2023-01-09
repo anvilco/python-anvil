@@ -10,7 +10,7 @@ from .api_resources.payload import (
 )
 from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
-
+from .multipart_helpers import get_multipart_payload
 
 logger = getLogger(__name__)
 
@@ -56,6 +56,24 @@ class Anvil:
     def mutate(self, query: BaseQuery, variables: dict, **kwargs):
         gql = GraphqlRequest(client=self.client)
         return gql.post(query.get_mutation(), variables, **kwargs)
+
+    def mutate_multipart(self, files: Dict, **kwargs):
+        """
+        Multipart version of `mutate`.
+
+        This will send a mutation based on the multipart spec defined here:
+        https://github.com/jaydenseric/graphql-multipart-request-spec
+
+        Note that `variables` and `query` have been removed and replaced with
+        `files`. The entire GraphQL payload should already be prepared as a
+        `dict` beforehand.
+
+        :param files:
+        :param kwargs:
+        :return:
+        """
+        gql = GraphqlRequest(client=self.client)
+        return gql.post_multipart(files=files, **kwargs)
 
     def request_rest(self, options: Optional[dict] = None):
         api = RestRequest(self.client, options=options)
@@ -291,11 +309,14 @@ class Anvil:
             raise ValueError(
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
-        return self.mutate(
+
+        files = get_multipart_payload(
             mutation,
             variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
-            **kwargs,
         )
+
+        res = self.mutate_multipart(files, **kwargs)
+        return res
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
         """Generate a signing URL for a given user."""
