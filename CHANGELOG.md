@@ -1,3 +1,10 @@
+# 1.8.0 (2022-09-09)
+
+- Added support for multipart uploads on `CreateEtchPacket` requests.
+- New example for multipart uploads in `examples/create_etch_upload_file_multipart.py`
+- Added environment variable usage in all `examples/` files for easier usage.
+- Updated a few minor development packages.
+
 # 1.7.0 (2022-09-09)
 
 - Added support for `version_number` in PDF Fill requests.

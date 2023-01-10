@@ -1,16 +1,18 @@
 # pylint: disable=no-self-argument,no-self-use
 
 import sys
+from io import BufferedIOBase
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     Field,
+    FilePath,
     HttpUrl,
     root_validator,
     validator,
 )
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .base import BaseModel
 
@@ -182,11 +184,18 @@ class DocumentUpload(BaseModel):
 
     id: str
     title: str
-    # A GraphQLUpload or Base64Upload, but using Bas64Upload for now
-    file: Base64Upload
+    file: "UploadableFile"
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
+
+    class Config:
+        """Special rules for this model class."""
+
+        arbitrary_types_allowed = True
+        # String to help point out the file upload attr.
+        # Used in multipart uploads and should not affect base64-encoded files.
+        contains_uploads = "file"
 
 
 class EtchCastRef(BaseModel):
@@ -210,7 +219,7 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
-    files: List[Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]]
+    files: List["AttachableEtchFile"]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
@@ -257,3 +266,24 @@ class ForgeSubmitPayload(BaseModel):
                 "required if either are provided."
             )
         return values
+
+
+# Types usable for uploads:
+# Base64Upload: An entire PDF file base64 encoded
+# FilePath: The absolute path of the file. When the pydantic model is used,
+#   it will convert a path string (i.e. "/home/me/my_file.pdf") into a
+#   `pathlib.Path` instance.
+# UploadMethod: A function that returns a tuple of:
+#   * BufferedIOBase instance for use in `requests`
+#   * String containing the name for the file for use in Anvil
+UploadMethod = Callable[[Any], Tuple[BufferedIOBase, str]]
+UploadableFile = Union[Base64Upload, FilePath, UploadMethod]
+AttachableEtchFile = Union[
+    DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
+]
+
+# Classes below use types wrapped in quotes avoid a circular dependency/weird
+# variable assignment locations with the aliases above. We need to manually
+# update the refs for them to point to the right things.
+DocumentUpload.update_forward_refs()
+CreateEtchPacketPayload.update_forward_refs()

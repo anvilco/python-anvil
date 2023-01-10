@@ -1,14 +1,14 @@
 # pylint: disable=too-many-instance-attributes
-from typing import Any, Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
+    AttachableEtchFile,
+    Base64Upload,
     CreateEtchFilePayload,
     CreateEtchPacketPayload,
-    DocumentMarkdown,
-    DocumentMarkup,
     DocumentUpload,
-    EtchCastRef,
     EtchSigner,
 )
 from python_anvil.utils import create_unique_id
@@ -88,9 +88,7 @@ class CreateEtchPacket(BaseQuery):
         signature_email_subject: Optional[str] = None,
         signature_email_body: Optional[str] = None,
         signers: Optional[List[EtchSigner]] = None,
-        files: Optional[
-            List[Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]]
-        ] = None,
+        files: Optional[List[AttachableEtchFile]] = None,
         file_payloads: Optional[dict] = None,
         signature_page_options: Optional[Dict[Any, Any]] = None,
         is_draft: bool = False,
@@ -176,12 +174,10 @@ class CreateEtchPacket(BaseQuery):
 
         self.signers.append(data)
 
-    def add_file(
-        self, file: Union[DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown]
-    ):
+    def add_file(self, file: AttachableEtchFile):
         """Add file to a pending list of Upload objects.
 
-        Files will not be uploaded when running this method. The will be
+        Files will not be uploaded when running this method. They will be
         uploaded when the mutation actually runs.
         """
         self.files.append(file)
@@ -206,7 +202,43 @@ class CreateEtchPacket(BaseQuery):
                 )
         return self.file_payloads
 
-    def create_payload(self) -> CreateEtchPacketPayload:
+    def get_files_for_payload(self) -> Tuple[List[AttachableEtchFile], List[Any]]:
+        """Scan through and gather files for use in multipart requests.
+
+        During the process, files will be replaced with a dummy `Path`
+        instance as `Callable` instances and likely their returns of some
+        sort of IO reader is not serializable and not easily dealt with in
+        pydantic (the underlying model system for the types used in this
+        library). Closer to the actual request, when the multipart payload is
+        being constructed, the dummy instances will be replaced by their actual
+        file instances.
+
+        :return: Tuple containing a list of uploadable file types, and a list
+            of actual file references
+        :rtype: Tuple[List, List]
+        """
+        contains_uploads = any(  # pylint: disable=use-a-generator
+            [isinstance(f, DocumentUpload) for f in self.files]
+        )
+        if not contains_uploads:
+            return self.files, []
+
+        files = []
+        for f in self.files:
+            if not isinstance(f, DocumentUpload):
+                continue
+
+            if getattr(f.Config, "contains_uploads", False):
+                attr_name = getattr(f.Config, "contains_uploads")
+                upload = getattr(f, attr_name)
+
+                if not isinstance(upload, Base64Upload):
+                    files.append(upload)
+                    setattr(f, attr_name, Path())
+
+        return self.files, files
+
+    def create_payload(self) -> Tuple[CreateEtchPacketPayload, List]:
         """Create a payload based on data set on the class instance.
 
         Check `api_resources.payload.CreateEtchPacketPayload` for full payload
@@ -215,17 +247,19 @@ class CreateEtchPacket(BaseQuery):
         """
         # If there's an existing payload instance attribute, just return that.
         if self.payload:
-            return self.payload
+            return self.payload, []
 
         if not self.name:
             raise TypeError("`name` and `signature_email_subject` cannot be None")
 
-        return CreateEtchPacketPayload(
+        payload_files, file_refs = self.get_files_for_payload()
+
+        payload = CreateEtchPacketPayload(
             is_test=self.is_test,
             is_draft=self.is_draft,
             name=self.name,
             signers=self.signers,
-            files=self.files,
+            files=payload_files,
             data=CreateEtchFilePayload(payloads=self.get_file_payloads()),
             signature_email_subject=self.signature_email_subject,
             signature_email_body=self.signature_email_body,
@@ -235,3 +269,5 @@ class CreateEtchPacket(BaseQuery):
             reply_to_name=self.reply_to_name,
             merge_pdfs=self.merge_pdfs,
         )
+
+        return payload, file_refs

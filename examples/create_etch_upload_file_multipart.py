@@ -1,11 +1,10 @@
 # pylint: disable=duplicate-code
-
 import os
 
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
 from python_anvil.api_resources.payload import (
-    DocumentMarkup,
+    DocumentUpload,
     EtchSigner,
     SignatureField,
     SignerField,
@@ -22,7 +21,7 @@ def main():
 
     # Create an instance of the builder
     packet = CreateEtchPacket(
-        name="Etch packet with existing template",
+        name="Etch packet with existing template multipart",
         #
         # Optional changes to email subject and body content
         signature_email_subject="Please sign these forms",
@@ -49,33 +48,42 @@ def main():
     )
 
     # Get your file(s) ready to sign.
-    # For this example, a PDF will not be uploaded. We'll create and style the
-    # document with HTML and CSS and add signing fields based on coordinates.
+    # For this example, the PDF hasn't been uploaded to Anvil yet.
+    # In the `create_etch_upload_file.py` example, we are base64 encoding our
+    # file(s) before sending. In this case, we will be providing a file's path
+    # or file descriptor (from an `open()` call)
+    filename = "my_local_file.pdf"
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    file_path = os.path.join(file_dir, filename)
 
-    # Define the document with HTML/CSS
-    file1 = DocumentMarkup(
+    # You can check manually if your file exists, however, the validator being
+    # used in the `GraphqlUpload` below will also check if the file exists.
+    #
+    # if not os.path.exists(file_path):
+    #     raise FileNotFoundError('File does not exist. Please check `file_path` '
+    #                             'and ensure it points to an existing file.')
+
+    # Upload the file and define signer field locations.
+    file1 = DocumentUpload(
         id="myNewFile",
         title="Please sign this important form",
-        filename="markup.pdf",
-        markup={
-            "html": """
-                <div class="first">This document is created with HTML.</div>
-                <br />
-                <br />
-                <br />
-                <div>We can also define signing fields with text tags</div>
-                <div>{{ signature : First signature : textTag : textTag }}</div>
-            """,
-            "css": """"body{ color: red; }  div.first { color: blue; } """,
-        },
+        # You can send a callable that returns a file handle and the filename
+        # you want to use in the Anvil app.
+        # (IMPORTANT: The data must be read in as _bytes_, not text.)
+        file=lambda: (
+            open(file_path, "rb"),  # pylint: disable=consider-using-with
+            filename,
+        ),
+        # or just the valid path itself
+        # file=file_path,
         fields=[
             SignatureField(
                 id="sign1",
                 type="signature",
                 page_num=0,
                 # The position and size of the field. The coordinates provided here
-                # (x=300, y=300) is the top-left of the rectangle.
-                rect=dict(x=300, y=300, width=250, height=30),
+                # (x=100, y=100) is the top-left of the rectangle.
+                rect=dict(x=183, y=100, width=250, height=50),
             )
         ],
     )
@@ -96,13 +104,7 @@ def main():
                 file_id="myNewFile",
                 # This is the signing field id in the `SignatureField` above
                 field_id="sign1",
-            ),
-            SignerField(
-                # this is the `id` in the `DocumentUpload` object above
-                file_id="myNewFile",
-                # This is the signing field id in the `SignatureField` above
-                field_id="textTag",
-            ),
+            )
         ],
         signer_type="embedded",
         #
@@ -112,7 +114,7 @@ def main():
         # signature field.
         # signature_mode="draw",
         #
-        # Whether or not to the signer is required to click each signature
+        # Whether to the signer is required to click each signature
         # field manually. If `False`, the PDF will be signed once the signer
         # accepts the PDF without making the user go through the PDF.
         # accept_each_field=False,
