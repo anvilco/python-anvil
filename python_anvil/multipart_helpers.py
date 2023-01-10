@@ -5,12 +5,14 @@ from io import BufferedIOBase
 from pathlib import Path
 from typing import Any, Callable, Optional, List, Tuple, Union
 
+from python_anvil.api_resources.mutations import BaseQuery
+
 FileLikeObject = Union[Path, BufferedIOBase]
 
 
 def get_extractable_files_from_payload(
     variables: Any,
-    is_match: Callable = lambda x: x,
+    is_match: Callable,
     cur_path: Optional[str] = None,
     cur_files: Optional[List] = None,
 ) -> Tuple[List[Tuple[str, FileLikeObject]], bool]:
@@ -28,7 +30,7 @@ def get_extractable_files_from_payload(
     :param cur_path:
     :param cur_files:
     :return: List containing a tuple of (file path string, file path/buffer object)
-    :rtype: Tuple[List[Tuple[str, Union[Path, BufferedIOBase]], bool]
+    :rtype: Tuple[List[Tuple[str, Union[Path, BufferedIOBase]], bool, List]
     """
 
     if cur_path is None:
@@ -74,12 +76,13 @@ def get_extractable_files_from_payload(
     return cur_files, False
 
 
-def get_multipart_payload(mutation, variables):
+def get_multipart_payload(mutation: BaseQuery):
     def is_match(item):
         return isinstance(item, Path) or isinstance(item, BufferedIOBase)
 
+    payload, to_upload = mutation.create_payload()
+    variables = payload.dict(by_alias=True, exclude_none=True)
     multipart_map, _ = get_extractable_files_from_payload(variables, is_match=is_match)
-    to_upload = {}
 
     operations = json.dumps(
         {
@@ -92,25 +95,28 @@ def get_multipart_payload(mutation, variables):
     filemap = {}
     for idx, filepath in enumerate(multipart_map):
         filemap[idx] = [filepath[0]]
-        to_upload[idx] = filepath[1]
 
     files = {"operations": (None, operations), "map": (None, json.dumps(filemap))}
 
-    for key, file_or_path in to_upload.items():
+    for idx, file_or_path in enumerate(to_upload):
         # `key` here is most likely going to be a list index (int), but
         # `requests` will expect an actual string when it constructs the
         # multipart request. We make sure this is a string here.
-        actual_key = str(key)
+        actual_key = str(idx)
 
-        # This is already a file-like thing, pass it directly to `requests`.
-        if isinstance(file_or_path, BufferedIOBase):
-            file_part = file_or_path
+        # This is already a file-like object, pass it directly to `requests`.
+        if isinstance(file_or_path, Callable):
+            # If you have a `ValueError` here, make sure your callable returns
+            # a tuple of the file and filename:
+            # Example: (open(file, "rb"), "file.pdf"))
+            file_part, name_part = file_or_path()
         elif isinstance(file_or_path, Path):
             file_part = open(file_or_path, "rb")
+            name_part = file_or_path.parts[-1]
         else:
             raise AssertionError("File path or file-like object not given")
 
         mimetype, _ = mimetypes.guess_type(file_part.name)
-        files[actual_key] = ('what.pdf', file_part, mimetype)
+        files[actual_key] = (name_part, file_part, mimetype)
 
     return files

@@ -310,10 +310,7 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
 
-        files = get_multipart_payload(
-            mutation,
-            variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
-        )
+        files = get_multipart_payload(mutation)
 
         res = self.mutate_multipart(files, **kwargs)
         return res

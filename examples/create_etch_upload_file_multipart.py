@@ -64,8 +64,12 @@ def main():
     file1 = DocumentUpload(
         id="myNewFile",
         title="Please sign this important form",
-        # An open file handle or file path goes here
-        file=file_path,
+        # You can send a callable that returns a file handle and the filename
+        # you want to use in the Anvil app.
+        # (IMPORTANT: The data must be read in as _bytes_, not text.)
+        file=lambda: (open(file_path, "rb"), filename),
+        # or just the valid path itself
+        # file=file_path,
         fields=[
             SignatureField(
                 id="sign1",

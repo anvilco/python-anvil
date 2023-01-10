@@ -12,7 +12,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     validator,
     FilePath,
 )
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Dict, List, Optional, Text, Union, Callable, Tuple
 
 from .base import BaseModel
 
@@ -184,7 +184,6 @@ class DocumentUpload(BaseModel):
 
     id: str
     title: str
-    # A GraphQLUpload or Base64Upload
     file: "UploadableFile"
     fields: List[SignatureField]
     font_size: int = 14
@@ -192,6 +191,9 @@ class DocumentUpload(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
+        # String to help point out the file upload attr.
+        # Used in multipart uploads and should not affect base64-encoded files.
+        contains_uploads = "file"
 
 
 class EtchCastRef(BaseModel):
@@ -264,7 +266,16 @@ class ForgeSubmitPayload(BaseModel):
         return values
 
 
-UploadableFile = Union[Base64Upload, FilePath, BufferedIOBase]
+# Types usable for uploads:
+# Base64Upload: An entire PDF file base64 encoded
+# FilePath: The absolute path of the file. When the pydantic model is used,
+#   it will convert a path string (i.e. "/home/me/my_file.pdf") into a
+#   `pathlib.Path` instance.
+# UploadMethod: A function that returns a tuple of:
+#   * BufferedIOBase instance for use in `requests`
+#   * String containing the name for the file for use in Anvil
+UploadMethod = Callable[[Any], Tuple[BufferedIOBase, str]]
+UploadableFile = Union[Base64Upload, FilePath, UploadMethod]
 AttachableEtchFile = Union[
     DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
 ]
