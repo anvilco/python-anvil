@@ -86,7 +86,6 @@ def get_multipart_payload(mutation: BaseQuery):  # pylint: disable=too-many-loca
 
     operations = json.dumps(
         {
-            "operationName": "CreateEtchPacket",
             "query": mutation.get_mutation(),
             "variables": variables,
         }
