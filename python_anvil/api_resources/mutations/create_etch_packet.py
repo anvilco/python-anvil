@@ -217,12 +217,14 @@ class CreateEtchPacket(BaseQuery):
             of actual file references
         :rtype: Tuple[List, List]
         """
-        contains_uploads = any([isinstance(f, DocumentUpload) for f in self.files])
+        contains_uploads = any(  # pylint: disable=use-a-generator
+            [isinstance(f, DocumentUpload) for f in self.files]
+        )
         if not contains_uploads:
             return self.files, []
 
         files = []
-        for idx, f in enumerate(self.files):
+        for f in self.files:
             if not isinstance(f, DocumentUpload):
                 continue
 

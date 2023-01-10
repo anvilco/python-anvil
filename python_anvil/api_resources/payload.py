@@ -190,6 +190,8 @@ class DocumentUpload(BaseModel):
     text_color: str = "#000000"
 
     class Config:
+        """Special rules for this model class."""
+
         arbitrary_types_allowed = True
         # String to help point out the file upload attr.
         # Used in multipart uploads and should not affect base64-encoded files.

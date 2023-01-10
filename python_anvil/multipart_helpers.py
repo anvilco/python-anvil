@@ -17,9 +17,7 @@ def get_extractable_files_from_payload(
     cur_path: Optional[str] = None,
     cur_files: Optional[List] = None,
 ) -> Tuple[List[Tuple[str, FileLikeObject]], bool]:
-    """
-    Processes variables bound for a Graphql multipart request and produces
-        a mapping for use in the request.
+    """Process variables bound for a Graphql multipart request.
 
     IMPORTANT: This will __overwrite__ the file-like objects to `None` due to
     the expected request format in the spec.
@@ -44,7 +42,8 @@ def get_extractable_files_from_payload(
     if is_match(variables):
         cur_files.append((cur_path, copy.deepcopy(variables)))
         return cur_files, True
-    elif isinstance(variables, dict):
+
+    if isinstance(variables, dict):
         to_remove = []
         for key in variables:
             _, remove = get_extractable_files_from_payload(
@@ -77,9 +76,9 @@ def get_extractable_files_from_payload(
     return cur_files, False
 
 
-def get_multipart_payload(mutation: BaseQuery):
+def get_multipart_payload(mutation: BaseQuery):  # pylint: disable=too-many-locals
     def is_match(item):
-        return isinstance(item, Path) or isinstance(item, BufferedIOBase)
+        return isinstance(item, (BufferedIOBase, Path))
 
     payload, to_upload = mutation.create_payload()
     variables = payload.dict(by_alias=True, exclude_none=True)
@@ -112,7 +111,7 @@ def get_multipart_payload(mutation: BaseQuery):
             # Example: (open(file, "rb"), "file.pdf"))
             file_part, name_part = file_or_path()
         elif isinstance(file_or_path, Path):
-            file_part = open(file_or_path, "rb")
+            file_part = open(file_or_path, "rb")  # pylint: disable=consider-using-with
             name_part = file_or_path.parts[-1]
         else:
             raise AssertionError("File path or file-like object not given")

@@ -1,3 +1,5 @@
+# pylint: disable=redefined-outer-name,unused-variable,expression-not-assigned,singleton-comparison
+
 from python_anvil.multipart_helpers import get_extractable_files_from_payload
 
 

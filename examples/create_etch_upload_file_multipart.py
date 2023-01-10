@@ -1,6 +1,6 @@
 # pylint: disable=duplicate-code
-
 import os
+
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
 from python_anvil.api_resources.payload import (
@@ -9,6 +9,7 @@ from python_anvil.api_resources.payload import (
     SignatureField,
     SignerField,
 )
+
 
 API_KEY = 'my-api-key'
 
@@ -67,7 +68,10 @@ def main():
         # You can send a callable that returns a file handle and the filename
         # you want to use in the Anvil app.
         # (IMPORTANT: The data must be read in as _bytes_, not text.)
-        file=lambda: (open(file_path, "rb"), filename),
+        file=lambda: (
+            open(file_path, "rb"),  # pylint: disable=consider-using-with
+            filename,
+        ),
         # or just the valid path itself
         # file=file_path,
         fields=[
