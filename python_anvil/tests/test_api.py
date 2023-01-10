@@ -223,19 +223,19 @@ def describe_api():
             'signaturePageOptions': {},
         }
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_empty_payload(m_request_post, anvil):
             with pytest.raises(TypeError):
                 anvil.create_etch_packet(payload={})
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_invalid_payload(m_request_post, anvil):
             with pytest.raises(TypeError):
                 anvil.create_etch_packet({})
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_valid_payload_type(m_request_post, anvil):
             payload = CreateEtchPacket(
                 name="Packet name",
@@ -243,9 +243,14 @@ def describe_api():
             )
             anvil.create_etch_packet(payload=payload)
             assert m_request_post.call_count == 1
-            assert expected_data in m_request_post.call_args[0]
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
+            )
+            variables = files_payload["variables"]
+            assert expected_data == variables
+
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_passes_options(m_request_post, anvil):
             payload = CreateEtchPacket(
                 is_test=False,
@@ -259,32 +264,44 @@ def describe_api():
             anvil.create_etch_packet(payload)
 
             assert m_request_post.call_count == 1
-            assert new_expected in m_request_post.call_args[0]
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
+            )
+            variables = files_payload["variables"]
+            assert new_expected == variables
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_valid_dict_type(m_request_post, anvil):
             anvil.create_etch_packet(
                 dict(name="Packet name", signature_email_subject="The subject")
             )
             assert m_request_post.call_count == 1
-            assert expected_data in m_request_post.call_args[0]
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
+            )
+            variables = files_payload["variables"]
+            assert expected_data == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_dict_with_signer(
             m_request_post, m_create_unique, anvil
         ):
             m_create_unique.return_value = "signer-mock-generated"
             anvil.create_etch_packet(payload=payloads.ETCH_TEST_PAYLOAD)
             assert m_request_post.call_count == 1
-            assert payloads.EXPECTED_ETCH_TEST_PAYLOAD in m_request_post.call_args[0]
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
+            )
+            variables = files_payload["variables"]
+            assert payloads.EXPECTED_ETCH_TEST_PAYLOAD == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_create_etch_packet_json(m_request_post, m_create_unique, anvil):
             m_create_unique.return_value = "signer-mock-generated"
             # We are currently removing `None`s from the payload, so do that here too.
@@ -295,12 +312,17 @@ def describe_api():
             }
             anvil.create_etch_packet(json=json.dumps(payload))
             assert m_request_post.call_count == 1
-            assert payload in m_request_post.call_args[0]
+
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
+            )
+            variables = files_payload["variables"]
+            assert payload == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
         def test_adding_unsupported_fields(m_request_post, m_create_unique, anvil):
             m_create_unique.return_value = "signer-mock-generated"
             # We are currently removing `None`s from the payload, so do that here too.
@@ -313,11 +335,13 @@ def describe_api():
             cep.newFeature = True  # type: ignore[attr-defined]
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
-            assert (
-                cep.dict(by_alias=True, exclude_none=True)
-                == m_request_post.call_args[0][1]
+
+            files_payload = json.loads(
+                m_request_post.call_args.kwargs["files"]["operations"][1]
             )
-            assert "newFeature" in m_request_post.call_args[0][1]
+            variables = files_payload["variables"]
+            assert cep.dict(by_alias=True, exclude_none=True) == variables
+            assert "newFeature" in variables
 
     def describe_forge_submit():
         expected_data = {

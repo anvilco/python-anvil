@@ -65,6 +65,7 @@ def describe_http_client():
                 auth="my_auth",
                 params=None,
                 retry=True,
+                files=None,
             )
 
     def describe_do_request():
@@ -83,6 +84,7 @@ def describe_http_client():
                 data=None,
                 auth=None,
                 params=None,
+                files=None,
             )
 
         @mock.patch("python_anvil.http.RateLimitException")
@@ -111,6 +113,7 @@ def describe_http_client():
                 data=None,
                 auth=None,
                 params=None,
+                files=None,
             )
 
         @mock.patch("python_anvil.http.RateLimitException")
@@ -138,4 +141,5 @@ def describe_http_client():
                 data=None,
                 auth=None,
                 params=None,
+                files=None,
             )
