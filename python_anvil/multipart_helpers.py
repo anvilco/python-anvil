@@ -3,9 +3,10 @@ import json
 import mimetypes
 from io import BufferedIOBase
 from pathlib import Path
-from typing import Any, Callable, Optional, List, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from python_anvil.api_resources.mutations import BaseQuery
+
 
 FileLikeObject = Union[Path, BufferedIOBase]
 

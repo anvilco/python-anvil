@@ -7,12 +7,12 @@ from io import BufferedIOBase
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     Field,
+    FilePath,
     HttpUrl,
     root_validator,
     validator,
-    FilePath,
 )
-from typing import Any, Dict, List, Optional, Text, Union, Callable, Tuple
+from typing import Any, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .base import BaseModel
 

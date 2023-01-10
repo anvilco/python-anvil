@@ -1,15 +1,15 @@
 # pylint: disable=too-many-instance-attributes
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
+    AttachableEtchFile,
+    Base64Upload,
     CreateEtchFilePayload,
     CreateEtchPacketPayload,
     DocumentUpload,
     EtchSigner,
-    AttachableEtchFile,
-    Base64Upload,
 )
 from python_anvil.utils import create_unique_id
 
@@ -202,6 +202,40 @@ class CreateEtchPacket(BaseQuery):
                 )
         return self.file_payloads
 
+    def get_files_for_payload(self) -> Tuple[List[AttachableEtchFile], List[Any]]:
+        """Scan through and gather files for use in multipart requests.
+
+        During the process, files will be replaced with a dummy `Path`
+        instance as `Callable` instances and likely their returns of some
+        sort of IO reader is not serializable and not easily dealt with in
+        pydantic (the underlying model system for the types used in this
+        library). Closer to the actual request, when the multipart payload is
+        being constructed, the dummy instances will be replaced by their actual
+        file instances.
+
+        :return: Tuple containing a list of uploadable file types, and a list
+            of actual file references
+        :rtype: Tuple[List, List]
+        """
+        contains_uploads = any([isinstance(f, DocumentUpload) for f in self.files])
+        if not contains_uploads:
+            return self.files, []
+
+        files = []
+        for idx, f in enumerate(self.files):
+            if not isinstance(f, DocumentUpload):
+                continue
+
+            if getattr(f.Config, "contains_uploads", False):
+                attr_name = getattr(f.Config, "contains_uploads")
+                upload = getattr(f, attr_name)
+
+                if not isinstance(upload, Base64Upload):
+                    files.append(upload)
+                    setattr(f, attr_name, Path())
+
+        return self.files, files
+
     def create_payload(self) -> Tuple[CreateEtchPacketPayload, List]:
         """Create a payload based on data set on the class instance.
 
@@ -235,23 +269,3 @@ class CreateEtchPacket(BaseQuery):
         )
 
         return payload, file_refs
-
-    def get_files_for_payload(self) -> Tuple[List[AttachableEtchFile], List[Any]]:
-        contains_uploads = any([isinstance(f, DocumentUpload) for f in self.files])
-        if not contains_uploads:
-            return self.files, []
-
-        files = []
-        for idx, f in enumerate(self.files):
-            if not isinstance(f, DocumentUpload):
-                continue
-
-            if getattr(f.Config, "contains_uploads", False):
-                attr_name = getattr(f.Config, "contains_uploads")
-                upload = getattr(f, attr_name)
-
-                if not isinstance(upload, Base64Upload):
-                    files.append(upload)
-                    setattr(f, attr_name, Path())
-
-        return self.files, files

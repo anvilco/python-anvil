@@ -12,6 +12,7 @@ from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
 from .http import HTTPClient
 from .multipart_helpers import get_multipart_payload
 
+
 logger = getLogger(__name__)
 
 
