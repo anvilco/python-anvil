@@ -1,8 +1,12 @@
+import os
+
 from python_anvil.api import Anvil
 from python_anvil.api_resources.payload import GeneratePDFPayload
 
 
-API_KEY = 'my-api-key'
+API_KEY = os.environ.get("ANVIL_API_KEY")
+# or set your own key here
+# API_KEY = 'my-api-key'
 
 
 def main():

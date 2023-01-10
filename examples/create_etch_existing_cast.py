@@ -1,11 +1,15 @@
 # pylint: disable=duplicate-code
 
+import os
+
 from python_anvil.api import Anvil
 from python_anvil.api_resources.mutations.create_etch_packet import CreateEtchPacket
 from python_anvil.api_resources.payload import EtchCastRef, EtchSigner, SignerField
 
 
-API_KEY = 'my-api-key'
+API_KEY = os.environ.get("ANVIL_API_KEY")
+# or set your own key here
+# API_KEY = 'my-api-key'
 
 
 def main():
