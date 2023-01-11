@@ -1,4 +1,4 @@
-# 1.8.0 (2022-09-09)
+# 1.8.0 (2022-01-10)
 
 - Added support for multipart uploads on `CreateEtchPacket` requests.
 - New example for multipart uploads in `examples/create_etch_upload_file_multipart.py`
