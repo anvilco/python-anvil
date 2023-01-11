@@ -4,6 +4,9 @@
 - Add additional variables for `CreateEtchPacket` mutation
 - Add missing `webhookURL` variable in `ForgeSubmit` mutation
 - Add `forgeSubmit` example
+# 2.0.0 (2023-??) In progress
+
+- **[BREAKING CHANGE]** Minimum required Python version updated to `>=3.7.2`
 
 # 1.8.0 (2023-01-10)
 
