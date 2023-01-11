@@ -55,7 +55,6 @@ pylint = "2.15.10"
 pytest = "^7.2.0"
 pytest-cov = "*"
 pytest-describe = "^2.0"
-pytest-expecter = "*"
 pytest-random = "*"
 freezegun = "*"
 

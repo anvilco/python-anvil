@@ -1,34 +1,27 @@
 # pylint: disable=redefined-outer-name,unused-variable,expression-not-assigned,singleton-comparison
 
-from expecter import expect
-
 from python_anvil.utils import build_batch_filenames, camel_to_snake, create_unique_id
 
 
 def describe_build_batch_filenames():
     def test_with_normal_filename():
         gen = build_batch_filenames("somefile.txt")
-        file = next(gen)
-        expect(file) == "somefile-0.txt"
-        file = next(gen)
-        expect(file) == "somefile-1.txt"
+        assert next(gen) == "somefile-0.txt"
+        assert next(gen) == "somefile-1.txt"
 
     def test_with_start_index():
         gen = build_batch_filenames("somefile.txt", start_idx=100)
         file = next(gen)
-        expect(file) == "somefile-100.txt"
-        file = next(gen)
-        expect(file) == "somefile-101.txt"
+        assert next(gen) == "somefile-100.txt"
+        assert next(gen) == "somefile-101.txt"
 
     def test_with_separator():
         gen = build_batch_filenames("somefile.txt", separator=":::")
-        file = next(gen)
-        expect(file) == "somefile:::0.txt"
+        assert next(gen) == "somefile:::0.txt"
 
     def test_with_all():
         gen = build_batch_filenames("somefile.txt", start_idx=555, separator=":::")
-        file = next(gen)
-        expect(file) == "somefile:::555.txt"
+        assert next(gen) == "somefile:::555.txt"
 
 
 def describe_create_unique_id():

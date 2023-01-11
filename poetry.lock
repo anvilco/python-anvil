@@ -1377,18 +1377,6 @@ files = [
 pytest = ">=4.0.0"
 
 [[package]]
-name = "pytest-expecter"
-version = "2.3"
-description = "Better testing with expecter and pytest."
-category = "dev"
-optional = false
-python-versions = ">=3.6,<4.0"
-files = [
-    {file = "pytest-expecter-2.3.tar.gz", hash = "sha256:8e6a3e565fbc524e5a4988b664d1b748e0a810b33233880aa5d3d78970351e06"},
-    {file = "pytest_expecter-2.3-py3-none-any.whl", hash = "sha256:6336d7f43221500e392014a949fd77ee2c2a84bcae2be7669acdd0d7c89b89e9"},
-]
-
-[[package]]
 name = "pytest-random"
 version = "0.02"
 description = "py.test plugin to randomize tests"
@@ -1997,4 +1985,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.2,<3.12"
-content-hash = "62195d49ee21b0053f9e3a0e72282a37403b4b612f2c4a034bd408ca79ce0df5"
+content-hash = "0bf5e0a9422809941104f46bd8e9c20dc2945b202599c0261034ebb3ea30ad7b"
