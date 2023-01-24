@@ -146,14 +146,37 @@ class Anvil:
             "generate-pdf", data=data.dict(by_alias=True, exclude_none=True), **kwargs
         )
 
-    def get_cast(self, eid: str, fields=None, **kwargs):
+    def get_cast(
+        self,
+        eid: str,
+        fields: Optional[List[str]] = None,
+        version_number: Optional[int] = None,
+        cast_args: Optional[List[str]] = None,
+        **kwargs,
+    ):
+
         if not fields:
             # Use default fields
             fields = ['eid', 'title', 'fieldInfo']
 
+        if not cast_args:
+            cast_args = []
+
+        cast_args.append(('eid', f'"{eid}"'))
+
+        # If `version_number` isn't provided, the API will default to the
+        # latest published version.
+        if version_number:
+            cast_args.append(("versionNumber", str(version_number)))
+
+        arg_str = ""
+        if len(cast_args):
+            joined_args = [(":".join(arg)) for arg in cast_args]
+            arg_str = f"({','.join(joined_args)})"
+
         res = self.query(
             f"""{{
-              cast(eid: "{eid}") {{
+              cast {arg_str} {{
                 {" ".join(fields)}
               }}
             }}""",
