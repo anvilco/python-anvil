@@ -230,6 +230,9 @@ class CreateEtchPacketPayload(BaseModel):
     webhook_url: Optional[str] = Field(None, alias="webhookURL")
     reply_to_name: Optional[Any] = None
     reply_to_email: Optional[Any] = None
+    enable_emails: Optional[Union[bool, List[str]]] = None
+    create_cast_templates_from_uploads: Optional[bool] = None
+    duplicate_casts: Optional[bool] = None
 
 
 class ForgeSubmitPayload(BaseModel):

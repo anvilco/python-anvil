@@ -56,6 +56,9 @@ mutation CreateEtchPacket (
     $replyToName: String,
     $replyToEmail: String,
     $data: JSON,
+    $enableEmails: JSON,
+    $createCastTemplatesFromUploads: Boolean,
+    $duplicateCasts: Boolean=false,
   ) {{
     createEtchPacket (
       name: $name,
@@ -71,7 +74,10 @@ mutation CreateEtchPacket (
       webhookURL: $webhookURL,
       replyToName: $replyToName,
       replyToEmail: $replyToEmail,
-      data: $data
+      data: $data,
+      enableEmails: $enableEmails,
+      createCastTemplatesFromUploads: $createCastTemplatesFromUploads,
+      duplicateCasts: $duplicateCasts
     )
         {query}
   }}
@@ -82,7 +88,7 @@ class CreateEtchPacket(BaseQuery):
     mutation = CREATE_ETCH_PACKET
     mutation_res_query = DEFAULT_RESPONSE_QUERY
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-locals
         self,
         name: Optional[str] = None,
         signature_email_subject: Optional[str] = None,
@@ -98,6 +104,9 @@ class CreateEtchPacket(BaseQuery):
         reply_to_name: Optional[str] = None,
         reply_to_email: Optional[str] = None,
         merge_pdfs: Optional[bool] = None,
+        enable_emails: Optional[Union[bool, List[str]]] = None,
+        create_cast_templates_from_uploads: Optional[bool] = None,
+        duplicate_casts: Optional[bool] = None,
     ):
         # `name` is required when `payload` is not present.
         if not payload and not name:
@@ -120,6 +129,9 @@ class CreateEtchPacket(BaseQuery):
         self.reply_to_name = reply_to_name
         self.reply_to_email = reply_to_email
         self.merge_pdfs = merge_pdfs
+        self.enable_emails = enable_emails
+        self.create_cast_templates_from_uploads = create_cast_templates_from_uploads
+        self.duplicate_casts = duplicate_casts
 
     @classmethod
     def create_from_dict(cls, payload: Dict) -> 'CreateEtchPacket':
@@ -268,6 +280,9 @@ class CreateEtchPacket(BaseQuery):
             reply_to_email=self.reply_to_email,
             reply_to_name=self.reply_to_name,
             merge_pdfs=self.merge_pdfs,
+            enable_emails=self.enable_emails,
+            create_cast_templates_from_uploads=self.create_cast_templates_from_uploads,
+            duplicate_casts=self.duplicate_casts,
         )
 
         return payload, file_refs
