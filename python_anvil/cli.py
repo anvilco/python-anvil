@@ -5,7 +5,7 @@ from csv import DictReader
 from logging import getLogger
 from tabulate import tabulate
 from time import sleep
-from typing import List
+from typing import Any, Dict, List
 
 from python_anvil import utils
 
@@ -150,9 +150,9 @@ def cast(ctx, eid, version_number, list_all, list_templates):
 
     if eid:
         click.echo(f"Getting cast with eid '{eid}' \n")
-        res = anvil.get_cast(eid, version_number=version_number, debug=debug)
+        _res = anvil.get_cast(eid, version_number=version_number, debug=debug)
 
-        if contains_headers(res):
+        if contains_headers(_res):
             res, headers = process_response(res)
             if debug:
                 click.echo(headers)
@@ -160,12 +160,12 @@ def cast(ctx, eid, version_number, list_all, list_templates):
         def get_field_info(cc):
             return tabulate(cc.get("fields", []))
 
-        if not res:
+        if not _res:
             click.echo(f"Cast with eid: {eid} not found")
             return
 
-        table_data = [[res["eid"], res["title"], get_field_info(res["fieldInfo"])]]
-        click.echo(tabulate(table_data, tablefmt="pretty", headers=res.keys()))
+        table_data = [[_res["eid"], _res["title"], get_field_info(_res["fieldInfo"])]]
+        click.echo(tabulate(table_data, tablefmt="pretty", headers=list(_res.keys())))
 
 
 @cli.command("fill-pdf")

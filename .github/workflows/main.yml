@@ -1,0 +1,46 @@
+name: Run linters and tests
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'poetry'
+
+    - name: Install poetry dependencies
+      run: poetry install
+
+    - name: Check dependencies
+      run: make doctor
+
+    - name: Install dependencies
+      run: make install
+
+    - name: Check code
+      run: make check
+
+    - name: Test code
+      run: make test
+
+#    - name: Upload coverage
+#      uses: codecov/codecov-action@v1
+#      with:
+#        fail_ci_if_error: true
