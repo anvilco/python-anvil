@@ -151,18 +151,18 @@ class Anvil:
         eid: str,
         fields: Optional[List[str]] = None,
         version_number: Optional[int] = None,
-        cast_args: Optional[List[str]] = None,
+        cast_args: Optional[List[Tuple[str, str]]] = None,
         **kwargs,
-    ):
+    ) -> Dict[str, Any]:
 
         if not fields:
             # Use default fields
-            fields = ['eid', 'title', 'fieldInfo']
+            fields = ["eid", "title", "fieldInfo"]
 
         if not cast_args:
             cast_args = []
 
-        cast_args.append(('eid', f'"{eid}"'))
+        cast_args.append(("eid", f'"{eid}"'))
 
         # If `version_number` isn't provided, the API will default to the
         # latest published version.
@@ -183,14 +183,12 @@ class Anvil:
             **kwargs,
         )
 
-        def get_data(r):
+        def get_data(r) -> Dict[str, Any]:
             return r["data"]["cast"]
 
         return _get_return(res, get_data=get_data)
 
-    def get_casts(
-        self, fields=None, show_all=False, **kwargs
-    ) -> Union[List, Tuple[List, Dict]]:
+    def get_casts(self, fields=None, show_all=False, **kwargs) -> List[Dict[str, Any]]:
         if not fields:
             # Use default fields
             fields = ["eid", "title", "fieldInfo"]

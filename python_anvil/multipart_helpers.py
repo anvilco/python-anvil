@@ -3,7 +3,7 @@ import json
 import mimetypes
 from io import BufferedIOBase
 from pathlib import Path
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from python_anvil.api_resources.mutations import BaseQuery
 
@@ -95,7 +95,10 @@ def get_multipart_payload(mutation: BaseQuery):  # pylint: disable=too-many-loca
     for idx, filepath in enumerate(multipart_map):
         filemap[idx] = [filepath[0]]
 
-    files = {"operations": (None, operations), "map": (None, json.dumps(filemap))}
+    files = {
+        "operations": (None, operations),
+        "map": (None, json.dumps(filemap)),
+    }  # type: Dict[str, Union[Tuple[None, str], Tuple[Any, Any, Optional[str]]]]
 
     for idx, file_or_path in enumerate(to_upload):
         # `key` here is most likely going to be a list index (int), but
@@ -104,7 +107,7 @@ def get_multipart_payload(mutation: BaseQuery):  # pylint: disable=too-many-loca
         actual_key = str(idx)
 
         # This is already a file-like object, pass it directly to `requests`.
-        if isinstance(file_or_path, Callable):
+        if isinstance(file_or_path, Callable):  # type: ignore
             # If you have a `ValueError` here, make sure your callable returns
             # a tuple of the file and filename:
             # Example: (open(file, "rb"), "file.pdf"))

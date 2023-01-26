@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 from python_anvil.http import HTTPClient
 
 
@@ -97,14 +99,14 @@ class GraphqlRequest(AnvilRequest):
             raise AssertionError(
                 "Either `query` or `files` must be passed in " "to this method."
             )
-        data = {}
+        data: Dict[str, Any] = {}
 
         if query:
             data["query"] = query
 
         if files and is_multipart:
             # Make sure `data` is nothing when we're doing a multipart request.
-            data = None
+            data = {}
         elif variables:
             data["variables"] = variables
 
