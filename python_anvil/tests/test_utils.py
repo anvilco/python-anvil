@@ -11,7 +11,6 @@ def describe_build_batch_filenames():
 
     def test_with_start_index():
         gen = build_batch_filenames("somefile.txt", start_idx=100)
-        file = next(gen)
         assert next(gen) == "somefile-100.txt"
         assert next(gen) == "somefile-101.txt"
 
