@@ -1,4 +1,4 @@
-name: main
+name: Run linters and tests
 
 on: [push]
 
