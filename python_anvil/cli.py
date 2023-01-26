@@ -125,18 +125,19 @@ def weld(ctx, eid, list_all):
 @click.option(
     "-a", "--all", "list_all", help="List all casts, even non-templates", is_flag=True
 )
+@click.option("--version_number", help="Get the specified version of this cast")
 @click.argument("eid", default="")
 @click.pass_context
-def cast(ctx, eid, list_all, list_templates):
+def cast(ctx, eid, version_number, list_all, list_templates):
     """Fetch Cast data given a Cast eid."""
-    anvil = ctx.obj["anvil"]
+    anvil = ctx.obj["anvil"]  # type: Anvil
     debug = ctx.obj["debug"]
 
     if not eid and not (list_templates or list_all):
         raise AssertionError("Cast eid or --list/--all option required")
 
     if list_all or list_templates:
-        res = anvil.get_casts(debug=debug, show_all=list_all)
+        res = anvil.get_casts(show_all=list_all, debug=debug)
 
         if contains_headers(res):
             res, headers = process_response(res)
@@ -149,7 +150,7 @@ def cast(ctx, eid, list_all, list_templates):
 
     if eid:
         click.echo(f"Getting cast with eid '{eid}' \n")
-        res = anvil.get_cast(eid, debug=debug)
+        res = anvil.get_cast(eid, version_number=version_number, debug=debug)
 
         if contains_headers(res):
             res, headers = process_response(res)

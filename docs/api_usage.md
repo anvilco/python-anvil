@@ -119,6 +119,8 @@ casts, but this can be changed with the `fields` argument.
 
 * `eid` - The eid of the Cast
 * `fields` - (Optional) list of fields you want from the Cast instance.
+* `version_number` - (Optional) Version number of the cast to fill out. If this is not provided, the latest published
+  version will be used.
 
 ### Anvil.get_welds
 
