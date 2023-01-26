@@ -357,7 +357,7 @@ def describe_api():
             )
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
-            assert expected_data in m_request_post.call_args[0]
+            assert expected_data == m_request_post.call_args[0][1]
 
         @mock.patch('python_anvil.api.GraphqlRequest.post')
         def test_invalid_wd_submission(m_request_post, anvil):
@@ -391,13 +391,16 @@ def describe_api():
                 weld_data_eid="wd1234",
                 payload=dict(field1="Updated data"),
             )
-            expected_data.update(
-                {
-                    "submissionEid": "sub1234",
-                    "weldDataEid": "wd1234",
-                    "payload": {"field1": "Updated data"},
-                }
-            )
+
+            # We copy `expected_data` here as it can cause a race condition
+            # in other tests that use it.
+            _expected_data = {
+                **expected_data,
+                "submissionEid": "sub1234",
+                "weldDataEid": "wd1234",
+                "payload": {"field1": "Updated data"},
+            }
+
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
-            assert expected_data in m_request_post.call_args[0]
+            assert _expected_data in m_request_post.call_args[0]
