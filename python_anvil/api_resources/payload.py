@@ -1,4 +1,4 @@
-# pylint: disable=no-self-argument,no-self-use
+# pylint: disable=no-self-argument
 
 import sys
 from io import BufferedIOBase

@@ -15,6 +15,6 @@ class BaseQuery:
     def create_payload(self):
         if not self.mutation:
             raise ValueError(
-                "`mutation` property must be set on the inheriting" "class level"
+                "`mutation` property must be set on the inheriting class level"
             )
         raise NotImplementedError()

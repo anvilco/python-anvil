@@ -97,7 +97,7 @@ class GraphqlRequest(AnvilRequest):
     ):
         if not query and not files:
             raise AssertionError(
-                "Either `query` or `files` must be passed in " "to this method."
+                "Either `query` or `files` must be passed into this method."
             )
         data: Dict[str, Any] = {}
 

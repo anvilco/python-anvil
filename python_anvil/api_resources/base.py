@@ -1,4 +1,4 @@
-# pylint: disable=no-self-argument,no-self-use
+# pylint: disable=no-self-argument
 import re
 
 # Disabling pylint no-name-in-module because this is the documented way to
