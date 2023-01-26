@@ -244,9 +244,8 @@ def describe_api():
             anvil.create_etch_packet(payload=payload)
             assert m_request_post.call_count == 1
 
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert expected_data == variables
 
@@ -264,9 +263,8 @@ def describe_api():
             anvil.create_etch_packet(payload)
 
             assert m_request_post.call_count == 1
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert new_expected == variables
 
@@ -276,9 +274,8 @@ def describe_api():
                 dict(name="Packet name", signature_email_subject="The subject")
             )
             assert m_request_post.call_count == 1
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert expected_data == variables
 
@@ -292,9 +289,8 @@ def describe_api():
             m_create_unique.return_value = "signer-mock-generated"
             anvil.create_etch_packet(payload=payloads.ETCH_TEST_PAYLOAD)
             assert m_request_post.call_count == 1
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert payloads.EXPECTED_ETCH_TEST_PAYLOAD == variables
 
@@ -313,9 +309,8 @@ def describe_api():
             anvil.create_etch_packet(json=json.dumps(payload))
             assert m_request_post.call_count == 1
 
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert payload == variables
 
@@ -336,9 +331,8 @@ def describe_api():
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
 
-            files_payload = json.loads(
-                m_request_post.call_args.kwargs["files"]["operations"][1]
-            )
+            files = m_request_post.call_args[1]["files"]
+            files_payload = json.loads(files["operations"][1])
             variables = files_payload["variables"]
             assert cep.dict(by_alias=True, exclude_none=True) == variables
             assert "newFeature" in variables
