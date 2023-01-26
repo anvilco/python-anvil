@@ -2,6 +2,7 @@
 import json
 import pytest
 from pydantic import ValidationError
+from typing import Any, MutableMapping
 from unittest import mock
 
 from python_anvil.api import Anvil, CreateEtchPacket
@@ -394,7 +395,7 @@ def describe_api():
 
             # We copy `expected_data` here as it can cause a race condition
             # in other tests that use it.
-            _expected_data = {
+            _expected_data: MutableMapping[str, Any] = {
                 **expected_data,
                 "submissionEid": "sub1234",
                 "weldDataEid": "wd1234",
