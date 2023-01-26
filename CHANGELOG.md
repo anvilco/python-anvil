@@ -1,3 +1,10 @@
+# 1.9.0 (2023-01-26)
+
+- Clearer version number support
+- Add additional variables for `CreateEtchPacket` mutation
+- Add missing `webhookURL` variable in `ForgeSubmit` mutation
+- Add `forgeSubmit` example
+
 # 1.8.0 (2023-01-10)
 
 - Added support for multipart uploads on `CreateEtchPacket` requests.
