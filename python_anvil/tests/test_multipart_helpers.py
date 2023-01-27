@@ -5,7 +5,9 @@ from python_anvil.multipart_helpers import get_extractable_files_from_payload
 
 def describe_get_extractable_files_from_payload():
     def test_it_works():
-        is_match = lambda x: isinstance(x, int)
+        def is_match(x):
+            return isinstance(x, int)
+
         variables = {
             "one": [{"f1": "data", "f2": 1}],
             "two": {"s2-1": "more data", "s2-2": "more more data", "s2-3": 2},

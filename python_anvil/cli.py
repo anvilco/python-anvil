@@ -1,11 +1,10 @@
-# pylint: disable=too-many-locals
 import click
 import os
 from csv import DictReader
 from logging import getLogger
 from tabulate import tabulate
 from time import sleep
-from typing import Any, Dict, List
+from typing import List
 
 from python_anvil import utils
 

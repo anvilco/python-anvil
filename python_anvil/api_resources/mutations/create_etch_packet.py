@@ -169,7 +169,7 @@ class CreateEtchPacket(BaseQuery):
 
         if data.signer_type not in ["embedded", "email"]:
             raise ValueError(
-                "Etch signer `signer_type` must be only 'embedded'" "or 'email"
+                "Etch signer `signer_type` must be only 'embedded' or 'email"
             )
 
         if not data.id:
@@ -179,7 +179,8 @@ class CreateEtchPacket(BaseQuery):
                 # Basic thing to get the next number
                 # But this might not be necessary since API goes by index
                 # of signers in the list.
-                num = max([(s.routing_order or 0) for s in self.signers]) + 1
+                all_signers = [(s.routing_order or 0) for s in self.signers]
+                num = max(all_signers) + 1
             else:
                 num = 1
             data.routing_order = num

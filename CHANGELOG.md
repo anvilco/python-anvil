@@ -1,3 +1,7 @@
+# 2.0.0 (2023-01-26)
+
+- **[BREAKING CHANGE]** Minimum required Python version updated to `>=3.7.2`
+
 # 1.9.0 (2023-01-26)
 
 - Clearer version number support
