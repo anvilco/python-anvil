@@ -15,9 +15,8 @@ from .api_resources.payload import (
     ForgeSubmitPayload,
     GeneratePDFPayload,
 )
-from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
+from .api_resources.requests import PlainRequest, RestRequest
 from .http import GQLClient, HTTPClient
-from .multipart_helpers import get_multipart_payload
 
 
 logger = getLogger(__name__)
@@ -49,7 +48,10 @@ class Anvil:
     # This is the default when a version is not provided.
     VERSION_LATEST_PUBLISHED = -2
 
-    def __init__(self, api_key=None, environment='dev', endpoint_url=None):
+    def __init__(self, api_key: str, environment="dev", endpoint_url=None):
+        if not api_key:
+            raise ValueError('`api_key` must be a valid string')
+
         self.client = HTTPClient(api_key=api_key, environment=environment)
         self.gql_client = GQLClient.get_client(
             api_key=api_key,
@@ -77,27 +79,27 @@ class Anvil:
 
         return self.gql_client.execute(query, variable_values=variables, **kwargs)
 
-    def mutate(self, query: BaseQuery, variables: dict, **kwargs):
-        gql = GraphqlRequest(client=self.client)
-        return gql.post(query.get_mutation(), variables, **kwargs)
-
-    def mutate_multipart(self, files: Dict, **kwargs):
+    def mutate(self, query: Union[str, BaseQuery], variables: Dict[str, Any], **kwargs):
         """
-        Multipart version of `mutate`.
+        Execute a GraphQL mutation.
 
-        This will send a mutation based on the multipart spec defined here:
+        NOTE: Any files attached provided in `variables` will be sent via the multipart spec:
         https://github.com/jaydenseric/graphql-multipart-request-spec
 
-        Note that `variables` and `query` have been removed and replaced with
-        `files`. The entire GraphQL payload should already be prepared as a
-        `dict` beforehand.
-
-        :param files:
+        :param query:
+        :type query: Union[str, BaseQuery]
+        :param variables:
+        :type variables: Dict[str, Any]
         :param kwargs:
         :return:
         """
-        gql = GraphqlRequest(client=self.client)
-        return gql.post_multipart(files=files, **kwargs)
+        if isinstance(query, str):
+            use_query = gql(query)
+        else:
+            mutation = query.get_mutation()
+            use_query = gql(mutation)
+
+        return self.gql_client.execute(use_query, variable_values=variables, **kwargs)
 
     def request_rest(self, options: Optional[dict] = None):
         api = RestRequest(self.client, options=options)
@@ -380,10 +382,10 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
 
-        files = get_multipart_payload(mutation)
+        payload = mutation.create_payload()
+        variables = payload.dict(by_alias=True, exclude_none=True)
 
-        res = self.mutate_multipart(files, **kwargs)
-        return res
+        return self.mutate(mutation, variables=variables, upload_files=True, **kwargs)
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
         """Generate a signing URL for a given user."""
@@ -404,7 +406,7 @@ class Anvil:
         payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
-    ):
+    ) -> dict:
         """Create a Webform (forge) submission via a graphql mutation."""
         if not any([json, payload]):
             raise TypeError('One of arguments `json` or `payload` are required')

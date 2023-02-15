@@ -25,7 +25,7 @@ def main():
 
     res = anvil.forge_submit(payload=payload)
 
-    data = res["data"]["forgeSubmit"]
+    data = res["forgeSubmit"]
 
     print(data)
 
@@ -49,7 +49,7 @@ def main():
 
     res = anvil.forge_submit(payload=payload)
 
-    data = res["data"]["forgeSubmit"]
+    data = res["forgeSubmit"]
     print(data)
 
 
