@@ -15,6 +15,7 @@ from python_anvil.api_resources.payload import (
 )
 from python_anvil.utils import create_unique_id
 
+
 logger: Logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE_QUERY = """{
@@ -197,15 +198,16 @@ class CreateEtchPacket(BaseQuery):
         uploaded when the mutation actually runs.
         """
         if (
-            isinstance(file.file, BufferedIOBase)
+            isinstance(file, DocumentUpload)
+            and isinstance(file.file, BufferedIOBase)
             and getattr(file.file, "content_type", None) is None
         ):
             # Don't clobber existing `content_type`s provided.
-            content_type, _ = guess_type(file.file.name)
+            content_type, _ = guess_type(file.file.name)  # type: ignore
             logger.debug(
                 "File did not have a `content_type`, guessing as '%s'", content_type
             )
-            file.file.content_type = content_type
+            file.file.content_type = content_type  # type: ignore
 
         self.files.append(file)
 

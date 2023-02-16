@@ -2,7 +2,10 @@ import os
 
 from python_anvil.api import Anvil
 
+
 API_KEY = os.environ.get("ANVIL_API_KEY")
+# or set your own key here
+# API_KEY = 'my-api-key'
 
 
 def call_current_user_query(anvil: Anvil) -> dict:

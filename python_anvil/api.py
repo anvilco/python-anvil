@@ -1,6 +1,6 @@
+import logging
 from gql import gql
 from graphql import DocumentNode
-from logging import getLogger
 from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .api_resources.mutations import (
@@ -19,7 +19,7 @@ from .api_resources.requests import PlainRequest, RestRequest
 from .http import GQLClient, HTTPClient
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _get_return(res: Dict, get_data: Callable[[Dict], Union[Dict, List]]):
@@ -74,6 +74,8 @@ class Anvil:
         :param kwargs:
         :return:
         """
+        # Remove `debug` for now.
+        debug = kwargs.pop("debug")
         if isinstance(query, str):
             query = gql(query)
 
@@ -93,6 +95,8 @@ class Anvil:
         :param kwargs:
         :return:
         """
+        # Remove `debug` for now.
+        debug = kwargs.pop("debug")
         if isinstance(query, str):
             use_query = gql(query)
         else:

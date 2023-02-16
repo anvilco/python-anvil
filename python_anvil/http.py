@@ -25,7 +25,10 @@ class GQLClient:
 
     @staticmethod
     def get_client(
-        api_key: str, environment: str = "dev", endpoint_url: Optional[str] = None
+        api_key: str,
+        environment: str = "dev",
+        endpoint_url: Optional[str] = None,
+        fetch_schema_from_transport: bool = False,
     ) -> Client:
         auth = HTTPBasicAuth(username=api_key, password="")
         endpoint_url = endpoint_url or GRAPHQL_ENDPOINT
@@ -35,7 +38,10 @@ class GQLClient:
             verify=True,
         )
 
-        return Client(transport=transport, fetch_schema_from_transport=True)
+        return Client(
+            transport=transport,
+            fetch_schema_from_transport=fetch_schema_from_transport,
+        )
 
 
 class HTTPClient:
