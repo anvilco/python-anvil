@@ -7,7 +7,6 @@ from io import BufferedIOBase
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     Field,
-    FilePath,
     HttpUrl,
     root_validator,
     validator,
@@ -184,7 +183,13 @@ class DocumentUpload(BaseModel):
 
     id: str
     title: str
-    file: "UploadableFile"
+    # Previously "UploadableFile", however, that seems to cause weird upload
+    # issues where a PDF file would have its first few bytes removed.
+    # We're now relying on the backend to validate this property instead of on
+    # the client library side.
+    # This might be a bug on the `pydantic` side(?) when this object gets
+    # converted into a dict.
+    file: Any
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
@@ -269,7 +274,7 @@ class ForgeSubmitPayload(BaseModel):
         return values
 
 
-UploadableFile = Union[Base64Upload, FilePath, BufferedIOBase]
+UploadableFile = Union[Base64Upload, BufferedIOBase]
 AttachableEtchFile = Union[
     DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
 ]
