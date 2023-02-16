@@ -1,5 +1,7 @@
 # pylint: disable=too-many-instance-attributes
+import logging
 from io import BufferedIOBase
+from logging import Logger
 from mimetypes import guess_type
 from typing import Any, Dict, List, Optional, Union
 
@@ -13,6 +15,7 @@ from python_anvil.api_resources.payload import (
 )
 from python_anvil.utils import create_unique_id
 
+logger: Logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE_QUERY = """{
   id
@@ -193,8 +196,15 @@ class CreateEtchPacket(BaseQuery):
         Files will not be uploaded when running this method. They will be
         uploaded when the mutation actually runs.
         """
-        if isinstance(file.file, BufferedIOBase):
+        if (
+            isinstance(file.file, BufferedIOBase)
+            and getattr(file.file, "content_type", None) is None
+        ):
+            # Don't clobber existing `content_type`s provided.
             content_type, _ = guess_type(file.file.name)
+            logger.debug(
+                "File did not have a `content_type`, guessing as '%s'", content_type
+            )
             file.file.content_type = content_type
 
         self.files.append(file)
