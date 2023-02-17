@@ -11,8 +11,7 @@ from typing import Optional
 
 from python_anvil.exceptions import AnvilRequestException
 
-from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT
-
+from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT, RETRIES_LIMIT
 
 logger = getLogger(__name__)
 
@@ -34,6 +33,7 @@ class GQLClient:
         auth = HTTPBasicAuth(username=api_key, password="")
         endpoint_url = endpoint_url or GRAPHQL_ENDPOINT
         transport = RequestsHTTPTransport(
+            retries=RETRIES_LIMIT,
             auth=auth,
             url=endpoint_url,
             verify=True,
