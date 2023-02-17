@@ -70,8 +70,8 @@ class Anvil:
         variables: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
-        """
-        Execute a GraphQL query.
+        """Execute a GraphQL query.
+
         :param query:
         :type query: Union[str, DocumentNode]
         :param variables:
@@ -80,17 +80,20 @@ class Anvil:
         :return:
         """
         # Remove `debug` for now.
-        debug = kwargs.pop("debug", None)
+        kwargs.pop("debug", None)
         if isinstance(query, str):
             query = gql(query)
 
         return self.gql_client.execute(query, variable_values=variables, **kwargs)
 
-    def mutate(self, query: Union[str, BaseQuery], variables: Dict[str, Any], **kwargs):
+    def mutate(
+        self, query: Union[str, BaseQuery], variables: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
         """
         Execute a GraphQL mutation.
 
-        NOTE: Any files attached provided in `variables` will be sent via the multipart spec:
+        NOTE: Any files attached provided in `variables` will be sent via the
+        multipart spec:
         https://github.com/jaydenseric/graphql-multipart-request-spec
 
         :param query:
@@ -101,7 +104,7 @@ class Anvil:
         :return:
         """
         # Remove `debug` for now.
-        debug = kwargs.pop("debug", None)
+        kwargs.pop("debug", None)
         if isinstance(query, str):
             use_query = gql(query)
         else:
@@ -227,8 +230,8 @@ class Anvil:
     def get_casts(
         self, fields: Optional[List[str]] = None, show_all: bool = False, **kwargs
     ) -> List[Dict[str, Any]]:
-        """
-        Retrieves all Cast objects for the current user across all organizations.
+        """Retrieve all Cast objects for the current user across all organizations.
+
         :param fields: List of fields to retrieve for each cast object
         :type fields: Optional[List[str]]
         :param show_all: Boolean to show all Cast objects.
@@ -265,8 +268,8 @@ class Anvil:
         return _get_return(res, get_data=get_data)
 
     def get_current_user(self, **kwargs):
-        """
-        Retrieves current user data.
+        """Retrieve current user data.
+
         :param kwargs:
         :return:
         """
@@ -349,6 +352,7 @@ class Anvil:
             }"""
             ),
             variables=dict(eid=eid),
+            **kwargs,
         )
 
         def get_data(r: dict):
@@ -415,7 +419,7 @@ class Anvil:
         payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
-    ) -> dict:
+    ) -> Dict[str, Any]:
         """Create a Webform (forge) submission via a graphql mutation."""
         if not any([json, payload]):
             raise TypeError('One of arguments `json` or `payload` are required')

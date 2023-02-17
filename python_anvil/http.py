@@ -1,6 +1,6 @@
 import requests
 from base64 import b64encode
-from gql import Client, gql
+from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
 from logging import getLogger
 from ratelimit import limits, sleep_and_retry
@@ -10,7 +10,7 @@ from typing import Optional
 
 from python_anvil.exceptions import AnvilRequestException
 
-from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT, REST_ENDPOINT
+from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT
 
 
 logger = getLogger(__name__)
@@ -26,7 +26,7 @@ class GQLClient:
     @staticmethod
     def get_client(
         api_key: str,
-        environment: str = "dev",
+        environment: str = "dev",  # pylint: disable=unused-argument
         endpoint_url: Optional[str] = None,
         fetch_schema_from_transport: bool = False,
     ) -> Client:

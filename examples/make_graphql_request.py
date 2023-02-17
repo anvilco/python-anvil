@@ -9,8 +9,8 @@ API_KEY = os.environ.get("ANVIL_API_KEY")
 
 
 def call_current_user_query(anvil: Anvil) -> dict:
-    """
-    Gets the user data attached to the current API key.
+    """Get the user data attached to the current API key.
+
     :param anvil:
     :type anvil: Anvil
     :return:
@@ -43,8 +43,8 @@ def call_current_user_query(anvil: Anvil) -> dict:
 
 
 def call_weld_query(anvil: Anvil, weld_eid: str):
-    """
-    Call the weld query.
+    """Call the weld query.
+
     The weld() query is an example of a query that takes variables.
     :param anvil:
     :type anvil: Anvil
