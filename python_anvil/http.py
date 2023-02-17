@@ -1,3 +1,4 @@
+import os
 import requests
 from base64 import b64encode
 from gql import Client
@@ -38,7 +39,21 @@ class GQLClient:
             verify=True,
         )
 
+        try:
+            file_dir = os.path.dirname(os.path.realpath(__file__))
+            file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
+            with open(file_path, encoding="utf-8") as f:
+                schema = f.read()
+        except Exception:  # pylint: disable
+            logger.warning(
+                "Unable to find local schema. Will not use schema for local "
+                "validation. Use `fetch_schema_from_transport=True` to allow "
+                "fetching the remote schema."
+            )
+            schema = None
+
         return Client(
+            schema=schema,
             transport=transport,
             fetch_schema_from_transport=fetch_schema_from_transport,
         )

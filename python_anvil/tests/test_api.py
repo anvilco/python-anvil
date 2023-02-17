@@ -17,10 +17,18 @@ from . import payloads
 
 DEV_KEY = "MY-SECRET-KEY"
 
+TEST_SCHEMA = """
+type GenerateEmbedURLResponse {
+  eid: String!
+  url: String!
+}
+"""
+
 
 def describe_api():
     @pytest.fixture
-    def anvil():
+    @mock.patch("builtins.open", new_callable=mock.mock_open, read_data=TEST_SCHEMA)
+    def anvil(m_open):
         return Anvil(api_key=DEV_KEY)
 
     def describe_init():
