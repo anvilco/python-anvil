@@ -75,7 +75,7 @@ class Anvil:
         :return:
         """
         # Remove `debug` for now.
-        debug = kwargs.pop("debug")
+        debug = kwargs.pop("debug", None)
         if isinstance(query, str):
             query = gql(query)
 
@@ -96,7 +96,7 @@ class Anvil:
         :return:
         """
         # Remove `debug` for now.
-        debug = kwargs.pop("debug")
+        debug = kwargs.pop("debug", None)
         if isinstance(query, str):
             use_query = gql(query)
         else:

@@ -175,19 +175,19 @@ def describe_api():
             assert m_request_post.call_count == 0
 
     def describe_current_user_query():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_get_current_user(m_request_post, anvil):
             anvil.get_current_user()
             assert m_request_post.call_count == 1
 
     def describe_get_welds():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_get_weld(m_request_post, anvil):
             anvil.get_welds()
             assert m_request_post.call_count == 1
 
     def describe_generate_etch_signing_url():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_get_url(m_request_post, anvil):
             anvil.generate_etch_signing_url(
                 signer_eid='someId', client_user_id='anotherId'
@@ -201,13 +201,13 @@ def describe_api():
             assert m_request_post.call_count == 1
 
     def describe_get_cast():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_get_cast(m_request_post, anvil):
             anvil.get_cast('castEid')
             assert m_request_post.call_count == 1
 
     def describe_get_casts():
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_get_casts(m_request_post, anvil):
             anvil.get_casts()
             assert m_request_post.call_count == 1
@@ -224,19 +224,19 @@ def describe_api():
             'signaturePageOptions': {},
         }
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_empty_payload(m_request_post, anvil):
             with pytest.raises(TypeError):
                 anvil.create_etch_packet(payload={})
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_invalid_payload(m_request_post, anvil):
             with pytest.raises(TypeError):
                 anvil.create_etch_packet({})
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_valid_payload_type(m_request_post, anvil):
             payload = CreateEtchPacket(
                 name="Packet name",
@@ -245,12 +245,10 @@ def describe_api():
             anvil.create_etch_packet(payload=payload)
             assert m_request_post.call_count == 1
 
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+            variables = m_request_post.call_args[1]["variable_values"]
             assert expected_data == variables
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_passes_options(m_request_post, anvil):
             payload = CreateEtchPacket(
                 is_test=False,
@@ -262,43 +260,39 @@ def describe_api():
             new_expected["isTest"] = False
             new_expected["isDraft"] = True
             anvil.create_etch_packet(payload)
-
             assert m_request_post.call_count == 1
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+
+            variables = m_request_post.call_args[1]["variable_values"]
             assert new_expected == variables
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_valid_dict_type(m_request_post, anvil):
             anvil.create_etch_packet(
                 dict(name="Packet name", signature_email_subject="The subject")
             )
             assert m_request_post.call_count == 1
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+
+            variables = m_request_post.call_args[1]["variable_values"]
             assert expected_data == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_dict_with_signer(
             m_request_post, m_create_unique, anvil
         ):
             m_create_unique.return_value = "signer-mock-generated"
             anvil.create_etch_packet(payload=payloads.ETCH_TEST_PAYLOAD)
             assert m_request_post.call_count == 1
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+
+            variables = m_request_post.call_args[1]["variable_values"]
             assert payloads.EXPECTED_ETCH_TEST_PAYLOAD == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_create_etch_packet_json(m_request_post, m_create_unique, anvil):
             m_create_unique.return_value = "signer-mock-generated"
             # We are currently removing `None`s from the payload, so do that here too.
@@ -310,15 +304,13 @@ def describe_api():
             anvil.create_etch_packet(json=json.dumps(payload))
             assert m_request_post.call_count == 1
 
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+            variables = m_request_post.call_args[1]["variable_values"]
             assert payload == variables
 
         @mock.patch(
             'python_anvil.api_resources.mutations.create_etch_packet.create_unique_id'
         )
-        @mock.patch('python_anvil.api.GraphqlRequest.post_multipart')
+        @mock.patch('gql.Client.execute')
         def test_adding_unsupported_fields(m_request_post, m_create_unique, anvil):
             m_create_unique.return_value = "signer-mock-generated"
             # We are currently removing `None`s from the payload, so do that here too.
@@ -332,9 +324,7 @@ def describe_api():
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
 
-            files = m_request_post.call_args[1]["files"]
-            files_payload = json.loads(files["operations"][1])
-            variables = files_payload["variables"]
+            variables = m_request_post.call_args[1]["variable_values"]
             assert cep.dict(by_alias=True, exclude_none=True) == variables
             assert "newFeature" in variables
 
@@ -345,22 +335,22 @@ def describe_api():
             "isTest": True,
         }
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_invalid_payload(m_request_post, anvil):
             with pytest.raises(TypeError):
                 anvil.forge_submit({})
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_minimum_valid_data_forge_eid(m_request_post, anvil):
             payload = ForgeSubmitPayload(
                 forge_eid="forge1234", payload=dict(field1="Some data")
             )
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
-            assert expected_data == m_request_post.call_args[0][1]
+            assert {"variable_values": expected_data} in m_request_post.call_args
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_invalid_wd_submission(m_request_post, anvil):
             with pytest.raises(ValidationError):
                 payload = dict(
@@ -384,7 +374,7 @@ def describe_api():
                 anvil.forge_submit(payload=payload)
                 assert m_request_post.call_count == 0
 
-        @mock.patch('python_anvil.api.GraphqlRequest.post')
+        @mock.patch('gql.Client.execute')
         def test_minimum_valid_data_submission(m_request_post, anvil):
             payload = ForgeSubmitPayload(
                 forge_eid="forge1234",
@@ -396,12 +386,14 @@ def describe_api():
             # We copy `expected_data` here as it can cause a race condition
             # in other tests that use it.
             _expected_data: MutableMapping[str, Any] = {
-                **expected_data,
-                "submissionEid": "sub1234",
-                "weldDataEid": "wd1234",
-                "payload": {"field1": "Updated data"},
+                "variable_values": {
+                    **expected_data,
+                    "submissionEid": "sub1234",
+                    "weldDataEid": "wd1234",
+                    "payload": {"field1": "Updated data"},
+                }
             }
 
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
-            assert _expected_data in m_request_post.call_args[0]
+            assert _expected_data in m_request_post.call_args
