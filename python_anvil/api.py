@@ -48,7 +48,12 @@ class Anvil:
     # This is the default when a version is not provided.
     VERSION_LATEST_PUBLISHED = -2
 
-    def __init__(self, api_key: str, environment="dev", endpoint_url=None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        environment="dev",
+        endpoint_url=None,
+    ):
         if not api_key:
             raise ValueError('`api_key` must be a valid string')
 
