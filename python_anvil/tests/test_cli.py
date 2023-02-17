@@ -71,3 +71,42 @@ def describe_cli():
                 )
                 generate_pdf.assert_called_once_with(in_data, debug=False)
                 m().write.assert_called_once_with("Some bytes")
+
+    def describe_gql_query():
+        @mock.patch("python_anvil.api.Anvil.query")
+        def it_works_query_only(query, runner, monkeypatch):
+            set_key(monkeypatch)
+
+            query.return_value = dict(
+                eid="abc123",
+                name="Some User",
+            )
+
+            query_str = """
+            query SomeQuery {
+                someQuery { eid name }
+            }
+            """
+
+            runner.invoke(cli, ['gql-query', '-q', query_str])
+            query.assert_called_once_with(query_str, variables=None, debug=False)
+
+        @mock.patch("python_anvil.api.Anvil.query")
+        def it_works_query_and_variables(query, runner, monkeypatch):
+            set_key(monkeypatch)
+
+            query.return_value = dict(
+                eid="abc123",
+                name="Some User",
+            )
+
+            query_str = """
+            query SomeQuery ($eid: String) {
+                someQuery(eid: $eid) { eid name }
+            }
+            """
+
+            variables = json.dumps(dict(eid="abc123"))
+
+            runner.invoke(cli, ['gql-query', '-q', query_str, '-v', variables])
+            query.assert_called_once_with(query_str, variables=variables, debug=False)

@@ -24,15 +24,43 @@ def describe_api():
         return Anvil(api_key=DEV_KEY)
 
     def describe_init():
+        @mock.patch('python_anvil.api.GQLClient')
         @mock.patch('python_anvil.api.HTTPClient')
-        def test_init_key_default(mock_client):
+        def test_init_key_default(mock_client, mock_gql):
             Anvil(api_key="what")
             mock_client.assert_called_once_with(api_key="what", environment="dev")
+            mock_gql.get_client.assert_called_once_with(
+                api_key="what", environment="dev", endpoint_url=None
+            )
 
+        @mock.patch('python_anvil.api.GQLClient')
         @mock.patch('python_anvil.api.HTTPClient')
-        def test_init_key_prod(mock_client):
+        def test_init_with_endpoint(mock_client, mock_gql):
+            Anvil(api_key="what", endpoint_url="http://somewhere.example")
+            mock_client.assert_called_once_with(api_key="what", environment="dev")
+            mock_gql.get_client.assert_called_once_with(
+                api_key="what",
+                environment="dev",
+                endpoint_url="http://somewhere.example",
+            )
+
+        @mock.patch('python_anvil.api.GQLClient')
+        @mock.patch('python_anvil.api.HTTPClient')
+        def test_init_key_prod(mock_client, mock_gql):
             Anvil(api_key="what", environment="prod")
             mock_client.assert_called_once_with(api_key="what", environment="prod")
+            mock_gql.get_client.assert_called_once_with(
+                api_key="what", environment="prod", endpoint_url=None
+            )
+
+        @mock.patch('python_anvil.api.GQLClient')
+        @mock.patch('python_anvil.api.HTTPClient')
+        def test_init_no_key(mock_client, mock_gql):
+            with pytest.raises(ValueError):
+                Anvil(environment="prod")
+
+            assert mock_client.call_count == 0
+            assert mock_gql.get_client.call_count == 0
 
     def describe_query():
         def test_query():
