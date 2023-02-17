@@ -2,6 +2,7 @@ import os
 import requests
 from base64 import b64encode
 from gql import Client
+from gql.dsl import DSLSchema
 from gql.transport.requests import RequestsHTTPTransport
 from logging import getLogger
 from ratelimit import limits, sleep_and_retry
@@ -13,11 +14,43 @@ from python_anvil.exceptions import AnvilRequestException
 
 from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT, RETRIES_LIMIT
 
+
 logger = getLogger(__name__)
 
 
 def _handle_request_error(e: Exception):
     raise e
+
+
+def get_local_schema(raise_on_error=False) -> Optional[str]:
+    """
+    Retrieve local GraphQL schema.
+
+    :param raise_on_error:
+    :return:
+    """
+    try:
+        file_dir = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
+        with open(file_path, encoding="utf-8") as file:
+            schema = file.read()
+    except Exception:  # pylint: disable
+        logger.warning(
+            "Unable to find local schema. Will not use schema for local "
+            "validation. Use `fetch_schema_from_transport=True` to allow "
+            "fetching the remote schema."
+        )
+        if raise_on_error:
+            raise
+        schema = None
+
+    return schema
+
+
+def get_gql_ds(client: Client):
+    if not client.schema:
+        raise ValueError("Client does not have a valid GraphQL schema.")
+    return DSLSchema(client.schema)
 
 
 class GQLClient:
@@ -39,18 +72,7 @@ class GQLClient:
             verify=True,
         )
 
-        try:
-            file_dir = os.path.dirname(os.path.realpath(__file__))
-            file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
-            with open(file_path, encoding="utf-8") as f:
-                schema = f.read()
-        except Exception:  # pylint: disable
-            logger.warning(
-                "Unable to find local schema. Will not use schema for local "
-                "validation. Use `fetch_schema_from_transport=True` to allow "
-                "fetching the remote schema."
-            )
-            schema = None
+        schema = get_local_schema(raise_on_error=False)
 
         return Client(
             schema=schema,
