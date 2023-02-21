@@ -1,31 +1,84 @@
+import os
 import requests
 from base64 import b64encode
+from gql import Client
+from gql.dsl import DSLSchema
+from gql.transport.requests import RequestsHTTPTransport
 from logging import getLogger
 from ratelimit import limits, sleep_and_retry
 from ratelimit.exception import RateLimitException
 from requests.auth import HTTPBasicAuth
+from typing import Optional
 
 from python_anvil.exceptions import AnvilRequestException
+
+from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT, RETRIES_LIMIT
 
 
 logger = getLogger(__name__)
 
-REQUESTS_LIMIT = {
-    "dev": {
-        "calls": 2,
-        "seconds": 1,
-    },
-    "prod": {
-        "calls": 40,
-        "seconds": 1,
-    },
-}
-
-RATELIMIT_ENV = "dev"
-
 
 def _handle_request_error(e: Exception):
     raise e
+
+
+def get_local_schema(raise_on_error=False) -> Optional[str]:
+    """
+    Retrieve local GraphQL schema.
+
+    :param raise_on_error:
+    :return:
+    """
+    try:
+        file_dir = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
+        with open(file_path, encoding="utf-8") as file:
+            schema = file.read()
+    except Exception:  # pylint: disable
+        logger.warning(
+            "Unable to find local schema. Will not use schema for local "
+            "validation. Use `fetch_schema_from_transport=True` to allow "
+            "fetching the remote schema."
+        )
+        if raise_on_error:
+            raise
+        schema = None
+
+    return schema
+
+
+def get_gql_ds(client: Client) -> DSLSchema:
+    if not client.schema:
+        raise ValueError("Client does not have a valid GraphQL schema.")
+    return DSLSchema(client.schema)
+
+
+class GQLClient:
+    """GraphQL client factory class."""
+
+    @staticmethod
+    def get_client(
+        api_key: str,
+        environment: str = "dev",  # pylint: disable=unused-argument
+        endpoint_url: Optional[str] = None,
+        fetch_schema_from_transport: bool = False,
+    ) -> Client:
+        auth = HTTPBasicAuth(username=api_key, password="")
+        endpoint_url = endpoint_url or GRAPHQL_ENDPOINT
+        transport = RequestsHTTPTransport(
+            retries=RETRIES_LIMIT,
+            auth=auth,
+            url=endpoint_url,
+            verify=True,
+        )
+
+        schema = get_local_schema(raise_on_error=False)
+
+        return Client(
+            schema=schema,
+            transport=transport,
+            fetch_schema_from_transport=fetch_schema_from_transport,
+        )
 
 
 class HTTPClient:

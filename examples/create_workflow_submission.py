@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from typing import Any, Dict
 
 from python_anvil.api import Anvil
 from python_anvil.api_resources.payload import ForgeSubmitPayload
@@ -23,9 +24,9 @@ def main():
         forge_eid=forge_eid, payload=dict(field1="Initial forgeSubmit")
     )
 
-    res = anvil.forge_submit(payload=payload)
+    res: Dict[str, Any] = anvil.forge_submit(payload=payload)
 
-    data = res["data"]["forgeSubmit"]
+    data = res.get("forgeSubmit", {})
 
     print(data)
 
@@ -49,7 +50,7 @@ def main():
 
     res = anvil.forge_submit(payload=payload)
 
-    data = res["data"]["forgeSubmit"]
+    data = res.get("forgeSubmit", {})
     print(data)
 
 

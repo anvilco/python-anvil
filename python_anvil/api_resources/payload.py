@@ -7,12 +7,11 @@ from io import BufferedIOBase
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
     Field,
-    FilePath,
     HttpUrl,
     root_validator,
     validator,
 )
-from typing import Any, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import Any, Dict, List, Optional, Text, Union
 
 from .base import BaseModel
 
@@ -184,7 +183,13 @@ class DocumentUpload(BaseModel):
 
     id: str
     title: str
-    file: "UploadableFile"
+    # Previously "UploadableFile", however, that seems to cause weird upload
+    # issues where a PDF file would have its first few bytes removed.
+    # We're now relying on the backend to validate this property instead of on
+    # the client library side.
+    # This might be a bug on the `pydantic` side(?) when this object gets
+    # converted into a dict.
+    file: Any
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
@@ -192,10 +197,8 @@ class DocumentUpload(BaseModel):
     class Config:
         """Special rules for this model class."""
 
+        # Needed to allow `BufferedIOBase` as an allowed `file` type.
         arbitrary_types_allowed = True
-        # String to help point out the file upload attr.
-        # Used in multipart uploads and should not affect base64-encoded files.
-        contains_uploads = "file"
 
 
 class EtchCastRef(BaseModel):
@@ -271,16 +274,7 @@ class ForgeSubmitPayload(BaseModel):
         return values
 
 
-# Types usable for uploads:
-# Base64Upload: An entire PDF file base64 encoded
-# FilePath: The absolute path of the file. When the pydantic model is used,
-#   it will convert a path string (i.e. "/home/me/my_file.pdf") into a
-#   `pathlib.Path` instance.
-# UploadMethod: A function that returns a tuple of:
-#   * BufferedIOBase instance for use in `requests`
-#   * String containing the name for the file for use in Anvil
-UploadMethod = Callable[[Any], Tuple[BufferedIOBase, str]]
-UploadableFile = Union[Base64Upload, FilePath, UploadMethod]
+UploadableFile = Union[Base64Upload, BufferedIOBase]
 AttachableEtchFile = Union[
     DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
 ]

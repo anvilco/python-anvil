@@ -1,11 +1,13 @@
 # pylint: disable=too-many-instance-attributes
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+import logging
+from io import BufferedIOBase
+from logging import Logger
+from mimetypes import guess_type
+from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
     AttachableEtchFile,
-    Base64Upload,
     CreateEtchFilePayload,
     CreateEtchPacketPayload,
     DocumentUpload,
@@ -13,6 +15,8 @@ from python_anvil.api_resources.payload import (
 )
 from python_anvil.utils import create_unique_id
 
+
+logger: Logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE_QUERY = """{
   id
@@ -193,6 +197,18 @@ class CreateEtchPacket(BaseQuery):
         Files will not be uploaded when running this method. They will be
         uploaded when the mutation actually runs.
         """
+        if (
+            isinstance(file, DocumentUpload)
+            and isinstance(file.file, BufferedIOBase)
+            and getattr(file.file, "content_type", None) is None
+        ):
+            # Don't clobber existing `content_type`s provided.
+            content_type, _ = guess_type(file.file.name)  # type: ignore
+            logger.debug(
+                "File did not have a `content_type`, guessing as '%s'", content_type
+            )
+            file.file.content_type = content_type  # type: ignore
+
         self.files.append(file)
 
     def add_file_payloads(self, file_id: str, fill_payload):
@@ -215,43 +231,7 @@ class CreateEtchPacket(BaseQuery):
                 )
         return self.file_payloads
 
-    def get_files_for_payload(self) -> Tuple[List[AttachableEtchFile], List[Any]]:
-        """Scan through and gather files for use in multipart requests.
-
-        During the process, files will be replaced with a dummy `Path`
-        instance as `Callable` instances and likely their returns of some
-        sort of IO reader is not serializable and not easily dealt with in
-        pydantic (the underlying model system for the types used in this
-        library). Closer to the actual request, when the multipart payload is
-        being constructed, the dummy instances will be replaced by their actual
-        file instances.
-
-        :return: Tuple containing a list of uploadable file types, and a list
-            of actual file references
-        :rtype: Tuple[List, List]
-        """
-        contains_uploads = any(  # pylint: disable=use-a-generator
-            [isinstance(f, DocumentUpload) for f in self.files]
-        )
-        if not contains_uploads:
-            return self.files, []
-
-        files = []
-        for f in self.files:
-            if not isinstance(f, DocumentUpload):
-                continue
-
-            if getattr(f.Config, "contains_uploads", False):
-                attr_name = getattr(f.Config, "contains_uploads")
-                upload = getattr(f, attr_name)
-
-                if not isinstance(upload, Base64Upload):
-                    files.append(upload)
-                    setattr(f, attr_name, Path())
-
-        return self.files, files
-
-    def create_payload(self) -> Tuple[CreateEtchPacketPayload, List]:
+    def create_payload(self) -> CreateEtchPacketPayload:
         """Create a payload based on data set on the class instance.
 
         Check `api_resources.payload.CreateEtchPacketPayload` for full payload
@@ -260,19 +240,17 @@ class CreateEtchPacket(BaseQuery):
         """
         # If there's an existing payload instance attribute, just return that.
         if self.payload:
-            return self.payload, []
+            return self.payload
 
         if not self.name:
             raise TypeError("`name` and `signature_email_subject` cannot be None")
-
-        payload_files, file_refs = self.get_files_for_payload()
 
         payload = CreateEtchPacketPayload(
             is_test=self.is_test,
             is_draft=self.is_draft,
             name=self.name,
             signers=self.signers,
-            files=payload_files,
+            files=self.files,
             data=CreateEtchFilePayload(payloads=self.get_file_payloads()),
             signature_email_subject=self.signature_email_subject,
             signature_email_body=self.signature_email_body,
@@ -286,4 +264,4 @@ class CreateEtchPacket(BaseQuery):
             duplicate_casts=self.duplicate_casts,
         )
 
-        return payload, file_refs
+        return payload

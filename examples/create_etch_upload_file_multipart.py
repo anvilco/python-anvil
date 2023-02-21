@@ -63,19 +63,20 @@ def main():
     #     raise FileNotFoundError('File does not exist. Please check `file_path` '
     #                             'and ensure it points to an existing file.')
 
+    # file data must be read in as _bytes_, not text.
+    file = open(file_path, "rb")  # pylint: disable=consider-using-with
+
+    # You can also provide a custom `content_type` if you needed.
+    # The Anvil library will guess the file's content_type by its file
+    # extension automatically, but this can be used to force a different
+    # content_type.
+    # f1.content_type = "application/pdf"
+
     # Upload the file and define signer field locations.
     file1 = DocumentUpload(
         id="myNewFile",
         title="Please sign this important form",
-        # You can send a callable that returns a file handle and the filename
-        # you want to use in the Anvil app.
-        # (IMPORTANT: The data must be read in as _bytes_, not text.)
-        file=lambda: (
-            open(file_path, "rb"),  # pylint: disable=consider-using-with
-            filename,
-        ),
-        # or just the valid path itself
-        # file=file_path,
+        file=file,
         fields=[
             SignatureField(
                 id="sign1",
@@ -140,8 +141,11 @@ def main():
     # Create your packet
     # If overriding/adding new fields, use the modified payload from
     # `packet.create_payload()`
-    res = anvil.create_etch_packet(payload=packet, include_headers=True)
-    print(res)
+    try:
+        res = anvil.create_etch_packet(payload=packet)
+        print(res)
+    finally:
+        file.close()
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
-from logging import getLogger
+import logging
+from gql import gql
+from graphql import DocumentNode
 from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
 
 from .api_resources.mutations import (
@@ -13,12 +15,11 @@ from .api_resources.payload import (
     ForgeSubmitPayload,
     GeneratePDFPayload,
 )
-from .api_resources.requests import GraphqlRequest, PlainRequest, RestRequest
-from .http import HTTPClient
-from .multipart_helpers import get_multipart_payload
+from .api_resources.requests import PlainRequest, RestRequest
+from .http import GQLClient, HTTPClient
 
 
-logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _get_return(res: Dict, get_data: Callable[[Dict], Union[Dict, List]]):
@@ -47,39 +48,70 @@ class Anvil:
     # This is the default when a version is not provided.
     VERSION_LATEST_PUBLISHED = -2
 
-    def __init__(self, api_key=None, environment='dev'):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        environment="dev",
+        endpoint_url=None,
+    ):
+        if not api_key:
+            raise ValueError('`api_key` must be a valid string')
+
         self.client = HTTPClient(api_key=api_key, environment=environment)
+        self.gql_client = GQLClient.get_client(
+            api_key=api_key,
+            environment=environment,
+            endpoint_url=endpoint_url,
+        )
 
     def query(
         self,
-        query: str,
-        variables: Union[Optional[Text], Dict[Text, Any]] = None,
+        query: Union[str, DocumentNode],
+        variables: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
-        gql = GraphqlRequest(client=self.client)
-        return gql.post(query, variables=variables, **kwargs)
+        """Execute a GraphQL query.
 
-    def mutate(self, query: BaseQuery, variables: dict, **kwargs):
-        gql = GraphqlRequest(client=self.client)
-        return gql.post(query.get_mutation(), variables, **kwargs)
-
-    def mutate_multipart(self, files: Dict, **kwargs):
-        """
-        Multipart version of `mutate`.
-
-        This will send a mutation based on the multipart spec defined here:
-        https://github.com/jaydenseric/graphql-multipart-request-spec
-
-        Note that `variables` and `query` have been removed and replaced with
-        `files`. The entire GraphQL payload should already be prepared as a
-        `dict` beforehand.
-
-        :param files:
+        :param query:
+        :type query: Union[str, DocumentNode]
+        :param variables:
+        :type variables: Optional[Dict[str, Any]]
         :param kwargs:
         :return:
         """
-        gql = GraphqlRequest(client=self.client)
-        return gql.post_multipart(files=files, **kwargs)
+        # Remove `debug` for now.
+        kwargs.pop("debug", None)
+        if isinstance(query, str):
+            query = gql(query)
+
+        return self.gql_client.execute(query, variable_values=variables, **kwargs)
+
+    def mutate(
+        self, query: Union[str, BaseQuery], variables: Dict[str, Any], **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Execute a GraphQL mutation.
+
+        NOTE: Any files attached provided in `variables` will be sent via the
+        multipart spec:
+        https://github.com/jaydenseric/graphql-multipart-request-spec
+
+        :param query:
+        :type query: Union[str, BaseQuery]
+        :param variables:
+        :type variables: Dict[str, Any]
+        :param kwargs:
+        :return:
+        """
+        # Remove `debug` for now.
+        kwargs.pop("debug", None)
+        if isinstance(query, str):
+            use_query = gql(query)
+        else:
+            mutation = query.get_mutation()
+            use_query = gql(mutation)
+
+        return self.gql_client.execute(use_query, variable_values=variables, **kwargs)
 
     def request_rest(self, options: Optional[dict] = None):
         api = RestRequest(self.client, options=options)
@@ -180,20 +212,34 @@ class Anvil:
             arg_str = f"({','.join(joined_args)})"
 
         res = self.query(
-            f"""{{
+            gql(
+                f"""{{
               cast {arg_str} {{
                 {" ".join(fields)}
               }}
-            }}""",
+            }}"""
+            ),
             **kwargs,
         )
 
-        def get_data(r) -> Dict[str, Any]:
-            return r["data"]["cast"]
+        def get_data(r: dict) -> Dict[str, Any]:
+            return r["cast"]
 
         return _get_return(res, get_data=get_data)
 
-    def get_casts(self, fields=None, show_all=False, **kwargs) -> List[Dict[str, Any]]:
+    def get_casts(
+        self, fields: Optional[List[str]] = None, show_all: bool = False, **kwargs
+    ) -> List[Dict[str, Any]]:
+        """Retrieve all Cast objects for the current user across all organizations.
+
+        :param fields: List of fields to retrieve for each cast object
+        :type fields: Optional[List[str]]
+        :param show_all: Boolean to show all Cast objects.
+            Defaults to showing only templates.
+        :type show_all: bool
+        :param kwargs:
+        :return:
+        """
         if not fields:
             # Use default fields
             fields = ["eid", "title", "fieldInfo"]
@@ -201,7 +247,8 @@ class Anvil:
         cast_args = "" if show_all else "(isTemplate: true)"
 
         res = self.query(
-            f"""{{
+            gql(
+                f"""{{
               currentUser {{
                 organizations {{
                   casts {cast_args} {{
@@ -209,19 +256,26 @@ class Anvil:
                   }}
                 }}
               }}
-            }}""",
+            }}"""
+            ),
             **kwargs,
         )
 
-        def get_data(r):
-            orgs = r["data"]["currentUser"]["organizations"]
+        def get_data(r: dict):
+            orgs = r["currentUser"]["organizations"]
             return [item for org in orgs for item in org["casts"]]
 
         return _get_return(res, get_data=get_data)
 
     def get_current_user(self, **kwargs):
+        """Retrieve current user data.
+
+        :param kwargs:
+        :return:
+        """
         res = self.query(
-            """{
+            gql(
+                """{
               currentUser {
                 name
                 email
@@ -237,16 +291,17 @@ class Anvil:
                   }
                 }
               }
-            }
-            """,
+            }"""
+            ),
             **kwargs,
         )
 
-        return _get_return(res, get_data=lambda r: r["data"]["currentUser"])
+        return _get_return(res, get_data=lambda r: r["currentUser"])
 
     def get_welds(self, **kwargs) -> Union[List, Tuple[List, Dict]]:
         res = self.query(
-            """{
+            gql(
+                """{
               currentUser {
                 organizations {
                   welds {
@@ -260,19 +315,21 @@ class Anvil:
                   }
                 }
               }
-            }""",
+            }"""
+            ),
             **kwargs,
         )
 
-        def get_data(r):
-            orgs = r["data"]["currentUser"]["organizations"]
+        def get_data(r: dict):
+            orgs = r["currentUser"]["organizations"]
             return [item for org in orgs for item in org["welds"]]
 
         return _get_return(res, get_data=get_data)
 
     def get_weld(self, eid: Text, **kwargs):
         res = self.query(
-            """
+            gql(
+                """
             query WeldQuery(
                 #$organizationSlug: String!,
                 #$slug: String!
@@ -292,13 +349,14 @@ class Anvil:
                         slug
                     }
                 }
-            }""",
+            }"""
+            ),
             variables=dict(eid=eid),
             **kwargs,
         )
 
-        def get_data(r):
-            return r["data"]["weld"]
+        def get_data(r: dict):
+            return r["weld"]
 
         return _get_return(res, get_data=get_data)
 
@@ -337,10 +395,10 @@ class Anvil:
                 "`payload` must be a valid CreateEtchPacket instance or dict"
             )
 
-        files = get_multipart_payload(mutation)
+        payload = mutation.create_payload()
+        variables = payload.dict(by_alias=True, exclude_none=True)
 
-        res = self.mutate_multipart(files, **kwargs)
-        return res
+        return self.mutate(mutation, variables=variables, upload_files=True, **kwargs)
 
     def generate_etch_signing_url(self, signer_eid: str, client_user_id: str, **kwargs):
         """Generate a signing URL for a given user."""
@@ -361,7 +419,7 @@ class Anvil:
         payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
-    ):
+    ) -> Dict[str, Any]:
         """Create a Webform (forge) submission via a graphql mutation."""
         if not any([json, payload]):
             raise TypeError('One of arguments `json` or `payload` are required')

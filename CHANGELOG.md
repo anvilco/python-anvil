@@ -1,3 +1,10 @@
+# 3.0.0 (2023-02-17)
+
+- **[BREAKING CHANGE]** [`graphql-python/gql`](https://github.com/graphql-python/gql) is now the main GraphQL client
+  implementation. All functions should still work the same as before. If there are any issues please let us know
+  in `python-anvil` GitHub issues.
+- Updated examples to reflect new GraphQL implementation and added `examples/make_graphql_request.py` example.
+
 # 2.0.0 (2023-01-26)
 
 - **[BREAKING CHANGE]** Minimum required Python version updated to `>=3.7.2`

@@ -160,7 +160,7 @@ well.
 Creates an Anvil Etch E-sign packet.
 
 This is one of the more complex processes due to the different types of data
-needed in the final payload. Please take a look at the [advanced section](advanced.md#create-etch-packet)
+needed in the final payload. Please take a look at the [advanced section](advanced/create_etch_packet.md)
 for more details the creation process.
 
 * `payload` - Payload to use for the packet. Accepted types are `dict`,

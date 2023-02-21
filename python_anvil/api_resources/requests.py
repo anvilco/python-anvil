@@ -78,6 +78,12 @@ class BaseAnvilHttpRequest(AnvilRequest):
 
 
 class GraphqlRequest(AnvilRequest):
+    """Create a GraphQL request.
+
+    .. deprecated :: 2.0.0
+       Use `python_anvil.http.GQLClient` to make GraphQL queries and mutations.
+    """
+
     API_HOST = "https://graphql.useanvil.com"
 
     def __init__(self, client: HTTPClient):

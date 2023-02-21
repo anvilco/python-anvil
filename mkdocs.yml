@@ -14,7 +14,9 @@ nav:
   - Home: index.md
   - API Usage: api_usage.md
   - CLI Usage: cli_usage.md
-  - Advanced: advanced.md
+  - Advanced:
+    - Create Etch Packet: advanced/create_etch_packet.md
+    - Dynamic GraphQL queries: advanced/dynamic_queries.md
   - About:
     - Release Notes: about/changelog.md
     - Contributing: about/contributing.md

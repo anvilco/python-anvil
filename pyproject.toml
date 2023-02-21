@@ -1,7 +1,7 @@
 [tool.poetry]
 
 name = "python_anvil"
-version = "2.0.0"
+version = "3.0.0"
 description = "Anvil API"
 license = "MIT"
 authors = ["Anvil Foundry Inc. <developers@useanvil.com>"]
@@ -39,6 +39,8 @@ requests = "^2.25.0"
 ratelimit = "^2.2.1"
 tabulate = "^0.9.0"
 pydantic = "^1.8.2"
+# TODO: Update to an actual release version when out.
+gql = {git = "https://github.com/graphql-python/gql.git", rev = "930fca579220fd4810053491878366fa69862e58", extras = ["requests"]}
 
 [tool.poetry.dev-dependencies]
 
@@ -70,8 +72,6 @@ pyinstaller = "^5.7.0"
 sniffer = "*"
 MacFSEvents = { version = "*", platform = "darwin" }
 pync = { version = "*", platform = "darwin" }
-# Updating `ipython` to 8.0+ will require a minimum Python of >=3.8
-ipython = "^7.12.0"
 pyinotify = {version = "^0.9.6", optional = true}
 tox = "^3.21.2"
 pre-commit = "^2.21.0"
