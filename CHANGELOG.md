@@ -1,4 +1,4 @@
-# 2.1.0 (2023-02-17)
+# 3.0.0 (2023-02-17)
 
 - **[BREAKING CHANGE]** [`graphql-python/gql`](https://github.com/graphql-python/gql) is now the main GraphQL client
   implementation. All functions should still work the same as before. If there are any issues please let us know
