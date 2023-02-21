@@ -47,7 +47,7 @@ def get_local_schema(raise_on_error=False) -> Optional[str]:
     return schema
 
 
-def get_gql_ds(client: Client):
+def get_gql_ds(client: Client) -> DSLSchema:
     if not client.schema:
         raise ValueError("Client does not have a valid GraphQL schema.")
     return DSLSchema(client.schema)
