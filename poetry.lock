@@ -14,14 +14,14 @@ files = [
 
 [[package]]
 name = "astroid"
-version = "2.13.5"
+version = "2.14.2"
 description = "An abstract syntax tree for Python with inference support."
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "astroid-2.13.5-py3-none-any.whl", hash = "sha256:6891f444625b6edb2ac798829b689e95297e100ddf89dbed5a8c610e34901501"},
-    {file = "astroid-2.13.5.tar.gz", hash = "sha256:df164d5ac811b9f44105a72b8f9d5edfb7b5b2d7e979b04ea377a77b3229114a"},
+    {file = "astroid-2.14.2-py3-none-any.whl", hash = "sha256:0e0e3709d64fbffd3037e4ff403580550f14471fd3eaae9fa11cc9a5c7901153"},
+    {file = "astroid-2.14.2.tar.gz", hash = "sha256:a3cf9f02c53dd259144a7e8f3ccd75d67c9a8c716ef183e0c1f291bc5d7bb3cf"},
 ]
 
 [package.dependencies]
@@ -441,38 +441,34 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "gql"
-version = "3.5.0b0"
+version = "3.5.0b1"
 description = "GraphQL client for Python"
 category = "main"
 optional = false
 python-versions = "*"
-files = []
-develop = false
+files = [
+    {file = "gql-3.5.0b1-py2.py3-none-any.whl", hash = "sha256:44d21ebd70ec7aebe44d3e902efcee360185f04fa3588b845570214c66e2d0d5"},
+    {file = "gql-3.5.0b1.tar.gz", hash = "sha256:5b4afc14b367ae0e6d36ef2584370d52035d34d5727e3ba77a24891dceec3c7d"},
+]
 
 [package.dependencies]
 backoff = ">=1.11.1,<3.0"
 graphql-core = ">=3.3.0a2,<3.4"
 requests = {version = ">=2.26,<3", optional = true, markers = "extra == \"requests\""}
-requests_toolbelt = {version = ">=0.9.1,<1", optional = true, markers = "extra == \"requests\""}
+requests-toolbelt = {version = ">=0.9.1,<1", optional = true, markers = "extra == \"requests\""}
 urllib3 = {version = ">=1.26", optional = true, markers = "extra == \"requests\""}
 yarl = ">=1.6,<2.0"
 
 [package.extras]
 aiohttp = ["aiohttp (>=3.7.1,<3.9.0)"]
-all = ["aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "requests (>=2.26,<3)", "requests_toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "websockets (>=10,<11)"]
+all = ["aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "websockets (>=10,<11)"]
 botocore = ["botocore (>=1.21,<2)"]
-dev = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "black (==22.3.0)", "botocore (>=1.21,<2)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "httpx (>=0.23.1,<1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.910)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests_toolbelt (>=0.9.1,<1)", "sphinx (>=5.3.0,<6)", "sphinx-argparse (==0.2.5)", "sphinx_rtd_theme (>=0.4,<1)", "types-aiofiles", "types-mock", "types-requests", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
+dev = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "black (==22.3.0)", "botocore (>=1.21,<2)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "httpx (>=0.23.1,<1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.910)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "sphinx (>=5.3.0,<6)", "sphinx-argparse (==0.2.5)", "sphinx-rtd-theme (>=0.4,<1)", "types-aiofiles", "types-mock", "types-requests", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
 httpx = ["httpx (>=0.23.1,<1)"]
-requests = ["requests (>=2.26,<3)", "requests_toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)"]
-test = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests_toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
+requests = ["requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)"]
+test = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
 test-no-transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "vcrpy (==4.0.2)"]
 websockets = ["websockets (>=10,<11)"]
-
-[package.source]
-type = "git"
-url = "https://github.com/graphql-python/gql.git"
-reference = "930fca579220fd4810053491878366fa69862e58"
-resolved_reference = "930fca579220fd4810053491878366fa69862e58"
 
 [[package]]
 name = "graphql-core"
@@ -1134,14 +1130,14 @@ email = ["email-validator (>=1.0.3)"]
 
 [[package]]
 name = "pydocstyle"
-version = "6.2.3"
+version = "6.3.0"
 description = "Python docstring style checker"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
 files = [
-    {file = "pydocstyle-6.2.3-py3-none-any.whl", hash = "sha256:a04ed1e6fe0be0970eddbb1681a7ab59b11eb92729fdb4b9b24f0eb11a25629e"},
-    {file = "pydocstyle-6.2.3.tar.gz", hash = "sha256:d867acad25e48471f2ad8a40ef9813125e954ad675202245ca836cb6e28b2297"},
+    {file = "pydocstyle-6.3.0-py3-none-any.whl", hash = "sha256:118762d452a49d6b05e194ef344a55822987a462831ade91ec5c06fd2169d019"},
+    {file = "pydocstyle-6.3.0.tar.gz", hash = "sha256:7ce43f0c0ac87b07494eb9c0b462c0b73e6ff276807f204d6b53edc72b7e44e1"},
 ]
 
 [package.dependencies]
@@ -1226,18 +1222,18 @@ files = [
 
 [[package]]
 name = "pylint"
-version = "2.15.10"
+version = "2.16.2"
 description = "python code static checker"
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "pylint-2.15.10-py3-none-any.whl", hash = "sha256:9df0d07e8948a1c3ffa3b6e2d7e6e63d9fb457c5da5b961ed63106594780cc7e"},
-    {file = "pylint-2.15.10.tar.gz", hash = "sha256:b3dc5ef7d33858f297ac0d06cc73862f01e4f2e74025ec3eff347ce0bc60baf5"},
+    {file = "pylint-2.16.2-py3-none-any.whl", hash = "sha256:ff22dde9c2128cd257c145cfd51adeff0be7df4d80d669055f24a962b351bbe4"},
+    {file = "pylint-2.16.2.tar.gz", hash = "sha256:13b2c805a404a9bf57d002cd5f054ca4d40b0b87542bdaba5e05321ae8262c84"},
 ]
 
 [package.dependencies]
-astroid = ">=2.12.13,<=2.14.0-dev0"
+astroid = ">=2.14.2,<=2.16.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
     {version = ">=0.2", markers = "python_version < \"3.11\""},
@@ -1498,14 +1494,14 @@ requests = ">=2.0.1,<3.0.0"
 
 [[package]]
 name = "setuptools"
-version = "67.3.2"
+version = "67.4.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "setuptools-67.3.2-py3-none-any.whl", hash = "sha256:bb6d8e508de562768f2027902929f8523932fcd1fb784e6d573d2cafac995a48"},
-    {file = "setuptools-67.3.2.tar.gz", hash = "sha256:95f00380ef2ffa41d9bba85d95b27689d923c93dfbafed4aecd7cf988a25e012"},
+    {file = "setuptools-67.4.0-py3-none-any.whl", hash = "sha256:f106dee1b506dee5102cc3f3e9e68137bbad6d47b616be7991714b0c62204251"},
+    {file = "setuptools-67.4.0.tar.gz", hash = "sha256:e5fd0a713141a4a105412233c63dc4e17ba0090c8e8334594ac790ec97792330"},
 ]
 
 [package.extras]
@@ -1674,26 +1670,26 @@ files = [
 
 [[package]]
 name = "types-docutils"
-version = "0.19.1.4"
+version = "0.19.1.6"
 description = "Typing stubs for docutils"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-docutils-0.19.1.4.tar.gz", hash = "sha256:1b64b21b609ff1fc7791d3d930f14b56b36ad09029fd97e45e34cc889d671b5f"},
-    {file = "types_docutils-0.19.1.4-py3-none-any.whl", hash = "sha256:870d71f3663141f67a3c59d26d2c54a8c478c842208bb0b345fbf6036f49f561"},
+    {file = "types-docutils-0.19.1.6.tar.gz", hash = "sha256:a334a703a8688910d0869464f1f6f8bd330d75843bdab4f893547bfb29417a01"},
+    {file = "types_docutils-0.19.1.6-py3-none-any.whl", hash = "sha256:b7e182f371cbe20828a8750ffb150219968452445946f66f33778b08e81c7d89"},
 ]
 
 [[package]]
 name = "types-requests"
-version = "2.28.11.13"
+version = "2.28.11.14"
 description = "Typing stubs for requests"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-requests-2.28.11.13.tar.gz", hash = "sha256:3fd332842e8759ea5f7eb7789df8aa772ba155216ccf10ef4aa3b0e5b42e1b46"},
-    {file = "types_requests-2.28.11.13-py3-none-any.whl", hash = "sha256:94896f6f8e9f3db11e422c6e3e4abbc5d7ccace853eac74b23bdd65eeee3cdee"},
+    {file = "types-requests-2.28.11.14.tar.gz", hash = "sha256:232792870b60adb07d23175451ab4e6190021b0c584edf052d92d9b993118f06"},
+    {file = "types_requests-2.28.11.14-py3-none-any.whl", hash = "sha256:f84613b0d4c5d0eeb7879dfa05e14a3702b9c1f7a4ee81dfe9b4321b13fe93a1"},
 ]
 
 [package.dependencies]
@@ -1716,26 +1712,26 @@ types-docutils = "*"
 
 [[package]]
 name = "types-tabulate"
-version = "0.9.0.0"
+version = "0.9.0.1"
 description = "Typing stubs for tabulate"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-tabulate-0.9.0.0.tar.gz", hash = "sha256:4a79474714cea156bcd2185bb9bddd8fb9d3d5227c8d0a7f21bf21caf5f60e67"},
-    {file = "types_tabulate-0.9.0.0-py3-none-any.whl", hash = "sha256:a1cc2aa52d2a9abfe0acbb361ccd49e3400794086a41626ce8784ed2e1ec0b0d"},
+    {file = "types-tabulate-0.9.0.1.tar.gz", hash = "sha256:e486292c279f19247865bdabe802419740a0e74b53444e7f7a8009e08129da5d"},
+    {file = "types_tabulate-0.9.0.1-py3-none-any.whl", hash = "sha256:be2ea0de05f615ccfcbadf6206aa720e265955eb1de23e343aec9d8bf3fa9aaa"},
 ]
 
 [[package]]
 name = "types-urllib3"
-version = "1.26.25.6"
+version = "1.26.25.7"
 description = "Typing stubs for urllib3"
 category = "dev"
 optional = false
 python-versions = "*"
 files = [
-    {file = "types-urllib3-1.26.25.6.tar.gz", hash = "sha256:35586727cbd7751acccf2c0f34a88baffc092f435ab62458f10776466590f2d5"},
-    {file = "types_urllib3-1.26.25.6-py3-none-any.whl", hash = "sha256:a6c23c41bd03e542eaee5423a018f833077b51c4bf9ceb5aa544e12b812d5604"},
+    {file = "types-urllib3-1.26.25.7.tar.gz", hash = "sha256:df4d3e5472bf8830bd74eac12d56e659f88662ba040c7d106bf3a5bee26fff28"},
+    {file = "types_urllib3-1.26.25.7-py3-none-any.whl", hash = "sha256:28d2d7f5c31ff8ed4d9d2e396ce906c49d37523c3ec207d03d3b1695755a7199"},
 ]
 
 [[package]]
@@ -1995,14 +1991,14 @@ typing-extensions = {version = ">=3.7.4", markers = "python_version < \"3.8\""}
 
 [[package]]
 name = "zipp"
-version = "3.13.0"
+version = "3.14.0"
 description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "zipp-3.13.0-py3-none-any.whl", hash = "sha256:e8b2a36ea17df80ffe9e2c4fda3f693c3dad6df1697d3cd3af232db680950b0b"},
-    {file = "zipp-3.13.0.tar.gz", hash = "sha256:23f70e964bc11a34cef175bc90ba2914e1e4545ea1e3e2f67c079671883f9cb6"},
+    {file = "zipp-3.14.0-py3-none-any.whl", hash = "sha256:188834565033387710d046e3fe96acfc9b5e86cbca7f39ff69cf21a4128198b7"},
+    {file = "zipp-3.14.0.tar.gz", hash = "sha256:9e5421e176ef5ab4c0ad896624e87a7b2f07aca746c9b2aa305952800cb8eecb"},
 ]
 
 [package.extras]
@@ -2012,4 +2008,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.2,<3.12"
-content-hash = "8f28f7d3f3fc987da7e0c5dc09a69d00495bc14e83033097dca02e9acbd68cdc"
+content-hash = "87aa3f8ecf950dc46c8aeb657987ab352f8ff85ecbe4b568425b12adcbdaef68"

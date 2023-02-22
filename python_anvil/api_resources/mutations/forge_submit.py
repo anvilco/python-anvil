@@ -47,7 +47,6 @@ mutation ForgeSubmit(
     $timezone: String,
     $groupArrayId: String,
     $groupArrayIndex: Int,
-    $errorType: String,
     $webhookURL: String,
 ) {{
     forgeSubmit (
@@ -61,7 +60,6 @@ mutation ForgeSubmit(
         timezone: $timezone,
         groupArrayId: $groupArrayId,
         groupArrayIndex: $groupArrayIndex,
-        errorType: $errorType,
         webhookURL: $webhookURL
     ) {query}
 }}
