@@ -307,7 +307,7 @@ class Anvil:
                   welds {
                     eid
                     slug
-                    title
+                    name
                     forges {
                       eid
                       name
