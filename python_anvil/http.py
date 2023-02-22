@@ -73,14 +73,14 @@ class GQLClient:
             verify=True,
         )
 
-        kwargs = {}
+        schema = None
         if force_local_schema or not fetch_schema_from_transport:
-            kwargs["schema"] = get_local_schema(raise_on_error=False)
+            schema = get_local_schema(raise_on_error=False)
 
         return Client(
+            schema=schema,
             transport=transport,
             fetch_schema_from_transport=fetch_schema_from_transport,
-            **kwargs,
         )
 
 

@@ -34,6 +34,7 @@ class AnvilRequest:
         else:
             message = f"Error: {status_code}: {response} {extra}"
 
+        # pylint: disable=broad-exception-raised
         raise Exception(message)
 
     def process_response(self, response, status_code, headers, **kwargs):

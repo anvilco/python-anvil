@@ -107,6 +107,7 @@ def weld(ctx, eid, list_all):
         return
 
     if not eid:
+        # pylint: disable=broad-exception-raised
         raise Exception("You need to pass in a weld eid")
 
     res = anvil.get_weld(eid)
