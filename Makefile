@@ -115,7 +115,7 @@ endif
 # Export PACKAGES so tox doesn't have to be reconfigured if these change
 tox: export TESTS = $(PACKAGE) tests
 tox: install
-	poetry run tox
+	poetry run tox -p 2
 
 .PHONY: read-coverage
 read-coverage:
