@@ -62,6 +62,7 @@ class GQLClient:
         environment: str = "dev",  # pylint: disable=unused-argument
         endpoint_url: Optional[str] = None,
         fetch_schema_from_transport: bool = False,
+        force_local_schema: bool = False,
     ) -> Client:
         auth = HTTPBasicAuth(username=api_key, password="")
         endpoint_url = endpoint_url or GRAPHQL_ENDPOINT
@@ -72,12 +73,14 @@ class GQLClient:
             verify=True,
         )
 
-        schema = get_local_schema(raise_on_error=False)
+        kwargs = {}
+        if force_local_schema or not fetch_schema_from_transport:
+            kwargs["schema"] = get_local_schema(raise_on_error=False)
 
         return Client(
-            schema=schema,
             transport=transport,
             fetch_schema_from_transport=fetch_schema_from_transport,
+            **kwargs,
         )
 
 
