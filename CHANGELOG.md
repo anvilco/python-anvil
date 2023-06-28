@@ -1,3 +1,8 @@
+# 3.0.1 (2023-06-28)
+
+- Fixed issue with `requests_toolbelt` (`gql` dependency) using an incompatible version of `urllib3`.
+  This caused an error of `ImportError: cannot import name 'appengine'` to be thrown.
+
 # 3.0.0 (2023-02-17)
 
 - **[BREAKING CHANGE]** [`graphql-python/gql`](https://github.com/graphql-python/gql) is now the main GraphQL client
