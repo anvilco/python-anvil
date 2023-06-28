@@ -1,6 +1,6 @@
 site_name: python-anvil
 site_description: Anvil API
-site_author: Allan Almazan
+site_author: Anvil Developers
 
 repo_url: https://github.com/anvilco/python-anvil
 edit_uri: https://github.com/anvilco/python-anvil/edit/master/docs
