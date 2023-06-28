@@ -34,6 +34,11 @@ classifiers = [
 
 python = ">=3.7.2,<3.12"
 
+# urllib must be pinned to <2 due to an issue with the `requests_toolbelt`
+# dependency in `gql`.
+# Similar: https://github.com/apache/arrow/commit/4295e3dd06f9f507f75ccc780eaca16a6b621a02
+urllib3 = "<2"
+
 click = "^8.0"
 requests = "^2.25.0"
 ratelimit = "^2.2.1"
