@@ -355,13 +355,13 @@ def describe_api():
                 for k, v in payloads.EXPECTED_ETCH_TEST_PAYLOAD_JSON.items()
                 if v is not None
             }
-            cep = CreateEtchPacketPayload.parse_obj(payload)
+            cep = CreateEtchPacketPayload.model_validate(payload)
             cep.newFeature = True  # type: ignore[attr-defined]
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
 
             variables = m_request_post.call_args[1]["variable_values"]
-            assert cep.dict(by_alias=True, exclude_none=True) == variables
+            assert cep.model_dump(by_alias=True, exclude_none=True) == variables
             assert "newFeature" in variables
 
     def describe_forge_submit():

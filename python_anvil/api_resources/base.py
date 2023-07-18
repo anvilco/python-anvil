@@ -3,7 +3,7 @@ import re
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import BaseModel as _BaseModel, Extra  # pylint: disable=no-name-in-module
+from pydantic import BaseModel as _BaseModel  # pylint: disable=no-name-in-module
 
 
 under_pat = re.compile(r"_([a-z])")
@@ -22,9 +22,9 @@ class BaseModel(_BaseModel):
         """
 
         alias_generator = underscore_to_camel
-        allow_population_by_field_name = True
+        populate_by_name = True
 
         # Allow extra fields even if it is not defined. This will allow models
         # to be more flexible if features are added in the Anvil API, but
         # explicit support hasn't been added yet to this library.
-        extra = Extra.allow
+        extra = "allow"

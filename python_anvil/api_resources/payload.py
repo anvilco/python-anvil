@@ -8,8 +8,8 @@ from io import BufferedIOBase
 from pydantic import (  # pylint: disable=no-name-in-module
     Field,
     HttpUrl,
-    root_validator,
-    validator,
+    field_validator,
+    model_validator,
 )
 from typing import Any, Dict, List, Optional, Text, Union
 
@@ -34,7 +34,7 @@ class FillPDFPayload(BaseModel):
     font_size: Optional[int] = None
     text_color: Optional[str] = None
 
-    @validator("data")
+    @field_validator("data")
     def data_cannot_be_empty(cls, v):
         if isinstance(v, dict) and len(v) == 0:
             raise ValueError("cannot be empty")
@@ -47,7 +47,7 @@ class GeneratePDFPayload(BaseModel):
     title: Optional[str]
     type: Optional[Literal["markdown", "html"]] = "markdown"
 
-    @validator("data")
+    @field_validator("data")
     def data_must_match_type(cls, v, values):
         if "type" in values and values["type"] == "html":
             if "html" not in v:
@@ -56,7 +56,7 @@ class GeneratePDFPayload(BaseModel):
                 raise ValueError("must contain a data dict not a list")
         return v
 
-    @validator("type")
+    @field_validator("type")
     def type_must_match_data(cls, v, values):
         if v == "html":
             if "data" in values and not isinstance(values["data"], dict):
@@ -262,7 +262,7 @@ class ForgeSubmitPayload(BaseModel):
     group_array_id: Optional[Text] = None
     group_array_index: Optional[int] = None
 
-    @root_validator
+    @model_validator(mode="after")
     def wd_submission_both_required(cls, values):
         both_required = ["weld_data_eid", "submission_eid"]
         picked = [k for k in both_required if k in values and values[k] is not None]
@@ -282,5 +282,5 @@ AttachableEtchFile = Union[
 # Classes below use types wrapped in quotes avoid a circular dependency/weird
 # variable assignment locations with the aliases above. We need to manually
 # update the refs for them to point to the right things.
-DocumentUpload.update_forward_refs()
-CreateEtchPacketPayload.update_forward_refs()
+DocumentUpload.model_rebuild()
+CreateEtchPacketPayload.model_rebuild()
