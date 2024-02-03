@@ -6,7 +6,7 @@ from io import BufferedIOBase
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
-    Field,
+    field_validator, ConfigDict, Field,
     HttpUrl,
     root_validator,
     validator,
@@ -24,8 +24,8 @@ else:
 
 class EmbeddedLogo(BaseModel):
     src: str
-    max_width: Optional[int]
-    max_height: Optional[int]
+    max_width: Optional[int] = None
+    max_height: Optional[int] = None
 
 
 class FillPDFPayload(BaseModel):
@@ -34,7 +34,8 @@ class FillPDFPayload(BaseModel):
     font_size: Optional[int] = None
     text_color: Optional[str] = None
 
-    @validator("data")
+    @field_validator("data")
+    @classmethod
     def data_cannot_be_empty(cls, v):
         if isinstance(v, dict) and len(v) == 0:
             raise ValueError("cannot be empty")
@@ -43,25 +44,9 @@ class FillPDFPayload(BaseModel):
 
 class GeneratePDFPayload(BaseModel):
     data: Union[List[Dict[str, Any]], Dict[Literal["html", "css"], str]]
-    logo: Optional[EmbeddedLogo]
-    title: Optional[str]
+    logo: Optional[EmbeddedLogo] = None
+    title: Optional[str] = None
     type: Optional[Literal["markdown", "html"]] = "markdown"
-
-    @validator("data")
-    def data_must_match_type(cls, v, values):
-        if "type" in values and values["type"] == "html":
-            if "html" not in v:
-                raise ValueError("must contain HTML if using `html` type")
-            if isinstance(v, list):
-                raise ValueError("must contain a data dict not a list")
-        return v
-
-    @validator("type")
-    def type_must_match_data(cls, v, values):
-        if v == "html":
-            if "data" in values and not isinstance(values["data"], dict):
-                raise ValueError("HTML types must used a dict data payload")
-        return v
 
 
 class GenerateEtchSigningURLPayload(BaseModel):
@@ -189,16 +174,11 @@ class DocumentUpload(BaseModel):
     # the client library side.
     # This might be a bug on the `pydantic` side(?) when this object gets
     # converted into a dict.
-    file: Any
+    file: Any = None
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
-
-    class Config:
-        """Special rules for this model class."""
-
-        # Needed to allow `BufferedIOBase` as an allowed `file` type.
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class EtchCastRef(BaseModel):
@@ -261,17 +241,6 @@ class ForgeSubmitPayload(BaseModel):
     webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
     group_array_id: Optional[Text] = None
     group_array_index: Optional[int] = None
-
-    @root_validator
-    def wd_submission_both_required(cls, values):
-        both_required = ["weld_data_eid", "submission_eid"]
-        picked = [k for k in both_required if k in values and values[k] is not None]
-        if len(picked) == 1:
-            raise ValueError(
-                "Both `weld_data_eid` and `submission_eid` are "
-                "required if either are provided."
-            )
-        return values
 
 
 UploadableFile = Union[Base64Upload, BufferedIOBase]
