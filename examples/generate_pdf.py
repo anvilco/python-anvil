@@ -1,3 +1,7 @@
+# Run this from the project root
+#
+# ANVIL_API_KEY=YOUR_KEY python examples/generate_pdf.py && open ./generated.pdf
+
 import os
 
 from python_anvil.api import Anvil
