@@ -32,23 +32,15 @@ FILL_DATA = {
     "data": {
         "shortText": "HELLOO",
         "date": "2022-07-08",
-        "name": {
-            "firstName": "Robin",
-            "mi": "W",
-            "lastName": "Smith"
-        },
+        "name": {"firstName": "Robin", "mi": "W", "lastName": "Smith"},
         "email": "testy@example.com",
-        "phone": {
-            "num": "5554443333",
-            "region": "US",
-            "baseRegion": "US"
-        },
+        "phone": {"num": "5554443333", "region": "US", "baseRegion": "US"},
         "usAddress": {
             "street1": "123 Main St #234",
             "city": "San Francisco",
             "state": "CA",
             "zip": "94106",
-            "country": "US"
+            "country": "US",
         },
         "ssn": "456454567",
         "ein": "897654321",
@@ -61,9 +53,10 @@ FILL_DATA = {
         "longText": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
         "textPerLine": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor.",
         "textPerLetter": "taH9QGigei6G5BtTUA4",
-        "image": "https://placekitten.com/800/495"
-    }
+        "image": "https://placehold.co/600x400",
+    },
 }
+
 
 def main():
     anvil = Anvil(api_key=API_KEY)

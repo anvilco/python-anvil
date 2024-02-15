@@ -6,8 +6,10 @@ from io import BufferedIOBase
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
 from pydantic import (  # pylint: disable=no-name-in-module
-    field_validator, ConfigDict, Field,
+    ConfigDict,
+    Field,
     HttpUrl,
+    field_validator,
     root_validator,
     validator,
 )
