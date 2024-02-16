@@ -47,6 +47,10 @@ class GeneratePDFPayload(BaseModel):
     logo: Optional[EmbeddedLogo] = None
     title: Optional[str] = None
     type: Optional[Literal["markdown", "html"]] = "markdown"
+    page: Optional[Dict[str, Any]] = None
+    font_size: Optional[int] = None
+    font_family: Optional[str] = None
+    text_color: Optional[str] = None
 
 
 class GenerateEtchSigningURLPayload(BaseModel):
