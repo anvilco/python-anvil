@@ -53,9 +53,17 @@ black = "=22.12.0"
 isort = "^5.11.4"
 
 # Linters
-mypy = "*"
 pydocstyle = "^6.3.0"
 pylint = "^2.16.2"
+
+# FIXME: Upgrading mypy will require updates to aliased fields. e.g.
+#
+# class EtchSigner(BaseModel):
+#     redirect_url: Optional[str] = Field(None, alias="redirectURL")
+#
+# Not sure what the solution is.
+mypy = "1.0.1"
+
 
 # Testing
 pytest = "^7.2.1"
