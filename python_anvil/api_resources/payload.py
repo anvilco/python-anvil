@@ -251,5 +251,5 @@ AttachableEtchFile = Union[
 # Classes below use types wrapped in quotes avoid a circular dependency/weird
 # variable assignment locations with the aliases above. We need to manually
 # update the refs for them to point to the right things.
-DocumentUpload.update_forward_refs()
-CreateEtchPacketPayload.update_forward_refs()
+DocumentUpload.model_rebuild()
+CreateEtchPacketPayload.model_rebuild()
