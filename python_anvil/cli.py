@@ -208,7 +208,7 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
         with click.progressbar(payloads, label="Filling PDFs and saving") as ps:
             indexed_files = utils.build_batch_filenames(out_filename)
             for payload in ps:
-                res = anvil.fill_pdf(template_id, payload.to_dict(), debug=debug)
+                res = anvil.fill_pdf(template_id, payload.model_dump(), debug=debug)
 
                 if contains_headers(res):
                     res, headers = process_response(res)
