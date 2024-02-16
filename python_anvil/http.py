@@ -1,4 +1,5 @@
 import os
+# import json
 import requests
 from base64 import b64encode
 from gql import Client
@@ -52,6 +53,13 @@ def get_gql_ds(client: Client) -> DSLSchema:
         raise ValueError("Client does not have a valid GraphQL schema.")
     return DSLSchema(client.schema)
 
+# FIXME: when gql 3.6.0 is stable, we can use this to paper over pre-graphql
+# handler errors. https://github.com/graphql-python/gql/releases/tag/v3.6.0b1
+# def json_deserialize (response_text):
+#   try:
+#       return json.loads(response_text)
+#   except Exception as e:
+#       return {"errors": [{"message": response_text}]}
 
 class GQLClient:
     """GraphQL client factory class."""
@@ -71,6 +79,8 @@ class GQLClient:
             auth=auth,
             url=endpoint_url,
             verify=True,
+            # FIXME: when gql 3.6.0 is stable... see note above
+            # json_deserialize=json_deserialize,
         )
 
         schema = None
