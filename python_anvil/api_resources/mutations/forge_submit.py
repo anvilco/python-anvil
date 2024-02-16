@@ -7,7 +7,6 @@ from python_anvil.api_resources.payload import ForgeSubmitPayload
 
 DEFAULT_RESPONSE_QUERY = """
 {
-  id
   eid
   status
   resolvedPayload
@@ -22,7 +21,6 @@ DEFAULT_RESPONSE_QUERY = """
     routingOrder
   }
   weldData {
-    id
     eid
     status
     isTest
