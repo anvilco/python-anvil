@@ -137,9 +137,7 @@ class Anvil:
             if isinstance(payload, dict):
                 data = FillPDFPayload(**payload)
             elif isinstance(payload, str):
-                data = FillPDFPayload.parse_raw(
-                    payload, content_type="application/json"
-                )
+                data = FillPDFPayload.model_validate_json(payload)
             elif isinstance(payload, FillPDFPayload):
                 data = payload
             else:
@@ -169,9 +167,7 @@ class Anvil:
         if isinstance(payload, dict):
             data = GeneratePDFPayload(**payload)
         elif isinstance(payload, str):
-            data = GeneratePDFPayload.parse_raw(
-                payload, content_type="application/json"
-            )
+            data = GeneratePDFPayload.model_validate_json(payload)
         elif isinstance(payload, GeneratePDFPayload):
             data = payload
         else:
@@ -180,7 +176,9 @@ class Anvil:
         # Any data errors would come from here
         api = RestRequest(client=self.client)
         return api.post(
-            "generate-pdf", data=data.model_dump(by_alias=True, exclude_none=True), **kwargs
+            "generate-pdf",
+            data=data.model_dump(by_alias=True, exclude_none=True),
+            **kwargs,
         )
 
     def get_cast(
@@ -380,9 +378,7 @@ class Anvil:
             raise TypeError('One of the arguments `payload` or `json` must exist')
 
         if json:
-            payload = CreateEtchPacketPayload.parse_raw(
-                json, content_type="application/json"
-            )
+            payload = CreateEtchPacketPayload.model_validate_json(json)
 
         if isinstance(payload, dict):
             mutation = CreateEtchPacket.create_from_dict(payload)
@@ -407,7 +403,9 @@ class Anvil:
             client_user_id=client_user_id,
         )
         payload = mutation.create_payload()
-        return self.mutate(mutation, variables=payload.model_dump(by_alias=True), **kwargs)
+        return self.mutate(
+            mutation, variables=payload.model_dump(by_alias=True), **kwargs
+        )
 
     def download_documents(self, document_group_eid: str, **kwargs):
         """Retrieve all completed documents in zip form."""
@@ -425,9 +423,7 @@ class Anvil:
             raise TypeError('One of arguments `json` or `payload` are required')
 
         if json:
-            payload = ForgeSubmitPayload.parse_raw(
-                json, content_type="application/json"
-            )
+            payload = ForgeSubmitPayload.model_validate_json(json)
 
         if isinstance(payload, dict):
             mutation = ForgeSubmit.create_from_dict(payload)
@@ -440,6 +436,8 @@ class Anvil:
 
         return self.mutate(
             mutation,
-            variables=mutation.create_payload().model_dump(by_alias=True, exclude_none=True),
+            variables=mutation.create_payload().model_dump(
+                by_alias=True, exclude_none=True
+            ),
             **kwargs,
         )
