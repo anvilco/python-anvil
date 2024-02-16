@@ -10,8 +10,6 @@ from pydantic import (  # pylint: disable=no-name-in-module
     Field,
     HttpUrl,
     field_validator,
-    root_validator,
-    validator,
 )
 from typing import Any, Dict, List, Optional, Text, Union
 
