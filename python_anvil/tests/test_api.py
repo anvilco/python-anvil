@@ -1,7 +1,6 @@
 # pylint: disable=unused-variable,unused-argument,too-many-statements
 import json
 import pytest
-from pydantic import ValidationError
 from typing import Any, MutableMapping
 from unittest import mock
 
