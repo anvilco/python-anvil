@@ -348,7 +348,7 @@ def describe_api():
             assert m_request_post.call_count == 1
 
             variables = m_request_post.call_args[1]["variable_values"]
-            assert cep.dict(by_alias=True, exclude_none=True) == variables
+            assert cep.model_dump(by_alias=True, exclude_none=True) == variables
             assert "newFeature" in variables
 
     def describe_forge_submit():

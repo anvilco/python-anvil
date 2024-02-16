@@ -158,7 +158,7 @@ class Anvil:
         api = RestRequest(client=self.client)
         return api.post(
             f"fill/{template_id}.pdf",
-            data.dict(by_alias=True, exclude_none=True) if data else {},
+            data.model_dump(by_alias=True, exclude_none=True) if data else {},
             **kwargs,
         )
 
@@ -180,7 +180,7 @@ class Anvil:
         # Any data errors would come from here
         api = RestRequest(client=self.client)
         return api.post(
-            "generate-pdf", data=data.dict(by_alias=True, exclude_none=True), **kwargs
+            "generate-pdf", data=data.model_dump(by_alias=True, exclude_none=True), **kwargs
         )
 
     def get_cast(
@@ -396,7 +396,7 @@ class Anvil:
             )
 
         payload = mutation.create_payload()
-        variables = payload.dict(by_alias=True, exclude_none=True)
+        variables = payload.model_dump(by_alias=True, exclude_none=True)
 
         return self.mutate(mutation, variables=variables, upload_files=True, **kwargs)
 
@@ -407,7 +407,7 @@ class Anvil:
             client_user_id=client_user_id,
         )
         payload = mutation.create_payload()
-        return self.mutate(mutation, variables=payload.dict(by_alias=True), **kwargs)
+        return self.mutate(mutation, variables=payload.model_dump(by_alias=True), **kwargs)
 
     def download_documents(self, document_group_eid: str, **kwargs):
         """Retrieve all completed documents in zip form."""
@@ -440,6 +440,6 @@ class Anvil:
 
         return self.mutate(
             mutation,
-            variables=mutation.create_payload().dict(by_alias=True, exclude_none=True),
+            variables=mutation.create_payload().model_dump(by_alias=True, exclude_none=True),
             **kwargs,
         )
