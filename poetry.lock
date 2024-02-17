@@ -26,6 +26,28 @@ files = [
 typing-extensions = {version = ">=4.0.0", markers = "python_version < \"3.9\""}
 
 [[package]]
+name = "anyio"
+version = "4.2.0"
+description = "High level compatibility layer for multiple asynchronous event loop implementations"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "anyio-4.2.0-py3-none-any.whl", hash = "sha256:745843b39e829e108e518c489b31dc757de7d2131d53fac32bd8df268227bfee"},
+    {file = "anyio-4.2.0.tar.gz", hash = "sha256:e1875bb4b4e2de1669f4bc7869b6d3f54231cdced71605e6e64c9be77e3be50f"},
+]
+
+[package.dependencies]
+exceptiongroup = {version = ">=1.0.2", markers = "python_version < \"3.11\""}
+idna = ">=2.8"
+sniffio = ">=1.1"
+typing-extensions = {version = ">=4.1", markers = "python_version < \"3.11\""}
+
+[package.extras]
+doc = ["Sphinx (>=7)", "packaging", "sphinx-autodoc-typehints (>=1.2.0)", "sphinx-rtd-theme"]
+test = ["anyio[trio]", "coverage[toml] (>=7)", "exceptiongroup (>=1.2.0)", "hypothesis (>=4.0)", "psutil (>=5.9)", "pytest (>=7.0)", "pytest-mock (>=3.6.1)", "trustme", "uvloop (>=0.17)"]
+trio = ["trio (>=0.23)"]
+
+[[package]]
 name = "astroid"
 version = "2.15.8"
 description = "An abstract syntax tree for Python with inference support."
@@ -420,33 +442,33 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "gql"
-version = "3.5.0b1"
+version = "3.6.0b1"
 description = "GraphQL client for Python"
 optional = false
 python-versions = "*"
 files = [
-    {file = "gql-3.5.0b1-py2.py3-none-any.whl", hash = "sha256:44d21ebd70ec7aebe44d3e902efcee360185f04fa3588b845570214c66e2d0d5"},
-    {file = "gql-3.5.0b1.tar.gz", hash = "sha256:5b4afc14b367ae0e6d36ef2584370d52035d34d5727e3ba77a24891dceec3c7d"},
+    {file = "gql-3.6.0b1-py2.py3-none-any.whl", hash = "sha256:c1acb7736fda247e21fe99325041eddef16a97e3618fe2d90e1c2ed7fe994d28"},
+    {file = "gql-3.6.0b1.tar.gz", hash = "sha256:d8d30c5b154f68183de2d11971a197685f7f79255972f70f46f1b822ff0dc62d"},
 ]
 
 [package.dependencies]
+anyio = ">=3.0,<5"
 backoff = ">=1.11.1,<3.0"
-graphql-core = ">=3.3.0a2,<3.4"
+graphql-core = ">=3.3.0a3,<3.4"
 requests = {version = ">=2.26,<3", optional = true, markers = "extra == \"requests\""}
-requests-toolbelt = {version = ">=0.9.1,<1", optional = true, markers = "extra == \"requests\""}
-urllib3 = {version = ">=1.26", optional = true, markers = "extra == \"requests\""}
+requests-toolbelt = {version = ">=1.0.0,<2", optional = true, markers = "extra == \"requests\""}
 yarl = ">=1.6,<2.0"
 
 [package.extras]
-aiohttp = ["aiohttp (>=3.7.1,<3.9.0)"]
-all = ["aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "websockets (>=10,<11)"]
+aiohttp = ["aiohttp (>=3.8.0,<4)", "aiohttp (>=3.9.0b0,<4)"]
+all = ["aiohttp (>=3.8.0,<4)", "aiohttp (>=3.9.0b0,<4)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "requests (>=2.26,<3)", "requests-toolbelt (>=1.0.0,<2)", "websockets (>=10,<12)"]
 botocore = ["botocore (>=1.21,<2)"]
-dev = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "black (==22.3.0)", "botocore (>=1.21,<2)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "httpx (>=0.23.1,<1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.910)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "sphinx (>=5.3.0,<6)", "sphinx-argparse (==0.2.5)", "sphinx-rtd-theme (>=0.4,<1)", "types-aiofiles", "types-mock", "types-requests", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
+dev = ["aiofiles", "aiohttp (>=3.8.0,<4)", "aiohttp (>=3.9.0b0,<4)", "black (==22.3.0)", "botocore (>=1.21,<2)", "check-manifest (>=0.42,<1)", "flake8 (==3.8.1)", "httpx (>=0.23.1,<1)", "isort (==4.3.21)", "mock (==4.0.2)", "mypy (==0.910)", "parse (==1.15.0)", "pytest (==7.4.2)", "pytest-asyncio (==0.21.1)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=1.0.0,<2)", "sphinx (>=5.3.0,<6)", "sphinx-argparse (==0.2.5)", "sphinx-rtd-theme (>=0.4,<1)", "types-aiofiles", "types-mock", "types-requests", "vcrpy (==4.4.0)", "websockets (>=10,<12)"]
 httpx = ["httpx (>=0.23.1,<1)"]
-requests = ["requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)"]
-test = ["aiofiles", "aiohttp (>=3.7.1,<3.9.0)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=0.9.1,<1)", "urllib3 (>=1.26)", "vcrpy (==4.0.2)", "websockets (>=10,<11)"]
-test-no-transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==6.2.5)", "pytest-asyncio (==0.16.0)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "vcrpy (==4.0.2)"]
-websockets = ["websockets (>=10,<11)"]
+requests = ["requests (>=2.26,<3)", "requests-toolbelt (>=1.0.0,<2)"]
+test = ["aiofiles", "aiohttp (>=3.8.0,<4)", "aiohttp (>=3.9.0b0,<4)", "botocore (>=1.21,<2)", "httpx (>=0.23.1,<1)", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==7.4.2)", "pytest-asyncio (==0.21.1)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "requests (>=2.26,<3)", "requests-toolbelt (>=1.0.0,<2)", "vcrpy (==4.4.0)", "websockets (>=10,<12)"]
+test-no-transport = ["aiofiles", "mock (==4.0.2)", "parse (==1.15.0)", "pytest (==7.4.2)", "pytest-asyncio (==0.21.1)", "pytest-console-scripts (==1.3.1)", "pytest-cov (==3.0.0)", "vcrpy (==4.4.0)"]
+websockets = ["websockets (>=10,<12)"]
 
 [[package]]
 name = "graphql-core"
@@ -1499,13 +1521,13 @@ use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
 
 [[package]]
 name = "requests-toolbelt"
-version = "0.10.1"
+version = "1.0.0"
 description = "A utility belt for advanced users of python-requests"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
-    {file = "requests-toolbelt-0.10.1.tar.gz", hash = "sha256:62e09f7ff5ccbda92772a29f394a49c3ad6cb181d568b1337626b2abb628a63d"},
-    {file = "requests_toolbelt-0.10.1-py2.py3-none-any.whl", hash = "sha256:18565aa58116d9951ac39baa288d3adb5b3ff975c4f25eee78555d89e8f247f7"},
+    {file = "requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6"},
+    {file = "requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06"},
 ]
 
 [package.dependencies]
@@ -1559,6 +1581,17 @@ growl = ["gntp (==0.7)"]
 libnotify = ["py-notify (==0.3.1)"]
 linux = ["pyinotify (==0.9.0)"]
 osx = ["MacFSEvents (==0.2.8)"]
+
+[[package]]
+name = "sniffio"
+version = "1.3.0"
+description = "Sniff out which async library your code is running under"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "sniffio-1.3.0-py3-none-any.whl", hash = "sha256:eecefdce1e5bbfb7ad2eeaabf7c1eeb404d7757c379bd1f7e5cce9d8bf425384"},
+    {file = "sniffio-1.3.0.tar.gz", hash = "sha256:e60305c5e5d314f5389259b7f22aaa33d8f7dee49763119234af3755c55b9101"},
+]
 
 [[package]]
 name = "snowballstemmer"
@@ -1992,4 +2025,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<3.13"
-content-hash = "d47ea6072729cd5c917921af7ec824c783911bd840c6d2f8b18c6cd531bb3ae2"
+content-hash = "36381192cdb44744b8f00d659ba10b7b5eecc17dbadbad9ff20c59d5879f209c"

@@ -392,7 +392,20 @@ class Anvil:
             )
 
         payload = mutation.create_payload()
+
+        # FIXME: do something here to prevent or fix pydantic from converting
+        # files into "SerializationIterator" objects
         variables = payload.model_dump(by_alias=True, exclude_none=True)
+
+        print('Files', variables["files"])
+        print('Each')
+        for file_obj in variables["files"]:
+          if file_obj["file"] and file_obj["file"].__class__.__name__ == 'SerializationIterator':
+            print("FML1", file_obj["file"])
+            print("FML2", dir(file_obj["file"]))
+
+            # TODO: how to get the value out of the iterator??????????
+            file_obj["file"] = file_obj["file"]
 
         return self.mutate(mutation, variables=variables, upload_files=True, **kwargs)
 
