@@ -1,4 +1,6 @@
 # pylint: disable=duplicate-code
+#
+# ANVIL_API_KEY=YOUR_KEY python examples/create_etch_upload_file.py
 
 import base64
 import os
@@ -24,6 +26,8 @@ def main():
 
     # Create an instance of the builder
     packet = CreateEtchPacket(
+        is_test=True,
+        #
         name="Etch packet with existing template",
         #
         # Optional changes to email subject and body content
@@ -55,7 +59,7 @@ def main():
     # to: open the file, upload the file as a base64 encoded payload along with
     # some data about where the user should sign.
     b64file = None
-    with open("./my_local_file.pdf", "rb") as f:
+    with open("./examples/pdf/blank_8_5x11.pdf", "rb") as f:
         b64file = base64.b64encode(f.read())
 
     if not b64file:

@@ -3,7 +3,10 @@ import re
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import BaseModel as _BaseModel, Extra  # pylint: disable=no-name-in-module
+from pydantic import (  # pylint: disable=no-name-in-module
+    BaseModel as _BaseModel,
+    ConfigDict,
+)
 
 
 under_pat = re.compile(r"_([a-z])")
@@ -15,16 +18,14 @@ def underscore_to_camel(name):
 
 
 class BaseModel(_BaseModel):
-    class Config:
-        """Config override for all models.
+    """Config override for all models.
 
-        This override is mainly so everything can go from snake to camel-case.
-        """
+    This override is mainly so everything can go from snake to camel-case.
+    """
 
-        alias_generator = underscore_to_camel
-        allow_population_by_field_name = True
-
-        # Allow extra fields even if it is not defined. This will allow models
-        # to be more flexible if features are added in the Anvil API, but
-        # explicit support hasn't been added yet to this library.
-        extra = Extra.allow
+    # Allow extra fields even if it is not defined. This will allow models
+    # to be more flexible if features are added in the Anvil API, but
+    # explicit support hasn't been added yet to this library.
+    model_config = ConfigDict(
+        alias_generator=underscore_to_camel, populate_by_name=True, extra="allow"
+    )

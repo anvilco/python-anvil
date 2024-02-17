@@ -57,7 +57,8 @@ def main():
         # This can be any string, but should be unique if adding multiple files.
         id="introPages",
         # The eid of the cast you want to use from "API Info" or through the CLI.
-        cast_eid="abc123",
+        # This is a sample PDF anyone can use
+        cast_eid="05xXsZko33JIO6aq5Pnr",
     )
 
     # Gather your signer data
