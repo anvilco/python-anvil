@@ -400,12 +400,15 @@ class Anvil:
         print('Files', variables["files"])
         print('Each')
         for file_obj in variables["files"]:
-          if file_obj["file"] and file_obj["file"].__class__.__name__ == 'SerializationIterator':
-            print("FML1", file_obj["file"])
-            print("FML2", dir(file_obj["file"]))
+            if (
+                file_obj["file"]
+                and file_obj["file"].__class__.__name__ == 'SerializationIterator'
+            ):
+                print("FML1", file_obj["file"])
+                print("FML2", dir(file_obj["file"]))
 
-            # TODO: how to get the value out of the iterator??????????
-            file_obj["file"] = file_obj["file"]
+                # TODO: how to get the value out of the iterator??????????
+                file_obj["file"] = file_obj["file"]
 
         return self.mutate(mutation, variables=variables, upload_files=True, **kwargs)
 
