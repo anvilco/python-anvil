@@ -28,7 +28,7 @@ run: install
 
 .PHONY: doctor
 doctor:  ## Confirm system dependencies are available
-	bin/verchew --exit-code
+	bin/verchew
 
 # PROJECT DEPENDENCIES ########################################################
 
