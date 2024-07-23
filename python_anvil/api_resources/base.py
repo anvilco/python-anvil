@@ -3,7 +3,11 @@ import re
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic.v1 import BaseModel as _BaseModel, Extra  # pylint: disable=no-name-in-module
+from pydantic.v1 import (  # pylint: disable=no-name-in-module
+    BaseModel as _BaseModel,
+    Extra,
+)
+
 
 under_pat = re.compile(r"_([a-z])")
 

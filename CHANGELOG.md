@@ -1,3 +1,7 @@
+# 3.0.2 (2024-07-23)
+
+- Updated `pydantic` package dependency to `v2`, but still using `v1` internally.
+
 # 3.0.1 (2023-06-28)
 
 - Fixed issue with `requests_toolbelt` (`gql` dependency) using an incompatible version of `urllib3`.
