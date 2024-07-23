@@ -1,3 +1,8 @@
+# 4.0.0 (2024-07-23)
+
+- Updated `pydantic` package dependency to `v2`, but still using `v1` internally.
+- **[BREAKING CHANGE]** Python requirement is now `>= 3.8.0`, up from `>= 3.7.2`.
+
 # 3.0.1 (2023-06-28)
 
 - Fixed issue with `requests_toolbelt` (`gql` dependency) using an incompatible version of `urllib3`.
