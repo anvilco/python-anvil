@@ -2,6 +2,7 @@
 
 import sys
 from io import BufferedIOBase
+from python_anvil.models import FileCompatibleBaseModel
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
@@ -167,7 +168,7 @@ class DocumentMarkdown(BaseModel):
     text_color: str = "#000000"
 
 
-class DocumentUpload(BaseModel):
+class DocumentUpload(FileCompatibleBaseModel):
     """Dataclass representing an uploaded document."""
 
     id: str
