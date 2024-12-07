@@ -197,7 +197,7 @@ class CreateEtchFilePayload(BaseModel):
     payloads: Union[str, Dict[str, FillPDFPayload]]
 
 
-class CreateEtchPacketPayload(BaseModel):
+class CreateEtchPacketPayload(FileCompatibleBaseModel):
     """
     Payload for createEtchPacket.
 
