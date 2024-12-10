@@ -8,6 +8,7 @@ from python_anvil.api_resources.payload import (
     DocumentMarkdown,
     EtchSigner,
     MarkdownContent,
+    MarkdownTable,
     SignatureField,
     SignerField,
 )
@@ -61,7 +62,7 @@ def main():
         fields=[
             # This is markdown content
             MarkdownContent(
-                table=dict(
+                table=MarkdownTable(
                     rows=[
                         ['Description', 'Quantity', 'Price'],
                         ['3x Roof Shingles', '15', '$60.00'],

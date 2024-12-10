@@ -43,7 +43,7 @@ class FillPDFPayload(BaseModel):
 
 class GeneratePDFPayload(BaseModel):
     data: Union[List[Dict[str, Any]], Dict[Literal["html", "css"], str]]
-    logo: Optional[EmbeddedLogo]
+    logo: Optional[EmbeddedLogo] = None
     title: Optional[str]
     type: Optional[Literal["markdown", "html"]] = "markdown"
 
@@ -84,7 +84,7 @@ class EtchSigner(BaseModel):
     # id will be generated if `None`
     id: Optional[str] = None
     routing_order: Optional[int] = None
-    redirect_url: Optional[str] = Field(None, alias="redirectURL")
+    redirect_url: Optional[str] = Field(default=None, alias="redirectURL")
     accept_each_field: Optional[bool] = None
     enable_emails: Optional[List[str]] = None
     # signature_mode can be "draw" or "text" (default: text)
@@ -227,10 +227,10 @@ class CreateEtchPacketPayload(BaseModel):
     signature_email_body: Optional[str] = None
     is_draft: Optional[bool] = False
     is_test: Optional[bool] = True
-    merge_pdfs: Optional[bool] = Field(None, alias="mergePDFs")
+    merge_pdfs: Optional[bool] = Field(None, serialization_alias="mergePDFs")
     data: Optional[CreateEtchFilePayload] = None
     signature_page_options: Optional[Dict[Any, Any]] = None
-    webhook_url: Optional[str] = Field(None, alias="webhookURL")
+    webhook_url: Optional[str] = Field(None, serialization_alias="webhookURL")
     reply_to_name: Optional[Any] = None
     reply_to_email: Optional[Any] = None
     enable_emails: Optional[Union[bool, List[str]]] = None
@@ -258,7 +258,7 @@ class ForgeSubmitPayload(BaseModel):
     # even when `False` is used in the payload.
     is_test: Optional[bool] = True
     timezone: Optional[Text] = None
-    webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
+    webhook_url: Optional[HttpUrl] = Field(default=None, alias="webhookURL")
     group_array_id: Optional[Text] = None
     group_array_index: Optional[int] = None
 

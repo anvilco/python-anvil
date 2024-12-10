@@ -34,8 +34,6 @@ classifiers = [
 [tool.poetry.dependencies]
 
 python = ">=3.8.0,<3.13"
-#python="3.12.8"
-
 
 click = "^8.1.7"
 requests = "^2.32.3"
@@ -53,7 +51,7 @@ isort = "^5.13.2"
 # Linters
 mypy = "^1.13.0"
 pydocstyle = "^6.3.0"
-pylint = "^2.17.7"
+pylint = "^3.2.7"
 
 # Testing
 pytest = "^7.4.4"
