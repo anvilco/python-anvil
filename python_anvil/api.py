@@ -1,7 +1,7 @@
 import logging
 from gql import gql
 from graphql import DocumentNode
-from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import (
     BaseQuery,
@@ -326,7 +326,7 @@ class Anvil:
 
         return _get_return(res, get_data=get_data)
 
-    def get_weld(self, eid: Text, **kwargs):
+    def get_weld(self, eid: str, **kwargs):
         res = self.query(
             gql(
                 """
@@ -416,7 +416,7 @@ class Anvil:
 
     def forge_submit(
         self,
-        payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
+        payload: Optional[Union[Dict[str, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
     ) -> Dict[str, Any]:
