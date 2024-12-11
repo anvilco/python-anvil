@@ -33,7 +33,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 
-python = ">=3.8"
+python = ">=3.8, <3.13"
 
 click = "^8.1.7"
 requests = "^2.32.3"
@@ -68,7 +68,7 @@ mkdocs = "^1.6.1"
 pygments = "^2.18.0"
 
 # Tooling
-pyinstaller = "^5.13.2"
+pyinstaller = "^6.11.1"
 sniffer = "*"
 MacFSEvents = { version = "*", platform = "darwin" }
 pync = { version = "*", platform = "darwin" }
