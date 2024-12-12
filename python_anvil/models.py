@@ -10,11 +10,19 @@ except ImportError:
     IS_V2 = False
 
 if IS_V2:
+    from python_anvil.api_resources.base import underscore_to_camel
+    from pydantic import ConfigDict
     class FileCompatibleBaseModel(BaseModel):
         """
             Patched model_dump to extract file objects from SerializationIterator in V2
             and return as BufferedReader
         """ 
+            # Allow extra fields even if it is not defined. This will allow models
+        # to be more flexible if features are added in the Anvil API, but
+        # explicit support hasn't been added yet to this library.
+        model_config = ConfigDict(
+            alias_generator=underscore_to_camel, populate_by_name=True, extra="allow"
+        )
 
         def _iterator_to_buffered_reader(self, value):
             content = bytearray()
@@ -51,6 +59,8 @@ if IS_V2:
                             if self._check_if_serialization_iterator(item['file']):
                                 data[key][index]['file'] = self._iterator_to_buffered_reader(item['file'])
             return data
+        
+        
 
 else:
     FileCompatibleBaseModel = BaseModel
