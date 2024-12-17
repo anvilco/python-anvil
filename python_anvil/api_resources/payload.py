@@ -2,6 +2,7 @@
 
 import sys
 from io import BufferedIOBase
+from python_anvil.models import FileCompatibleBaseModel
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
@@ -167,7 +168,7 @@ class DocumentMarkdown(BaseModel):
     text_color: str = "#000000"
 
 
-class DocumentUpload(BaseModel):
+class DocumentUpload(FileCompatibleBaseModel):
     """Dataclass representing an uploaded document."""
 
     id: str
@@ -178,6 +179,9 @@ class DocumentUpload(BaseModel):
     # the client library side.
     # This might be a bug on the `pydantic` side(?) when this object gets
     # converted into a dict.
+
+    # NOTE: This field name is referenced in the models.py file, if you change it you 
+    #   must change the reference
     file: Any = None
     fields: List[SignatureField]
     font_size: int = 14
@@ -196,7 +200,7 @@ class CreateEtchFilePayload(BaseModel):
     payloads: Union[str, Dict[str, FillPDFPayload]]
 
 
-class CreateEtchPacketPayload(BaseModel):
+class CreateEtchPacketPayload(FileCompatibleBaseModel):
     """
     Payload for createEtchPacket.
 
@@ -206,6 +210,9 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
+    # NOTE: This is a list of `AttachableEtchFile` objects, but we need to
+    # override the default `FileCompatibleBaseModel` to handle multipart/form-data
+    # uploads correctly. This field name is referenced in the models.py file.
     files: List["AttachableEtchFile"]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
