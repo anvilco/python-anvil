@@ -180,7 +180,7 @@ class DocumentUpload(FileCompatibleBaseModel):
     # This might be a bug on the `pydantic` side(?) when this object gets
     # converted into a dict.
 
-    # NOTE: This field name is referenced in the models.py file, if you change it you 
+    # NOTE: This field name is referenced in the models.py file, if you change it you
     #   must change the reference
     file: Any = None
     fields: List[SignatureField]
