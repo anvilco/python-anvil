@@ -2,7 +2,6 @@
 
 import sys
 from io import BufferedIOBase
-from python_anvil.models import FileCompatibleBaseModel
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
@@ -13,6 +12,8 @@ from pydantic import (  # pylint: disable=no-name-in-module
     field_validator,
 )
 from typing import Any, Dict, List, Optional, Text, Union
+
+from python_anvil.models import FileCompatibleBaseModel
 
 from .base import BaseModel
 
