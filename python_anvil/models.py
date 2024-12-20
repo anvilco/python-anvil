@@ -6,6 +6,7 @@ from typing import Any
 
 
 from pydantic import BaseModel, ConfigDict
+
 # from pydantic.version import VERSION as PYDANTIC_VERSION
 
 # IS_V2 = not PYDANTIC_VERSION.startswith('1')
@@ -18,6 +19,7 @@ from pydantic import BaseModel, ConfigDict
 # from pydantic import ConfigDict
 
 from python_anvil.api_resources.base import underscore_to_camel
+
 
 class FileCompatibleBaseModel(BaseModel):
     """
@@ -46,9 +48,9 @@ class FileCompatibleBaseModel(BaseModel):
             bio.seek(0)  # Reset to start
 
             # Create a BufferedReader with the content
-            reader = BufferedReader(bio) # type: ignore[arg-type]
+            reader = BufferedReader(bio)  # type: ignore[arg-type]
             # Add a length attribute that requests_toolbelt can use
-            reader.len = total_length # type: ignore[attr-defined]
+            reader.len = total_length  # type: ignore[attr-defined]
             return reader
 
     def _check_if_serialization_iterator(self, value):
@@ -88,13 +90,10 @@ class FileCompatibleBaseModel(BaseModel):
                 for index, item in enumerate(value):
                     if isinstance(item, dict) and 'file' in item:
                         if self._check_if_serialization_iterator(item['file']):
-                            file_obj = self._iterator_to_buffered_reader(
-                                item['file']
-                            )
-                            data[key][index]['file'] = self._process_file_data(
-                                file_obj
-                            )
+                            file_obj = self._iterator_to_buffered_reader(item['file'])
+                            data[key][index]['file'] = self._process_file_data(file_obj)
         return data
+
 
 # else:
 # FileCompatibleBaseModel = BaseModel
