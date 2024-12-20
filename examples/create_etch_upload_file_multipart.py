@@ -52,7 +52,7 @@ def main():
     # In the `create_etch_upload_file.py` example, we are base64 encoding our
     # file(s) before sending. In this case, we will be providing a file's path
     # or file descriptor (from an `open()` call)
-    filename = "my_local_file.pdf"
+    filename = "./pdf/blank_8_5x11.pdf"
     file_dir = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(file_dir, filename)
 

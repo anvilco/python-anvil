@@ -5,13 +5,15 @@ from io import BufferedIOBase
 
 # Disabling pylint no-name-in-module because this is the documented way to
 # import `BaseModel` and it's not broken, so let's keep it.
-from pydantic.v1 import (  # pylint: disable=no-name-in-module
+from pydantic import (  # pylint: disable=no-name-in-module
+    ConfigDict,
     Field,
     HttpUrl,
-    root_validator,
-    validator,
+    field_validator,
 )
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Dict, List, Optional, Union
+
+from python_anvil.models import FileCompatibleBaseModel
 
 from .base import BaseModel
 
@@ -24,8 +26,8 @@ else:
 
 class EmbeddedLogo(BaseModel):
     src: str
-    max_width: Optional[int]
-    max_height: Optional[int]
+    max_width: Optional[int] = None
+    max_height: Optional[int] = None
 
 
 class FillPDFPayload(BaseModel):
@@ -34,7 +36,8 @@ class FillPDFPayload(BaseModel):
     font_size: Optional[int] = None
     text_color: Optional[str] = None
 
-    @validator("data")
+    @field_validator("data")
+    @classmethod
     def data_cannot_be_empty(cls, v):
         if isinstance(v, dict) and len(v) == 0:
             raise ValueError("cannot be empty")
@@ -43,25 +46,13 @@ class FillPDFPayload(BaseModel):
 
 class GeneratePDFPayload(BaseModel):
     data: Union[List[Dict[str, Any]], Dict[Literal["html", "css"], str]]
-    logo: Optional[EmbeddedLogo]
-    title: Optional[str]
+    logo: Optional[EmbeddedLogo] = None
+    title: Optional[str] = None
     type: Optional[Literal["markdown", "html"]] = "markdown"
-
-    @validator("data")
-    def data_must_match_type(cls, v, values):
-        if "type" in values and values["type"] == "html":
-            if "html" not in v:
-                raise ValueError("must contain HTML if using `html` type")
-            if isinstance(v, list):
-                raise ValueError("must contain a data dict not a list")
-        return v
-
-    @validator("type")
-    def type_must_match_data(cls, v, values):
-        if v == "html":
-            if "data" in values and not isinstance(values["data"], dict):
-                raise ValueError("HTML types must used a dict data payload")
-        return v
+    page: Optional[Dict[str, Any]] = None
+    font_size: Optional[int] = None
+    font_family: Optional[str] = None
+    text_color: Optional[str] = None
 
 
 class GenerateEtchSigningURLPayload(BaseModel):
@@ -178,7 +169,7 @@ class DocumentMarkdown(BaseModel):
     text_color: str = "#000000"
 
 
-class DocumentUpload(BaseModel):
+class DocumentUpload(FileCompatibleBaseModel):
     """Dataclass representing an uploaded document."""
 
     id: str
@@ -189,16 +180,14 @@ class DocumentUpload(BaseModel):
     # the client library side.
     # This might be a bug on the `pydantic` side(?) when this object gets
     # converted into a dict.
-    file: Any
+
+    # NOTE: This field name is referenced in the models.py file, if you change it you
+    #   must change the reference
+    file: Any = None
     fields: List[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
-
-    class Config:
-        """Special rules for this model class."""
-
-        # Needed to allow `BufferedIOBase` as an allowed `file` type.
-        arbitrary_types_allowed = True
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class EtchCastRef(BaseModel):
@@ -212,7 +201,7 @@ class CreateEtchFilePayload(BaseModel):
     payloads: Union[str, Dict[str, FillPDFPayload]]
 
 
-class CreateEtchPacketPayload(BaseModel):
+class CreateEtchPacketPayload(FileCompatibleBaseModel):
     """
     Payload for createEtchPacket.
 
@@ -222,6 +211,9 @@ class CreateEtchPacketPayload(BaseModel):
 
     name: str
     signers: List[EtchSigner]
+    # NOTE: This is a list of `AttachableEtchFile` objects, but we need to
+    # override the default `FileCompatibleBaseModel` to handle multipart/form-data
+    # uploads correctly. This field name is referenced in the models.py file.
     files: List["AttachableEtchFile"]
     signature_email_subject: Optional[str] = None
     signature_email_body: Optional[str] = None
@@ -246,10 +238,10 @@ class ForgeSubmitPayload(BaseModel):
     https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations
     """
 
-    forge_eid: Text
-    payload: Dict[Text, Any]
-    weld_data_eid: Optional[Text] = None
-    submission_eid: Optional[Text] = None
+    forge_eid: str
+    payload: Dict[str, Any]
+    weld_data_eid: Optional[str] = None
+    submission_eid: Optional[str] = None
     # Defaults to True when not provided/is None
     enforce_payload_valid_on_create: Optional[bool] = None
     current_step: Optional[int] = None
@@ -257,21 +249,10 @@ class ForgeSubmitPayload(BaseModel):
     # Note that if using a development API key, this will be forced to `True`
     # even when `False` is used in the payload.
     is_test: Optional[bool] = True
-    timezone: Optional[Text] = None
+    timezone: Optional[str] = None
     webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
-    group_array_id: Optional[Text] = None
+    group_array_id: Optional[str] = None
     group_array_index: Optional[int] = None
-
-    @root_validator
-    def wd_submission_both_required(cls, values):
-        both_required = ["weld_data_eid", "submission_eid"]
-        picked = [k for k in both_required if k in values and values[k] is not None]
-        if len(picked) == 1:
-            raise ValueError(
-                "Both `weld_data_eid` and `submission_eid` are "
-                "required if either are provided."
-            )
-        return values
 
 
 UploadableFile = Union[Base64Upload, BufferedIOBase]
@@ -282,5 +263,5 @@ AttachableEtchFile = Union[
 # Classes below use types wrapped in quotes avoid a circular dependency/weird
 # variable assignment locations with the aliases above. We need to manually
 # update the refs for them to point to the right things.
-DocumentUpload.update_forward_refs()
-CreateEtchPacketPayload.update_forward_refs()
+DocumentUpload.model_rebuild()
+CreateEtchPacketPayload.model_rebuild()

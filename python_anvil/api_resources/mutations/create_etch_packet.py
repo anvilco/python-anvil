@@ -19,17 +19,14 @@ from python_anvil.utils import create_unique_id
 logger: Logger = logging.getLogger(__name__)
 
 DEFAULT_RESPONSE_QUERY = """{
-  id
   eid
   name
   detailsURL
   documentGroup {
-    id
     eid
     status
     files
     signers {
-      id
       eid
       aliasId
       routingOrder

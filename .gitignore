@@ -12,6 +12,7 @@ Icon*
 # Temporary virtual environment files
 /.cache/
 /.venv/
+/env/
 
 # Temporary server files
 .env
@@ -49,3 +50,6 @@ Icon*
 .tox
 .idea
 .vscode
+
+filled.pdf
+generated.pdf

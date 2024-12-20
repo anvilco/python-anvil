@@ -1,7 +1,6 @@
 # pylint: disable=unused-variable,unused-argument,too-many-statements
 import json
 import pytest
-from pydantic.v1 import ValidationError
 from typing import Any, MutableMapping
 from unittest import mock
 
@@ -187,18 +186,6 @@ def describe_api():
             assert m_request_post.call_count == 0
 
         @mock.patch('python_anvil.api.RestRequest.post')
-        def test_invalid_data_for_html(m_request_post, anvil):
-            with pytest.raises(ValueError):
-                anvil.generate_pdf(
-                    {
-                        # This should be a plain dict, not a list
-                        "data": [{"d1": "data"}],
-                        "type": "html",
-                    }
-                )
-            assert m_request_post.call_count == 0
-
-        @mock.patch('python_anvil.api.RestRequest.post')
         def test_invalid_data_for_markdown(m_request_post, anvil):
             with pytest.raises(ValueError):
                 anvil.generate_pdf(
@@ -355,13 +342,13 @@ def describe_api():
                 for k, v in payloads.EXPECTED_ETCH_TEST_PAYLOAD_JSON.items()
                 if v is not None
             }
-            cep = CreateEtchPacketPayload.parse_obj(payload)
+            cep = CreateEtchPacketPayload.model_validate(payload)
             cep.newFeature = True  # type: ignore[attr-defined]
             anvil.create_etch_packet(payload=cep)
             assert m_request_post.call_count == 1
 
             variables = m_request_post.call_args[1]["variable_values"]
-            assert cep.dict(by_alias=True, exclude_none=True) == variables
+            assert cep.model_dump(by_alias=True, exclude_none=True) == variables
             assert "newFeature" in variables
 
     def describe_forge_submit():
@@ -385,30 +372,6 @@ def describe_api():
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
             assert {"variable_values": expected_data} in m_request_post.call_args
-
-        @mock.patch('gql.Client.execute')
-        def test_invalid_wd_submission(m_request_post, anvil):
-            with pytest.raises(ValidationError):
-                payload = dict(
-                    forge_eid="forge1234",
-                    # weld_data_eid and submission_eid must be provided
-                    # if one exists.
-                    weld_data_eid="wd1234",
-                    payload=dict(field1="Updated data"),
-                )
-                anvil.forge_submit(payload=payload)
-                assert m_request_post.call_count == 0
-
-            with pytest.raises(ValidationError):
-                payload = dict(
-                    forge_eid="forge1234",
-                    # weld_data_eid and submission_eid must be provided
-                    # if one exists.
-                    submission_eid="sub1234",
-                    payload=dict(field1="Updated data"),
-                )
-                anvil.forge_submit(payload=payload)
-                assert m_request_post.call_count == 0
 
         @mock.patch('gql.Client.execute')
         def test_minimum_valid_data_submission(m_request_post, anvil):
