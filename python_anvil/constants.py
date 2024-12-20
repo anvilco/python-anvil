@@ -1,7 +1,6 @@
 """Basic constants used in the library."""
 
-# GRAPHQL_ENDPOINT: str = "https://graphql.useanvil.com"
-GRAPHQL_ENDPOINT: str = "http://localhost:3000/graphql"
+GRAPHQL_ENDPOINT: str = "https://graphql.useanvil.com"
 REST_ENDPOINT = "https://app.useanvil.com/api/v1/"
 
 RETRIES_LIMIT = 5
