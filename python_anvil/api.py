@@ -1,7 +1,7 @@
 import logging
 from gql import gql
 from graphql import DocumentNode
-from typing import Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union
+from typing import Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import (
     BaseQuery,
@@ -324,7 +324,7 @@ class Anvil:
 
         return _get_return(res, get_data=get_data)
 
-    def get_weld(self, eid: Text, **kwargs):
+    def get_weld(self, eid: str, **kwargs):
         res = self.query(
             gql(
                 """
@@ -397,15 +397,15 @@ class Anvil:
         # files into "SerializationIterator" objects
         variables = payload.model_dump(by_alias=True, exclude_none=True)
 
-        print('Files', variables["files"])
-        print('Each')
+        # print('Files', variables["files"])
+        # print('Each')
         for file_obj in variables["files"]:
             if (
                 file_obj["file"]
                 and file_obj["file"].__class__.__name__ == 'SerializationIterator'
             ):
-                print("FML1", file_obj["file"])
-                print("FML2", dir(file_obj["file"]))
+                # print("FML1", file_obj["file"])
+                # print("FML2", dir(file_obj["file"]))
 
                 # TODO: how to get the value out of the iterator??????????
                 file_obj["file"] = file_obj["file"]
@@ -430,7 +430,7 @@ class Anvil:
 
     def forge_submit(
         self,
-        payload: Optional[Union[Dict[Text, Any], ForgeSubmitPayload]] = None,
+        payload: Optional[Union[Dict[str, Any], ForgeSubmitPayload]] = None,
         json=None,
         **kwargs,
     ) -> Dict[str, Any]:

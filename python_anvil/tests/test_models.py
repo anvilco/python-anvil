@@ -1,6 +1,5 @@
 import base64
 import pytest
-from io import BufferedReader
 from pydantic import BaseModel
 from typing import Any, List, Optional
 
@@ -95,6 +94,7 @@ def test_file_compat_base_model_handles_lists():
 
 
 def test_document_upload_handles_file_objects():
+    # pylint: disable-next=import-outside-toplevel
     from python_anvil.api_resources.payload import DocumentUpload, SignatureField
 
     # Create a sample signature field
@@ -133,6 +133,7 @@ def test_document_upload_handles_file_objects():
 
 
 def test_create_etch_packet_payload_handles_nested_file_objects():
+    # pylint: disable-next=import-outside-toplevel
     from python_anvil.api_resources.payload import (
         CreateEtchPacketPayload,
         DocumentUpload,
@@ -194,6 +195,7 @@ def test_create_etch_packet_payload_handles_nested_file_objects():
 
 
 def test_create_etch_packet_payload_handles_multiple_files():
+    # pylint: disable-next=import-outside-toplevel
     from python_anvil.api_resources.payload import (
         CreateEtchPacketPayload,
         DocumentUpload,

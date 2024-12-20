@@ -11,7 +11,7 @@ from pydantic import (  # pylint: disable=no-name-in-module
     HttpUrl,
     field_validator,
 )
-from typing import Any, Dict, List, Optional, Text, Union
+from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.models import FileCompatibleBaseModel
 
@@ -238,10 +238,10 @@ class ForgeSubmitPayload(BaseModel):
     https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations
     """
 
-    forge_eid: Text
-    payload: Dict[Text, Any]
-    weld_data_eid: Optional[Text] = None
-    submission_eid: Optional[Text] = None
+    forge_eid: str
+    payload: Dict[str, Any]
+    weld_data_eid: Optional[str] = None
+    submission_eid: Optional[str] = None
     # Defaults to True when not provided/is None
     enforce_payload_valid_on_create: Optional[bool] = None
     current_step: Optional[int] = None
@@ -249,9 +249,9 @@ class ForgeSubmitPayload(BaseModel):
     # Note that if using a development API key, this will be forced to `True`
     # even when `False` is used in the payload.
     is_test: Optional[bool] = True
-    timezone: Optional[Text] = None
+    timezone: Optional[str] = None
     webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
-    group_array_id: Optional[Text] = None
+    group_array_id: Optional[str] = None
     group_array_index: Optional[int] = None
 
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Text, Union
+from typing import Any, Dict, Optional, Union
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.mutations.helpers import get_payload_attrs
@@ -70,10 +70,10 @@ class ForgeSubmit(BaseQuery):
 
     def __init__(
         self,
-        payload: Union[Dict[Text, Any], ForgeSubmitPayload],
-        forge_eid: Optional[Text] = None,
-        weld_data_eid: Optional[Text] = None,
-        submission_eid: Optional[Text] = None,
+        payload: Union[Dict[str, Any], ForgeSubmitPayload],
+        forge_eid: Optional[str] = None,
+        weld_data_eid: Optional[str] = None,
+        submission_eid: Optional[str] = None,
         is_test: Optional[bool] = None,
         **kwargs,
     ):
@@ -107,7 +107,7 @@ class ForgeSubmit(BaseQuery):
                 setattr(self, attr, kwargs[attr])
 
     @classmethod
-    def create_from_dict(cls, payload: Dict[Text, Any]):
+    def create_from_dict(cls, payload: Dict[str, Any]):
         # Parse the data through the model class to validate and pass it back
         # as variables in this class.
         return cls(**payload)

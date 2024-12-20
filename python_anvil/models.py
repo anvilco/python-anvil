@@ -3,27 +3,15 @@ import os
 from io import BufferedReader, BytesIO
 from mimetypes import guess_type
 from pydantic import BaseModel, ConfigDict
-from typing import Any
 
 from python_anvil.api_resources.base import underscore_to_camel
 
 
-# from pydantic.version import VERSION as PYDANTIC_VERSION
-
-# IS_V2 = not PYDANTIC_VERSION.startswith('1')
-# except ImportError:
-# from pydantic.v1 import BaseModel
-
-# IS_V2 = False
-
-# if IS_V2:
-# from pydantic import ConfigDict
-
-
 class FileCompatibleBaseModel(BaseModel):
     """
-    Patched model_dump to extract file objects from SerializationIterator in V2
-    and return as BufferedReader or base64 encoded dict as needed.
+    Patched model_dump to extract file objects from SerializationIterator.
+
+    Becaus of Pydantic V2. Return as BufferedReader or base64 encoded dict as needed.
     """
 
     # Allow extra fields even if it is not defined. This will allow models
@@ -92,7 +80,3 @@ class FileCompatibleBaseModel(BaseModel):
                             file_obj = self._iterator_to_buffered_reader(item['file'])
                             data[key][index]['file'] = self._process_file_data(file_obj)
         return data
-
-
-# else:
-# FileCompatibleBaseModel = BaseModel
