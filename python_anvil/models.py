@@ -2,10 +2,11 @@ import base64
 import os
 from io import BufferedReader, BytesIO
 from mimetypes import guess_type
+from pydantic import BaseModel, ConfigDict
 from typing import Any
 
+from python_anvil.api_resources.base import underscore_to_camel
 
-from pydantic import BaseModel, ConfigDict
 
 # from pydantic.version import VERSION as PYDANTIC_VERSION
 
@@ -17,8 +18,6 @@ from pydantic import BaseModel, ConfigDict
 
 # if IS_V2:
 # from pydantic import ConfigDict
-
-from python_anvil.api_resources.base import underscore_to_camel
 
 
 class FileCompatibleBaseModel(BaseModel):
