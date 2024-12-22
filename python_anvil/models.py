@@ -29,15 +29,8 @@ class FileCompatibleBaseModel(BaseModel):
         except StopIteration:
             # Create a BytesIO with the content
             bio = BytesIO(bytes(content))
-            # Get the total length
-            bio.seek(0, 2)  # Seek to end
-            total_length = bio.tell()
-            bio.seek(0)  # Reset to start
-
             # Create a BufferedReader with the content
             reader = BufferedReader(bio)  # type: ignore[arg-type]
-            # Add a length attribute that requests_toolbelt can use
-            reader.len = total_length  # type: ignore[attr-defined]
             return reader
 
     def _check_if_serialization_iterator(self, value):
