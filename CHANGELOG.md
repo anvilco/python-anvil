@@ -1,6 +1,6 @@
 # 5.0.0 (2024-12-27)
 
-- **[BREAKING CHANGE]** Python requirement is now `>= 3.8.0,<3.12`.
+- **[BREAKING CHANGE]** Python requirement is now `>= 3.8.0,<3.13`.
 - Unpegged `urllib3`.
 - Utilizing pydantic v2 syntax and best practices.
 - Improves file handling with `FileCompatibleBaseModel` (Thanks @cyrusradfar!)
