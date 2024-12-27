@@ -42,3 +42,9 @@ Options:
   -i, --input TEXT  Filename of input CSV that provides data  [required]
   --help            Show this message and exit.
 ```
+
+For example, you can fill a sample PDF template with the following command
+
+```shell
+$ ANVIL_API_KEY=MY_GENERATED_KEY anvil fill-pdf -o test.pdf -i examples/cli/fill_pdf.csv 05xXsZko33JIO6aq5Pnr
+```
