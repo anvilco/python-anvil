@@ -27,6 +27,8 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
@@ -98,7 +100,7 @@ anvil = "python_anvil.cli:cli"
 
 [tool.black]
 
-target-version = ["py37", "py38", "py39", "py310"]
+target-version = ["py38", "py39", "py310", "py311", "py312"]
 skip-string-normalization = true
 
 [build-system]
