@@ -23,18 +23,16 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [tool.poetry.dependencies]
 
-python = ">=3.8.0,<3.13"
+python = ">=3.8.0,<3.12"
 
 # urllib must be pinned to <2 due to an issue with the `requests_toolbelt`
 # dependency in `gql`.
