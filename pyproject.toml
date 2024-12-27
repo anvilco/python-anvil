@@ -98,7 +98,7 @@ anvil = "python_anvil.cli:cli"
 
 [tool.black]
 
-target-version = ["py38", "py39", "py310", "py311", "py312"]
+target-version = ["py38", "py39", "py310", "py311"]
 skip-string-normalization = true
 
 [build-system]
