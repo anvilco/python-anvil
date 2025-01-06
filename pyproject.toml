@@ -50,7 +50,7 @@ isort = "^5.11.4"
 
 # Linters
 pydocstyle = "^6.3.0"
-pylint = "^2.16.2"
+pylint = "^3.0"
 
 # FIXME: Upgrading mypy will require updates to aliased fields. e.g.
 #
