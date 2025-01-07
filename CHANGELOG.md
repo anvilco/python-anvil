@@ -1,11 +1,11 @@
 # 5.0.1 (2025-01-06)
 
-- Added/fixed testing for support for Python `3.12`.
+- Python requirement is now `>= 3.8.0,<3.13`.
 - Updated `pylint` to `^3.0` in support of the above.
 
 # 5.0.0 (2024-12-27)
 
-- **[BREAKING CHANGE]** Python requirement is now `>= 3.8.0,<3.13`.
+- **[BREAKING CHANGE]** Python requirement is now `>= 3.8.0,<3.12`.
 - Unpegged `urllib3`.
 - Utilizing pydantic v2 syntax and best practices.
 - Improves file handling with `FileCompatibleBaseModel` (Thanks @cyrusradfar!)
