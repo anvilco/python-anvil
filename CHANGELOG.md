@@ -1,3 +1,7 @@
+# 5.0.2 (2025-01-14)
+
+- `gql` requirement is now `3.6.0b2`
+
 # 5.0.1 (2025-01-06)
 
 - Python requirement is now `>= 3.8.0,<3.13`.

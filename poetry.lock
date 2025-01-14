@@ -448,13 +448,13 @@ dev = ["flake8", "markdown", "twine", "wheel"]
 
 [[package]]
 name = "gql"
-version = "3.6.0b1"
+version = "3.6.0b2"
 description = "GraphQL client for Python"
 optional = false
 python-versions = "*"
 files = [
-    {file = "gql-3.6.0b1-py2.py3-none-any.whl", hash = "sha256:c1acb7736fda247e21fe99325041eddef16a97e3618fe2d90e1c2ed7fe994d28"},
-    {file = "gql-3.6.0b1.tar.gz", hash = "sha256:d8d30c5b154f68183de2d11971a197685f7f79255972f70f46f1b822ff0dc62d"},
+    {file = "gql-3.6.0b2-py2.py3-none-any.whl", hash = "sha256:c681d2273cc8164c0d6557c2d6fd4df190a009706a2044cd640be6a24526318e"},
+    {file = "gql-3.6.0b2.tar.gz", hash = "sha256:f1a4fc06186f25e5b4b5abaf3af359bc7ac65b38bcaa705b6507cd29dec2ecbf"},
 ]
 
 [package.dependencies]
@@ -1908,4 +1908,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8.0,<3.13"
-content-hash = "155d84eb57c5a688f4171d3500f04ef4404b303ebace40e329de7f4e9ca0d896"
+content-hash = "506deb5a982ed6edc0f0d7370a156d36271b447fa2e5e859a771552e570f5dc3"
