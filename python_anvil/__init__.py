@@ -1,12 +1,12 @@
-from pkg_resources import DistributionNotFound, get_distribution
+from importlib.metadata import version, PackageNotFoundError
 
 from python_anvil import api, cli
 from python_anvil.models import FileCompatibleBaseModel
 
 
 try:
-    __version__ = get_distribution('python_anvil').version
-except DistributionNotFound:
+    __version__ = version('python_anvil')
+except PackageNotFoundError:
     __version__ = '(local)'
 
 __all__ = ['api', 'cli', 'FileCompatibleBaseModel']
