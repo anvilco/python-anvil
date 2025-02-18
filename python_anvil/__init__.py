@@ -1,4 +1,4 @@
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 from python_anvil import api, cli
 from python_anvil.models import FileCompatibleBaseModel
