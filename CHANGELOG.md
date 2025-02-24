@@ -1,3 +1,8 @@
+# 5.0.3 (2025-02-24)
+
+- Package import now uses `importlib.metadata` to get the version and throws `PackageNotFoundError` if the package is not
+  installed.
+
 # 5.0.2 (2025-01-14)
 
 - `gql` requirement is now `3.6.0b2`
