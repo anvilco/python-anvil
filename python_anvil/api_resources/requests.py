@@ -20,11 +20,7 @@ class AnvilRequest:
         if method.upper() not in ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]:
             raise ValueError("Invalid HTTP method provided")
 
-        absolute_url = kwargs.pop("absolute_url", False)
-        if absolute_url:
-            full_url = url
-        else:
-            full_url = "/".join([self.get_url(), url]) if len(url) > 0 else self.get_url()
+        full_url = "/".join([self.get_url(), url]) if len(url) > 0 else self.get_url()
 
         return self._client.request(method, full_url, **kwargs)
 
@@ -68,18 +64,16 @@ class BaseAnvilHttpRequest(AnvilRequest):
 
     def get(self, url, params=None, **kwargs):
         retry = kwargs.pop("retry", True)
-        absolute_url = kwargs.pop("absolute_url", False)
         content, status_code, headers = self._request(
-            "GET", url, params=params, retry=retry, absolute_url=absolute_url
+            "GET", url, params=params, retry=retry
         )
         return self.process_response(content, status_code, headers, **kwargs)
 
     def post(self, url, data=None, **kwargs):
         retry = kwargs.pop("retry", True)
-        absolute_url = kwargs.pop("absolute_url", False)
         params = kwargs.pop("params", None)
         content, status_code, headers = self._request(
-            "POST", url, json=data, retry=retry, params=params, absolute_url=absolute_url
+            "POST", url, json=data, retry=retry, params=params
         )
         return self.process_response(content, status_code, headers, **kwargs)
 
