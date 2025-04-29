@@ -1,7 +1,8 @@
 from typing import Any, Dict
 
-from python_anvil.http import HTTPClient
 from python_anvil.constants import VALID_HOSTS
+from python_anvil.http import HTTPClient
+
 
 
 class AnvilRequest:
@@ -172,9 +173,7 @@ class FullyQualifiedRequest(BaseAnvilHttpRequest):
 
     def _validate_url(self, url):
         if not any(url.startswith(host) for host in VALID_HOSTS):
-            raise ValueError(
-                f"URL must start with one of: {', '.join(VALID_HOSTS)}"
-            )
+            raise ValueError(f"URL must start with one of: {', '.join(VALID_HOSTS)}")
 
     def get(self, url, params=None, **kwargs):
         self._validate_url(url)
