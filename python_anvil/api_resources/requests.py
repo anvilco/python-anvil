@@ -164,15 +164,12 @@ class PlainRequest(BaseAnvilHttpRequest):
 
 
 class FullyQualifiedRequest(BaseAnvilHttpRequest):
-    """A request class that validates URLs are fully qualified and point to Anvil domains."""
+    """A request class that validates URLs point to Anvil domains."""
 
     VALID_HOSTS = [
         "https://app.useanvil.com",
         # Future Anvil specific URLs
     ]
-
-    def __init__(self, client, options=None):
-        super().__init__(client, options)
 
     def get_url(self):
         return ""  # Not used since we expect full URLs
