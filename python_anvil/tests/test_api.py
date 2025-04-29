@@ -399,52 +399,52 @@ def describe_api():
 
     def describe_rest_request_absolute_url_behavior():
         @pytest.mark.parametrize(
-            "url, expected_absolute_url",
+            "url, should_raise",
             [
-                ("some/relative/path", False),
-                ("https://external.example.com/full/path/file.pdf", True),
+                ("some/relative/path", True),  # Relative path should raise
+                ("https://external.example.com/full/path/file.pdf", True),  # External URL should raise
+                ("https://app.useanvil.com/api/v1/some-endpoint", False),  # Valid Anvil URL should work
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
-        def test_get_behavior(mock_request, anvil, url, expected_absolute_url):
+        def test_get_behavior(mock_request, anvil, url, should_raise):
             mock_request.return_value = (b"fake_content", 200, {})
-            rest_client = anvil.request_rest()
+            rest_client = anvil.request_fully_qualified()
 
-            if expected_absolute_url:
-                rest_client.get(url, absolute_url=True)
+            if should_raise:
+                with pytest.raises(ValueError, match="URL must start with one of: https://app.useanvil.com"):
+                    rest_client.get(url)
             else:
                 rest_client.get(url)
-
-            mock_request.assert_called_once_with(
-                "GET",
-                url,
-                params=None,
-                retry=True,
-                absolute_url=expected_absolute_url,
-            )
+                mock_request.assert_called_once_with(
+                    "GET",
+                    url,
+                    params=None,
+                    retry=True,
+                )
 
         @pytest.mark.parametrize(
-            "url, expected_absolute_url",
+            "url, should_raise",
             [
-                ("some/relative/path", False),
-                ("https://external.example.com/full/path/file.pdf", True),
+                ("some/relative/path", True),  # Relative path should raise
+                ("https://external.example.com/full/path/file.pdf", True),  # External URL should raise
+                ("https://app.useanvil.com/api/v1/some-endpoint", False),  # Valid Anvil URL should work
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
-        def test_post_behavior(mock_request, anvil, url, expected_absolute_url):
+        def test_post_behavior(mock_request, anvil, url, should_raise):
             mock_request.return_value = (b"fake_content", 200, {})
-            rest_client = anvil.request_rest()
+            rest_client = anvil.request_fully_qualified()
 
-            if expected_absolute_url:
-                rest_client.post(url, data={}, absolute_url=True)
+            if should_raise:
+                with pytest.raises(ValueError, match="URL must start with one of: https://app.useanvil.com"):
+                    rest_client.post(url, data={})
             else:
                 rest_client.post(url, data={})
-
-            mock_request.assert_called_once_with(
-                "POST",
-                url,
-                json={},
-                retry=True,
-                params=None,
-                absolute_url=expected_absolute_url,
-            )
+                mock_request.assert_called_once_with(
+                    "POST",
+                    url,
+                    json={},
+                    retry=True,
+                    params=None,
+                )
