@@ -401,9 +401,9 @@ def describe_api():
         @pytest.mark.parametrize(
             "url, should_raise",
             [
-                ("some/relative/path", True),  # Relative path should raise
-                ("https://external.example.com/full/path/file.pdf", True),  # External URL should raise
-                ("https://app.useanvil.com/api/v1/some-endpoint", False),  # Valid Anvil URL should work
+                ("some/relative/path", True),
+                ("https://external.example.com/full/path/file.pdf", True),
+                ("https://app.useanvil.com/api/v1/some-endpoint", False),
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
@@ -412,7 +412,10 @@ def describe_api():
             rest_client = anvil.request_fully_qualified()
 
             if should_raise:
-                with pytest.raises(ValueError, match="URL must start with one of: https://app.useanvil.com"):
+                with pytest.raises(
+                    ValueError, 
+                    match="URL must start with one of: https://app.useanvil.com"
+                ):
                     rest_client.get(url)
             else:
                 rest_client.get(url)
@@ -426,9 +429,9 @@ def describe_api():
         @pytest.mark.parametrize(
             "url, should_raise",
             [
-                ("some/relative/path", True),  # Relative path should raise
-                ("https://external.example.com/full/path/file.pdf", True),  # External URL should raise
-                ("https://app.useanvil.com/api/v1/some-endpoint", False),  # Valid Anvil URL should work
+                ("some/relative/path", True),
+                ("https://external.example.com/full/path/file.pdf", True),
+                ("https://app.useanvil.com/api/v1/some-endpoint", False),
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
@@ -437,7 +440,10 @@ def describe_api():
             rest_client = anvil.request_fully_qualified()
 
             if should_raise:
-                with pytest.raises(ValueError, match="URL must start with one of: https://app.useanvil.com"):
+                with pytest.raises(
+                    ValueError, 
+                    match="URL must start with one of: https://app.useanvil.com"
+                ):
                     rest_client.post(url, data={})
             else:
                 rest_client.post(url, data={})
