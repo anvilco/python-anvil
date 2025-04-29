@@ -9,10 +9,10 @@ from python_anvil.api_resources.payload import (
     CreateEtchPacketPayload,
     ForgeSubmitPayload,
 )
+from python_anvil.constants import VALID_HOSTS
 
 from ..api_resources.payload import FillPDFPayload
 from . import payloads
-from constants import VALID_HOSTS
 
 
 DEV_KEY = "MY-SECRET-KEY"

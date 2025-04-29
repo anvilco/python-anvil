@@ -1,8 +1,7 @@
 from typing import Any, Dict
 
 from python_anvil.http import HTTPClient
-
-from constants import VALID_HOSTS
+from python_anvil.constants import VALID_HOSTS
 
 
 class AnvilRequest:
