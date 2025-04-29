@@ -15,7 +15,7 @@ from .api_resources.payload import (
     ForgeSubmitPayload,
     GeneratePDFPayload,
 )
-from .api_resources.requests import PlainRequest, RestRequest
+from .api_resources.requests import FullyQualifiedRequest, PlainRequest, RestRequest
 from .http import GQLClient, HTTPClient
 
 
@@ -115,6 +115,10 @@ class Anvil:
 
     def request_rest(self, options: Optional[dict] = None):
         api = RestRequest(self.client, options=options)
+        return api
+
+    def request_fully_qualified(self, options: Optional[dict] = None):
+        api = FullyQualifiedRequest(self.client, options=options)
         return api
 
     def fill_pdf(

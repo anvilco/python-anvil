@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from python_anvil.constants import VALID_HOSTS
 from python_anvil.http import HTTPClient
 
 
@@ -161,3 +162,22 @@ class PlainRequest(BaseAnvilHttpRequest):
 
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}"
+
+
+class FullyQualifiedRequest(BaseAnvilHttpRequest):
+    """A request class that validates URLs point to Anvil domains."""
+
+    def get_url(self):
+        return ""  # Not used since we expect full URLs
+
+    def _validate_url(self, url):
+        if not any(url.startswith(host) for host in VALID_HOSTS):
+            raise ValueError(f"URL must start with one of: {', '.join(VALID_HOSTS)}")
+
+    def get(self, url, params=None, **kwargs):
+        self._validate_url(url)
+        return super().get(url, params, **kwargs)
+
+    def post(self, url, data=None, **kwargs):
+        self._validate_url(url)
+        return super().post(url, data, **kwargs)

@@ -9,6 +9,7 @@ from python_anvil.api_resources.payload import (
     CreateEtchPacketPayload,
     ForgeSubmitPayload,
 )
+from python_anvil.constants import VALID_HOSTS
 
 from ..api_resources.payload import FillPDFPayload
 from . import payloads
@@ -396,3 +397,61 @@ def describe_api():
             anvil.forge_submit(payload=payload)
             assert m_request_post.call_count == 1
             assert _expected_data in m_request_post.call_args
+
+    def describe_rest_request_absolute_url_behavior():
+        @pytest.mark.parametrize(
+            "url, should_raise",
+            [
+                ("some/relative/path", True),
+                ("https://external.example.com/full/path/file.pdf", True),
+                *[(host + "/some-endpoint", False) for host in VALID_HOSTS],
+            ],
+        )
+        @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
+        def test_get_behavior(mock_request, anvil, url, should_raise):
+            mock_request.return_value = (b"fake_content", 200, {})
+            rest_client = anvil.request_fully_qualified()
+
+            if should_raise:
+                with pytest.raises(
+                    ValueError,
+                    match="URL must start with one of: https://app.useanvil.com",
+                ):
+                    rest_client.get(url)
+            else:
+                rest_client.get(url)
+                mock_request.assert_called_once_with(
+                    "GET",
+                    url,
+                    params=None,
+                    retry=True,
+                )
+
+        @pytest.mark.parametrize(
+            "url, should_raise",
+            [
+                ("some/relative/path", True),
+                ("https://external.example.com/full/path/file.pdf", True),
+                *[(host + "/some-endpoint", False) for host in VALID_HOSTS],
+            ],
+        )
+        @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
+        def test_post_behavior(mock_request, anvil, url, should_raise):
+            mock_request.return_value = (b"fake_content", 200, {})
+            rest_client = anvil.request_fully_qualified()
+
+            if should_raise:
+                with pytest.raises(
+                    ValueError,
+                    match="URL must start with one of: https://app.useanvil.com",
+                ):
+                    rest_client.post(url, data={})
+            else:
+                rest_client.post(url, data={})
+                mock_request.assert_called_once_with(
+                    "POST",
+                    url,
+                    json={},
+                    retry=True,
+                    params=None,
+                )
