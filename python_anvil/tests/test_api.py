@@ -413,7 +413,7 @@ def describe_api():
 
             if should_raise:
                 with pytest.raises(
-                    ValueError, 
+                    ValueError,
                     match="URL must start with one of: https://app.useanvil.com",
                 ):
                     rest_client.get(url)
@@ -441,7 +441,7 @@ def describe_api():
 
             if should_raise:
                 with pytest.raises(
-                    ValueError, 
+                    ValueError,
                     match="URL must start with one of: https://app.useanvil.com",
                 ):
                     rest_client.post(url, data={})
