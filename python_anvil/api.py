@@ -15,7 +15,7 @@ from .api_resources.payload import (
     ForgeSubmitPayload,
     GeneratePDFPayload,
 )
-from .api_resources.requests import PlainRequest, RestRequest, FullyQualifiedRequest
+from .api_resources.requests import FullyQualifiedRequest, PlainRequest, RestRequest
 from .http import GQLClient, HTTPClient
 
 
