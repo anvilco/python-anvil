@@ -190,4 +190,3 @@ class FullyQualifiedRequest(BaseAnvilHttpRequest):
     def post(self, url, data=None, **kwargs):
         self._validate_url(url)
         return super().post(url, data, **kwargs)
-    
