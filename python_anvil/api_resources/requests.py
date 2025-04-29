@@ -4,7 +4,6 @@ from python_anvil.constants import VALID_HOSTS
 from python_anvil.http import HTTPClient
 
 
-
 class AnvilRequest:
     show_headers = False
     _client: HTTPClient
