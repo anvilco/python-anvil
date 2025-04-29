@@ -161,3 +161,32 @@ class PlainRequest(BaseAnvilHttpRequest):
 
     def get_url(self):
         return f"{self.API_HOST}/{self.API_BASE}"
+
+
+class FullyQualifiedRequest(BaseAnvilHttpRequest):
+    """A request class that validates URLs are fully qualified and point to Anvil domains."""
+
+    VALID_HOSTS = [
+        "https://app.useanvil.com",
+        # Future Anvil specific URLs
+    ]
+
+    def __init__(self, client, options=None):
+        super().__init__(client, options)
+
+    def get_url(self):
+        return ""  # Not used since we expect full URLs
+
+    def _validate_url(self, url):
+        if not any(url.startswith(host) for host in self.VALID_HOSTS):
+            raise ValueError(
+                f"URL must start with one of: {', '.join(self.VALID_HOSTS)}"
+            )
+
+    def get(self, url, params=None, **kwargs):
+        self._validate_url(url)
+        return super().get(url, params, **kwargs)
+
+    def post(self, url, data=None, **kwargs):
+        self._validate_url(url)
+        return super().post(url, data, **kwargs)
