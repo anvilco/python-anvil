@@ -1,6 +1,0 @@
-#!/Users/manggit/Work/python-anvil/venv/bin/python
-import sys
-from python_anvil.cli import cli
-
-if __name__ == '__main__':
-    sys.exit(cli())
