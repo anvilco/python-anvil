@@ -2,6 +2,8 @@ from typing import Any, Dict
 
 from python_anvil.http import HTTPClient
 
+from constants import VALID_HOSTS
+
 
 class AnvilRequest:
     show_headers = False
@@ -166,18 +168,13 @@ class PlainRequest(BaseAnvilHttpRequest):
 class FullyQualifiedRequest(BaseAnvilHttpRequest):
     """A request class that validates URLs point to Anvil domains."""
 
-    VALID_HOSTS = [
-        "https://app.useanvil.com",
-        # Future Anvil specific URLs
-    ]
-
     def get_url(self):
         return ""  # Not used since we expect full URLs
 
     def _validate_url(self, url):
-        if not any(url.startswith(host) for host in self.VALID_HOSTS):
+        if not any(url.startswith(host) for host in VALID_HOSTS):
             raise ValueError(
-                f"URL must start with one of: {', '.join(self.VALID_HOSTS)}"
+                f"URL must start with one of: {', '.join(VALID_HOSTS)}"
             )
 
     def get(self, url, params=None, **kwargs):

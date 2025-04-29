@@ -12,6 +12,7 @@ from python_anvil.api_resources.payload import (
 
 from ..api_resources.payload import FillPDFPayload
 from . import payloads
+from constants import VALID_HOSTS
 
 
 DEV_KEY = "MY-SECRET-KEY"
@@ -403,7 +404,7 @@ def describe_api():
             [
                 ("some/relative/path", True),
                 ("https://external.example.com/full/path/file.pdf", True),
-                ("https://app.useanvil.com/api/v1/some-endpoint", False),
+                *[(host + "/some-endpoint", False) for host in VALID_HOSTS],
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
@@ -431,7 +432,7 @@ def describe_api():
             [
                 ("some/relative/path", True),
                 ("https://external.example.com/full/path/file.pdf", True),
-                ("https://app.useanvil.com/api/v1/some-endpoint", False),
+                *[(host + "/some-endpoint", False) for host in VALID_HOSTS],
             ],
         )
         @mock.patch("python_anvil.api_resources.requests.AnvilRequest._request")
