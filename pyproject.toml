@@ -1,7 +1,7 @@
 [tool.poetry]
 
 name = "python_anvil"
-version = "5.0.3"
+version = "5.1.0"
 description = "Anvil API"
 license = "MIT"
 authors = ["Anvil Foundry Inc. <developers@useanvil.com>"]
