@@ -1,6 +1,3 @@
-# Language declaration for anvilco/marketing-site. Read at build time to source
-# the Python SDK page from this repo. `supported` is omitted so it derives from
-# repo visibility (public = live).
 products:
   - generate
   - fill
@@ -9,7 +6,6 @@ packageManagerInstall: pip install python-anvil
 languages:
   - key: python
     label: Python
-    slug: python
     examples:
       generate: examples/generate_pdf.py
       fill: examples/fill_pdf.py
