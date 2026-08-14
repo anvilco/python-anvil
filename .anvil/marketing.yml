@@ -1,12 +1,5 @@
-products:
-  - generate
-  - fill
-  - sign
-packageManagerInstall: pip install python-anvil
+packageManagerInstall:
+  - pip install python-anvil
 languages:
   - key: python
     label: Python
-    examples:
-      generate: examples/generate_pdf.py
-      fill: examples/fill_pdf.py
-      sign: examples/create_etch_existing_cast.py
