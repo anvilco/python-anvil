@@ -3,3 +3,4 @@ packageManagerInstall:
 languages:
   - key: python
     label: Python
+    extension: py
