@@ -1,5 +1,0 @@
-packageManagerInstall:
-  - pip install python-anvil
-languages:
-  - key: python
-    label: Python
