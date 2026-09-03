@@ -11,10 +11,13 @@ from python_anvil.api import Anvil
 
 API_KEY = os.environ.get("ANVIL_API_KEY")
 
-# The PDF template ID to fill. This is a sample template available to anyone.
-# See https://www.useanvil.com/help/tutorials/set-up-a-pdf-template for details
-# on setting up your own template.
+# The PDF template ID to fill. This is a sample template available to
+# anyone. See
+# https://www.useanvil.com/help/tutorials/set-up-a-pdf-template
+# for details on setting up your own template.
 PDF_TEMPLATE_EID = "05xXsZko33JIO6aq5Pnr"
+
+LONG_TEXT = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 
 # Fill data can be an instance of `FillPDFPayload` or a plain dict.
 # The keys in `data` must match the field IDs on the PDF template,
@@ -43,7 +46,7 @@ FILL_DATA = {
         "dollar": 123.45,
         "integer": 12345,
         "percent": 50.3,
-        "longText": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+        "longText": LONG_TEXT,
     },
 }
 

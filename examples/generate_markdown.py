@@ -17,6 +17,13 @@ API_KEY = os.environ.get("ANVIL_API_KEY")
 def main():
     anvil = Anvil(api_key=API_KEY)
 
+    invoice_rows = [
+        ["Description", "Quantity", "Price"],
+        ["4x Large Widgets", "4", "$40.00"],
+        ["10x Medium Sized Widgets in dark blue", "10", "$100.00"],
+        ["10x Small Widgets in white", "6", "$60.00"],
+    ]
+
     payload = GeneratePDFPayload(
         type="markdown",
         title="Example Invoice",
@@ -24,20 +31,16 @@ def main():
             dict(label="Name", content="Sally Jones"),
             dict(
                 content=(
-                    "Lorem **ipsum** dolor sit _amet_, consectetur adipiscing "
-                    "elit, sed [do eiusmod](https://www.useanvil.com/docs) "
+                    "Lorem **ipsum** dolor sit _amet_, consectetur "
+                    "adipiscing elit, sed "
+                    "[do eiusmod](https://www.useanvil.com/docs) "
                     "tempor incididunt ut labore et dolore magna aliqua."
                 )
             ),
             dict(
                 table=dict(
                     firstRowHeaders=True,
-                    rows=[
-                        ["Description", "Quantity", "Price"],
-                        ["4x Large Widgets", "4", "$40.00"],
-                        ["10x Medium Sized Widgets in dark blue", "10", "$100.00"],
-                        ["10x Small Widgets in white", "6", "$60.00"],
-                    ],
+                    rows=invoice_rows,
                 )
             ),
         ],
