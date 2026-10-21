@@ -27,7 +27,7 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
-from python_anvil.api import Anvil
+from python_anvil import Anvil, AnvilRequestError
 from python_anvil.api_resources.mutations import CreateEtchPacket
 from python_anvil.api_resources.payload import (
     DocumentUpload,
@@ -35,8 +35,6 @@ from python_anvil.api_resources.payload import (
     SignatureField,
     SignerField,
 )
-from python_anvil.api_resources.requests import PlainRequest, RestRequest
-from python_anvil.http import GQLClient
 
 
 API_KEY = os.environ.get("ANVIL_API_KEY")
@@ -61,6 +59,9 @@ def check(method: str, fn: Callable[[], str | None]) -> None:
     except Skip as e:
         results.append((method, "SKIP"))
         print(f"  SKIP  {method}: {e}")
+    except AnvilRequestError as e:
+        results.append((method, "FAIL"))
+        print(f"  FAIL  {method}: {e}")
     except Exception as e:
         results.append((method, "FAIL"))
         print(f"  FAIL  {method}: {type(e).__name__}: {e}")
@@ -77,25 +78,6 @@ def assert_pdf(data: object) -> str:
     return f"{len(data)} bytes"
 
 
-def make_client(api_key: str) -> Anvil:
-    """Make a 5.x client pointed at BASE_URL.
-
-    5.x has no base URL option: GraphQL goes to `endpoint_url`, and the REST
-    hosts are class attributes. The GraphQL client is also recreated to fetch
-    the schema from the API, instead of validating against the schema file
-    checked in with the client, which has drifted from the API.
-    """
-    anvil = Anvil(api_key, endpoint_url=f"{BASE_URL}/graphql")
-    RestRequest.API_HOST = BASE_URL
-    PlainRequest.API_HOST = BASE_URL
-    anvil.gql_client = GQLClient.get_client(
-        api_key=api_key,
-        endpoint_url=f"{BASE_URL}/graphql",
-        fetch_schema_from_transport=True,
-    )
-    return anvil
-
-
 def main() -> None:
     if not API_KEY:
         print(
@@ -106,7 +88,7 @@ def main() -> None:
 
     print(f"Testing the Anvil Python client against {BASE_URL}\n")
 
-    client = make_client(API_KEY)
+    client = Anvil(API_KEY, base_url=BASE_URL)
 
     # What the later steps need, found as we go
     state: dict[str, object] = {
@@ -119,8 +101,8 @@ def main() -> None:
         "weld_data_eid": None,
     }
 
-    def query() -> str:
-        data = client.query(
+    def request_graphql() -> str:
+        data = client.request_graphql(
             """
             query TestClient {
               currentUser { eid }
@@ -143,7 +125,7 @@ def main() -> None:
 
         if state["cast_eid"]:
             # The API won't fill a PDF with empty data, so use the template's example data
-            cast_data = client.query(
+            cast_data = client.request_graphql(
                 "query TestClientCast ($eid: String!) { cast(eid: $eid) { exampleData } }",
                 {"eid": state["cast_eid"]},
             )
@@ -157,12 +139,17 @@ def main() -> None:
 
         return f"organization {organization['eid']}"
 
-    check("query", query)
+    check("request_graphql", request_graphql)
 
     def request_rest() -> str:
-        data = client.request_rest().post(
-            "generate-pdf",
-            {"title": "request_rest", "data": [{"content": "Sent with request_rest"}]},
+        data = client.request_rest(
+            "POST",
+            "/api/v1/generate-pdf",
+            json={
+                "title": "request_rest",
+                "data": [{"content": "Sent with request_rest"}],
+            },
+            data_type="bytes",
         )
         return assert_pdf(data)
 
@@ -228,21 +215,20 @@ def main() -> None:
 
     check("fill_pdf (VERSION_LATEST)", fill_pdf_latest)
 
-    def fill_pdf_with_headers() -> str:
+    def fill_pdf_stream() -> str:
         skip_unless(
             state["cast_eid"],
             "No PDF template with example data found. Set ANVIL_PDF_TEMPLATE_ID.",
         )
-        res = client.fill_pdf(
+        with client.fill_pdf(
             str(state["cast_eid"]),
             {"data": state["cast_data"] or {}},
-            include_headers=True,
-        )
-        if "x-ratelimit-limit" not in {k.lower() for k in res["headers"]}:
-            raise AssertionError("Expected the rate limit headers")
-        return f"{assert_pdf(res['response'])}, with headers"
+            data_type="stream",
+        ) as response:
+            data = b"".join(response.iter_content(chunk_size=64 * 1024))
+        return assert_pdf(data)
 
-    check("fill_pdf (include_headers)", fill_pdf_with_headers)
+    check("fill_pdf (stream)", fill_pdf_stream)
 
     def create_etch_packet() -> str:
         packet = CreateEtchPacket(
@@ -251,7 +237,49 @@ def main() -> None:
             # Send it right away, so it has signers that can sign
             is_draft=False,
         )
-        # An open file is base64 encoded into the mutation's variables
+        packet.add_file(
+            DocumentUpload(
+                id="testFile",
+                title="Test File",
+                file=Anvil.prepare_graphql_file(PDF_TO_SIGN),
+                fields=[
+                    SignatureField(
+                        id="signature",
+                        type="signature",
+                        page_num=0,
+                        rect={"x": 100, "y": 100, "width": 150, "height": 30},
+                    )
+                ],
+            )
+        )
+        packet.add_signer(
+            EtchSigner(
+                id="signer",
+                name="Test Signer",
+                email="test-signer@example.com",
+                # Signs through a URL from generate_etch_signing_url rather than by email
+                signer_type="embedded",
+                fields=[SignerField(file_id="testFile", field_id="signature")],
+            )
+        )
+        data = client.create_etch_packet(packet)
+
+        created = data["createEtchPacket"]
+        state["etch_packet_eid"] = created["eid"]
+        document_group = created.get("documentGroup") or {}
+        state["document_group_eid"] = document_group.get("eid")
+        signers = document_group.get("signers") or []
+        state["signer_eid"] = signers[0]["eid"] if signers else None
+        return str(created["eid"])
+
+    check("create_etch_packet", create_etch_packet)
+
+    def create_etch_packet_base64() -> str:
+        packet = CreateEtchPacket(
+            name="Anvil Python client test (base64 upload)", is_test=True, is_draft=True
+        )
+        # An open file that wasn't prepared with `prepare_graphql_file` is base64
+        # encoded into the mutation's variables, as it always was
         with PDF_TO_SIGN.open("rb") as pdf:
             packet.add_file(
                 DocumentUpload(
@@ -273,43 +301,30 @@ def main() -> None:
                     id="signer",
                     name="Test Signer",
                     email="test-signer@example.com",
-                    # Signs through a URL from generate_etch_signing_url rather than by email
                     signer_type="embedded",
                     fields=[SignerField(file_id="testFile", field_id="signature")],
                 )
             )
             data = client.create_etch_packet(packet)
+        return f"draft {data['createEtchPacket']['eid']}"
 
-        created = data["createEtchPacket"]
-        state["etch_packet_eid"] = created["eid"]
-        document_group = created.get("documentGroup") or {}
-        state["document_group_eid"] = document_group.get("eid")
-        signers = document_group.get("signers") or []
-        state["signer_eid"] = signers[0]["eid"] if signers else None
-        return str(created["eid"])
-
-    check("create_etch_packet", create_etch_packet)
+    check("create_etch_packet (base64 upload)", create_etch_packet_base64)
 
     def get_etch_packet() -> str:
         skip_unless(state["etch_packet_eid"], "create_etch_packet failed")
-        data = client.query(
-            "query EtchPacket ($eid: String!) { etchPacket (eid: $eid) { eid status } }",
-            {"eid": state["etch_packet_eid"]},
-        )
-        packet = data["etchPacket"]
+        packet = client.get_etch_packet(str(state["etch_packet_eid"]))
         if packet["eid"] != state["etch_packet_eid"]:
             raise AssertionError("Got a different packet back")
         return str(packet["status"])
 
-    check("etchPacket query", get_etch_packet)
+    check("get_etch_packet", get_etch_packet)
 
     def generate_etch_signing_url() -> str:
         skip_unless(state["signer_eid"], "create_etch_packet failed")
-        data = client.generate_etch_signing_url(
+        url = client.generate_etch_signing_url(
             signer_eid=str(state["signer_eid"]),
             client_user_id="anvil-python-test-client",
         )
-        url = data["generateEtchSignURL"]
         if not isinstance(url, str) or not url.startswith(("http://", "https://")):
             raise AssertionError(f"Expected a URL, got {url!r}")
         return "got a URL"
@@ -341,15 +356,12 @@ def main() -> None:
 
     def remove_weld_data() -> str:
         skip_unless(state["weld_data_eid"], "forge_submit did not create a submission")
-        data = client.mutate(
-            "mutation RemoveWeldData ($eid: String!) { removeWeldData (eid: $eid) }",
-            {"eid": state["weld_data_eid"]},
-        )
-        if data["removeWeldData"] is not True:
+        removed = client.remove_weld_data(str(state["weld_data_eid"]))
+        if removed is not True:
             raise AssertionError("Expected True")
         return f"removed {state['weld_data_eid']}"
 
-    check("removeWeldData mutation", remove_weld_data)
+    check("remove_weld_data", remove_weld_data)
 
     # The convenience queries
     check("get_current_user", lambda: client.get_current_user()["eid"])

@@ -12,81 +12,23 @@ from python_anvil.api_resources.payload import (
     DocumentUpload,
     EtchSigner,
 )
+from python_anvil.graphql.mutations.create_etch_packet import (
+    DEFAULT_RESPONSE_QUERY,
+    generate_mutation,
+)
 from python_anvil.utils import create_unique_id
 
 
 logger: Logger = logging.getLogger(__name__)
 
-DEFAULT_RESPONSE_QUERY = """{
-  eid
-  name
-  detailsURL
-  documentGroup {
-    eid
-    status
-    files
-    signers {
-      eid
-      aliasId
-      routingOrder
-      name
-      email
-      status
-      signActionType
-    }
-  }
-}"""
-
-# NOTE: Since the below will be used as a formatted string (this also applies
-#   to f-strings) any literal curly braces need to be doubled, else they'll be
-#   interpreted as string replacement tokens.
-CREATE_ETCH_PACKET = """
-mutation CreateEtchPacket (
-    $name: String,
-    $files: [EtchFile!],
-    $isDraft: Boolean,
-    $isTest: Boolean,
-    $mergePDFs: Boolean,
-    $signatureEmailSubject: String,
-    $signatureEmailBody: String,
-    $signatureProvider: String,
-    $signaturePageOptions: JSON,
-    $signers: [JSON!],
-    $webhookURL: String,
-    $replyToName: String,
-    $replyToEmail: String,
-    $data: JSON,
-    $enableEmails: JSON,
-    $createCastTemplatesFromUploads: Boolean,
-    $duplicateCasts: Boolean=false,
-  ) {{
-    createEtchPacket (
-      name: $name,
-      files: $files,
-      isDraft: $isDraft,
-      isTest: $isTest,
-      mergePDFs: $mergePDFs,
-      signatureEmailSubject: $signatureEmailSubject,
-      signatureEmailBody: $signatureEmailBody,
-      signatureProvider: $signatureProvider,
-      signaturePageOptions: $signaturePageOptions,
-      signers: $signers,
-      webhookURL: $webhookURL,
-      replyToName: $replyToName,
-      replyToEmail: $replyToEmail,
-      data: $data,
-      enableEmails: $enableEmails,
-      createCastTemplatesFromUploads: $createCastTemplatesFromUploads,
-      duplicateCasts: $duplicateCasts
-    )
-        {query}
-  }}
-"""
-
 
 class CreateEtchPacket(BaseQuery):
-    mutation = CREATE_ETCH_PACKET
-    mutation_res_query = DEFAULT_RESPONSE_QUERY
+    """Builds a `createEtchPacket` mutation, adding signers and files one at a time.
+
+    Or pass the whole thing as `payload`.
+    """
+
+    default_response_query = DEFAULT_RESPONSE_QUERY
 
     def __init__(
         self,
@@ -107,6 +49,8 @@ class CreateEtchPacket(BaseQuery):
         enable_emails: bool | list[str] | None = None,
         create_cast_templates_from_uploads: bool | None = None,
         duplicate_casts: bool | None = None,
+        organization_eid: str | None = None,
+        allow_updates: bool | None = None,
     ):
         # `name` is required when `payload` is not present.
         if not payload and not name:
@@ -132,6 +76,11 @@ class CreateEtchPacket(BaseQuery):
         self.enable_emails = enable_emails
         self.create_cast_templates_from_uploads = create_cast_templates_from_uploads
         self.duplicate_casts = duplicate_casts
+        self.organization_eid = organization_eid
+        self.allow_updates = allow_updates
+
+    def get_mutation(self, response_query: str | None = None) -> str:
+        return generate_mutation(response_query or self.default_response_query)
 
     @classmethod
     def create_from_dict(cls, payload: dict) -> "CreateEtchPacket":
@@ -258,6 +207,8 @@ class CreateEtchPacket(BaseQuery):
             enable_emails=self.enable_emails,
             create_cast_templates_from_uploads=self.create_cast_templates_from_uploads,
             duplicate_casts=self.duplicate_casts,
+            organization_eid=self.organization_eid,
+            allow_updates=self.allow_updates,
         )
 
         return payload

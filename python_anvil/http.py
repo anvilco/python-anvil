@@ -1,224 +1,184 @@
-import os
-from base64 import b64encode
-from logging import getLogger
+"""Sends the client's requests: auth, rate limiting, retries and error handling."""
 
-# import json
+from __future__ import annotations
+
+import logging
+from collections.abc import Callable, Mapping
+from typing import Any
+from urllib.parse import urlsplit
+
 import requests
-from gql import Client
-from gql.dsl import DSLSchema
-from gql.transport.requests import RequestsHTTPTransport
-from ratelimit import limits, sleep_and_retry
-from ratelimit.exception import RateLimitException
-from requests.auth import HTTPBasicAuth
 
-from python_anvil.exceptions import AnvilRequestException
-
-from .constants import GRAPHQL_ENDPOINT, RATELIMIT_ENV, REQUESTS_LIMIT, RETRIES_LIMIT
-
-
-logger = getLogger(__name__)
-
-
-def _handle_request_error(e: Exception):
-    raise e
-
-
-def get_local_schema(raise_on_error=False) -> str | None:
-    """
-    Retrieve local GraphQL schema.
-
-    :param raise_on_error:
-    :return:
-    """
-    try:
-        file_dir = os.path.dirname(os.path.realpath(__file__))
-        file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
-        with open(file_path, encoding="utf-8") as file:
-            schema = file.read()
-    except Exception:
-        logger.warning(
-            "Unable to find local schema. Will not use schema for local "
-            "validation. Use `fetch_schema_from_transport=True` to allow "
-            "fetching the remote schema."
-        )
-        if raise_on_error:
-            raise
-        schema = None
-
-    return schema
+from python_anvil.auth import build_auth_header
+from python_anvil.constants import (
+    DATA_TYPE_BYTES,
+    DATA_TYPE_JSON,
+    DATA_TYPE_STREAM,
+    DATA_TYPES,
+    DEFAULT_BASE_URL,
+    DEFAULT_REQUEST_LIMIT,
+    DEFAULT_REQUEST_LIMIT_MS,
+    DEFAULT_TIMEOUT,
+)
+from python_anvil.errors import (
+    AnvilRequestError,
+    looks_like_json_error,
+    normalize_exception,
+    normalize_json_errors,
+)
+from python_anvil.rate_limit import RateLimiter
 
 
-def get_gql_ds(client: Client) -> DSLSchema:
-    if not client.schema:
-        raise ValueError("Client does not have a valid GraphQL schema.")
-    return DSLSchema(client.schema)
+logger = logging.getLogger(__name__)
 
 
-# FIXME: when gql 3.6.0 is stable, we can use this to paper over pre-graphql
-# handler errors. https://github.com/graphql-python/gql/releases/tag/v3.6.0b1
-# def json_deserialize (response_text):
-#   try:
-#       return json.loads(response_text)
-#   except Exception as e:
-#       return {"errors": [{"message": response_text}]}
+def default_user_agent() -> str:
+    from python_anvil import __version__
 
-
-class GQLClient:
-    """GraphQL client factory class."""
-
-    @staticmethod
-    def get_client(
-        api_key: str,
-        environment: str = "dev",
-        endpoint_url: str | None = None,
-        fetch_schema_from_transport: bool = False,
-        force_local_schema: bool = False,
-    ) -> Client:
-        auth = HTTPBasicAuth(username=api_key, password="")
-        endpoint_url = endpoint_url or GRAPHQL_ENDPOINT
-        transport = RequestsHTTPTransport(
-            retries=RETRIES_LIMIT,
-            auth=auth,
-            url=endpoint_url,
-            verify=True,
-            # FIXME: when gql 3.6.0 is stable... see note above
-            # json_deserialize=json_deserialize,
-        )
-
-        schema = None
-        if force_local_schema or not fetch_schema_from_transport:
-            schema = get_local_schema(raise_on_error=False)
-
-        return Client(
-            schema=schema,
-            transport=transport,
-            fetch_schema_from_transport=fetch_schema_from_transport,
-        )
+    return f"python-anvil/{__version__}"
 
 
 class HTTPClient:
-    def __init__(self, api_key=None, environment="dev"):
-        self._session = requests.Session()
-        self.api_key = api_key
-        global RATELIMIT_ENV
-        RATELIMIT_ENV = environment
+    """Sends requests to one Anvil environment with one set of credentials.
 
-    def get_auth(self, encode=False) -> str:
-        # TODO: Handle OAuth + API_KEY
-        if not self.api_key:
-            raise AttributeError("You must have an API key")
+    Every request gets the Authorization and User-Agent headers, waits for the
+    rate limit, and is retried after a 429. See `RateLimiter`.
+    """
 
-        # By default, the `requests` package will base64encode things with
-        # the `HTTPBasicAuth` method, so no need to handle that here, but the
-        # option is here if you _really_ want it.
-        if encode:
-            return b64encode(f"{self.api_key}:".encode()).decode()
-
-        return self.api_key
-
-    @sleep_and_retry
-    @limits(
-        calls=REQUESTS_LIMIT[RATELIMIT_ENV]["calls"],
-        period=REQUESTS_LIMIT[RATELIMIT_ENV]["seconds"],
-    )
-    def do_request(
+    def __init__(
         self,
-        method,
-        url,
-        headers=None,
-        data=None,
-        auth=None,
-        params=None,
-        retry=True,
-        files=None,
-        **kwargs,
-    ) -> requests.Response:
-        for _ in range(5):
-            # Retry a max of 5 times in case of hitting any rate limit errors
-            res = self._session.request(
-                method,
-                url,
-                headers=headers,
-                data=data,
-                auth=auth,
-                params=params,
-                files=files,
-                **kwargs,
-            )
+        api_key: str | None = None,
+        access_token: str | None = None,
+        *,
+        base_url: str = DEFAULT_BASE_URL,
+        user_agent: str | None = None,
+        request_limit: int = DEFAULT_REQUEST_LIMIT,
+        request_limit_ms: int = DEFAULT_REQUEST_LIMIT_MS,
+        timeout: float | tuple[float, float] | None = DEFAULT_TIMEOUT,
+        session: requests.Session | None = None,
+    ):
+        self.base_url = normalize_base_url(base_url)
+        self.auth_header = build_auth_header(api_key, access_token)
+        self.user_agent = user_agent or default_user_agent()
+        self.timeout = timeout
+        self.session = session or requests.Session()
+        self.rate_limiter = RateLimiter(request_limit, request_limit_ms)
 
-            if res.status_code == 429:
-                time_to_wait = int(res.headers.get("Retry-After", 1))
-                if retry:
-                    logger.warning(
-                        "Rate-limited: request not accepted. Retrying in %i second%s.",
-                        time_to_wait,
-                        "s" if time_to_wait > 1 else "",
-                    )
-
-                    # This exception will raise up to the `sleep_and_retry` decorator
-                    # which will handle waiting for `time_to_wait` seconds.
-                    raise RateLimitException("Retrying", period_remaining=time_to_wait)
-
-                raise AnvilRequestException(
-                    f"Rate limit exceeded. Retry after {time_to_wait} seconds."
-                )
-
-            break
-
-        return res
+    def url(self, path_or_url: str) -> str:
+        """The full URL for a path like `/api/v1/fill/abc.pdf`. A full URL on the base URL is used as-is."""
+        if path_or_url.startswith(self.base_url):
+            return path_or_url
+        return f"{self.base_url}/{path_or_url.lstrip('/')}"
 
     def request(
         self,
-        method,
-        url,
-        headers=None,
-        data=None,
-        auth=None,
-        params=None,
-        retry=True,
-        files=None,
-        **kwargs,
-    ):
-        """Make an HTTP request.
+        method: str,
+        path_or_url: str,
+        *,
+        params: Mapping[str, Any] | None = None,
+        json: Any = None,
+        data: Any = None,
+        files: Callable[[], Any] | None = None,
+        headers: Mapping[str, str] | None = None,
+        stream: bool = False,
+        timeout: float | tuple[float, float] | None = None,
+    ) -> requests.Response:
+        """Send a request, within the rate limit and retried after any 429.
 
-        :param method: HTTP method to use
-        :param url: URL to make the request on.
-        :param headers:
-        :param data:
-        :param auth:
-        :param params:
-        :param files:
-        :param retry: Whether to retry on any rate-limited requests
-        :param kwargs:
-        :return:
+        The response is returned as the server sent it, errors and all. Use
+        `process_response` to turn it into data or an `AnvilRequestError`.
+
+        :param files: A function that returns the multipart parts to send, so
+            they can be built again for a retry.
         """
-        parse_json = kwargs.pop("parse_json", False)
-        if self.api_key and not auth:
-            auth = HTTPBasicAuth(self.get_auth(), "")
+        url = self.url(path_or_url)
+        all_headers = {
+            "User-Agent": self.user_agent,
+            "Authorization": self.auth_header,
+            **(headers or {}),
+        }
+        timeout = self.timeout if timeout is None else timeout
 
-        try:
-            res = self.do_request(
-                method,
+        def send() -> requests.Response:
+            return self.session.request(
+                method.upper(),
                 url,
-                headers=headers,
-                data=data,
-                auth=auth,
                 params=params,
-                retry=retry,
-                files=files,
-                **kwargs,
+                json=json,
+                data=data,
+                files=files() if files else None,
+                headers=all_headers,
+                stream=stream,
+                timeout=timeout,
             )
 
-            if parse_json and res.headers.get("Content-Type") == "application/json":
-                content = res.json()
-            else:
-                # This actually reads the content and can potentially cause issues
-                # depending on the content.
-                # The structure of this method is very similar to Stripe's requests
-                # HTTP client: https://github.com/stripe/stripe-python/blob/afa872c538bee0a1e14c8e131df52dd3c24ff05a/stripe/http_client.py#L304-L308
-                content = res.content
-            status_code = res.status_code
-        except Exception as e:
-            _handle_request_error(e)
+        return self.rate_limiter.run(send)
 
-        return content, status_code, res.headers
+    def close(self) -> None:
+        self.session.close()
+
+
+def process_response(
+    response: requests.Response, data_type: str = DATA_TYPE_JSON
+) -> Any:
+    """The data in a response, or an `AnvilRequestError` if it is an error.
+
+    Whatever was asked for, a JSON response is parsed and checked for errors:
+    the API answers every request with JSON when something is wrong.
+    """
+    if data_type not in DATA_TYPES:
+        raise ValueError(f"data_type must be one of: {'|'.join(DATA_TYPES)}")
+
+    status_code = response.status_code
+    content_type = response.headers.get("content-type", "")
+
+    json_body: Any = None
+    parse_error: Exception | None = None
+    is_json = "application/json" in content_type.lower()
+    if is_json:
+        try:
+            json_body = response.json()
+        except ValueError as e:
+            parse_error = e
+            logger.debug(
+                "Problem parsing the JSON response for status %s: %s", status_code, e
+            )
+
+    if parse_error or looks_like_json_error(json_body) or status_code >= 300:
+        if parse_error:
+            errors = normalize_exception(parse_error)
+        else:
+            errors = normalize_json_errors(
+                json_body, response.reason or "Unknown Error"
+            )
+        # A GraphQL response can have data alongside its errors
+        data = json_body.get("data") if isinstance(json_body, Mapping) else None
+        response.close()
+        raise AnvilRequestError(
+            errors,
+            status_code=status_code,
+            headers=response.headers,
+            data=data,
+            response=response,
+        )
+
+    if is_json or data_type == DATA_TYPE_JSON:
+        return json_body if is_json else response.json()
+    if data_type == DATA_TYPE_BYTES:
+        return response.content
+    if data_type == DATA_TYPE_STREAM:
+        return response
+    raise ValueError(
+        f"data_type must be one of: {'|'.join(DATA_TYPES)}"
+    )  # pragma: no cover
+
+
+def normalize_base_url(base_url: str) -> str:
+    if not isinstance(base_url, str) or not base_url:
+        raise ValueError("`base_url` must be a URL like https://app.useanvil.com")
+    parts = urlsplit(base_url)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ValueError(
+            f"`base_url` must be a URL like https://app.useanvil.com, not {base_url!r}"
+        )
+    return base_url.rstrip("/")

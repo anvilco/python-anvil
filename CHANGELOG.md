@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- BREAKING: Drop support for Python 3.8 and 3.9, which are end of life. The minimum supported version is now Python 3.10.
+- Add support for Python 3.14 and 3.15 ([#95](https://github.com/anvilco/python-anvil/issues/95)).
+- BREAKING: The `anvil` command line tool's dependencies, `click` and `tabulate`, are now the `cli` extra: `pip install 'python-anvil[cli]'` ([#96](https://github.com/anvilco/python-anvil/issues/96)). Importing `python_anvil` no longer imports the CLI.
+- BREAKING: One `requests`-based transport replaces `gql` for GraphQL and the `ratelimit` decorators for REST. Both dependencies are dropped.
+  - `Anvil(api_key, base_url=...)` sends every request to one host: REST to `{base_url}/api/...`, GraphQL to `{base_url}/graphql`. `base_url` defaults to production. The `endpoint_url` argument is removed, and `environment` does nothing: the rate limits now come from the API.
+  - OAuth access tokens are supported: `Anvil(access_token=...)`. JWTs are sent as-is, other tokens base64 encoded, like node-anvil.
+  - Rate limits are learned from the first response's `X-RateLimit-Limit` and `X-RateLimit-Interval-Ms` headers. Requests made before that response arrives wait for it. The client counts requests over a sliding window, like the API, and only waits when the limit has been reached. A `429` is retried after its `Retry-After` plus 50ms, for as long as it takes. The `retry` option is removed.
+  - API errors raise `AnvilRequestError`, with the normalized `errors` (GraphQL errors, REST errors and validation errors with their `fields`), the `status_code`, the `headers` and any partial `data`. The REST methods used to raise a bare `Exception`; GraphQL methods raised `gql`'s errors. `AnvilRequestException` and `AnvilException` remain as aliases.
+  - Methods return the data: the PDF or zip `bytes` for `fill_pdf`, `generate_pdf` and `download_documents`, and the response's `data` dict for the GraphQL methods. The `include_headers` and `debug` options are removed; the headers are on `AnvilRequestError`.
+  - `data_type="stream"` on the binary methods returns the `requests.Response`, to stream a large PDF or zip.
+  - Requests time out after 5 minutes by default (`timeout`). They never did before.
+  - A `requests.Session` can be passed in (`session`), e.g. to use a proxy, and `user_agent`, `request_limit` and `request_limit_ms` match node-anvil's options.
+- BREAKING: `request_rest` now sends a request, `request_rest("POST", "/api/v1/...", json=...)`, like node-anvil's `requestREST`. The `RestRequest`, `PlainRequest`, `GraphqlRequest` and `FullyQualifiedRequest` classes and `request_fully_qualified` are removed.
+- BREAKING: `generate_etch_signing_url` returns the URL. `get_etch_packet` returns the packet, and `remove_weld_data` whether the data was removed.
+- BREAKING: `query` and `mutate` take the operation as a string; `gql` documents and its DSL are gone. `request_graphql` is the same thing with node-anvil's name.
+- BREAKING: `get_casts` and `get_welds` query the API's paginated `casts` and `welds` fields, which the old queries no longer matched, and return up to 500 per organization. `get_current_user` no longer selects each organization's casts.
+- Add `get_etch_packet` and `remove_weld_data`, and `response_query` and `mutation` options on `create_etch_packet`, `forge_submit` and `get_etch_packet`, matching node-anvil.
+- Add `Anvil.prepare_graphql_file` (also `python_anvil.prepare_graphql_file`) for multipart uploads of a path, bytes or a file object, anywhere in a mutation's variables. Files given as open file objects used to be base64 encoded into the JSON; they still are unless prepared this way.
+- The `createEtchPacket` mutation gains `organizationEid` and `allowUpdates`, and the mutations and default response fields now match node-anvil's exactly.
+- The client's queries and mutations are checked against the API schema in CI, and `make update-schema` refreshes the schema from the published `@anvilco/types` package.
+- Add `test-client.py`, which runs every method against a real environment: `ANVIL_API_KEY=... make test-client`.
+
 ## [v5.0.3] - 2025-02-24
 
 - Package import now uses `importlib.metadata` to get the version and throws `PackageNotFoundError` if the package is not
