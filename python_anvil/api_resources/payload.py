@@ -4,11 +4,11 @@ from typing import Any, Literal
 from pydantic import (
     ConfigDict,
     Field,
-    HttpUrl,
     field_validator,
 )
 
 from python_anvil.models import FileCompatibleBaseModel
+from python_anvil.types import operations, rest
 
 from .base import BaseModel
 
@@ -19,11 +19,15 @@ class EmbeddedLogo(BaseModel):
     max_height: int | None = None
 
 
-class FillPDFPayload(BaseModel):
+class FillPDFPayload(rest.FillPdfRequest):
+    """The body of a fill PDF request: `data` and the API's styling options.
+
+    See `python_anvil.types.rest.FillPdfRequest` for every option.
+    """
+
     data: list[dict[str, Any]] | dict[str, Any]
-    title: str | None = None
-    font_size: int | None = None
-    text_color: str | None = None
+    # The API defaults this to "pdf"; leave it out rather than always sending it
+    output_format: Literal["pdf", "url"] | None = Field(None, alias="outputFormat")
 
     @field_validator("data")
     @classmethod
@@ -54,21 +58,21 @@ class SignerField(BaseModel):
     field_id: str
 
 
-class EtchSigner(BaseModel):
-    """Dataclass representing etch signers."""
+class EtchSigner(rest.EtchSigner):
+    """A signer of an Etch packet: who signs, which fields, and how.
+
+    See `python_anvil.types.rest.EtchSigner` for every option.
+    """
 
     name: str
     email: str
-    fields: list[SignerField]
-    signer_type: str = "email"
+    fields: list[SignerField]  # type: ignore[assignment]
+    signer_type: Literal["email", "embedded", "in-person"] = Field(
+        "email", alias="signerType"
+    )
     # id will be generated if `None`
-    id: str | None = None
-    routing_order: int | None = None
-    redirect_url: str | None = Field(None, alias="redirectURL")
-    accept_each_field: bool | None = None
-    enable_emails: list[str] | None = None
-    # signature_mode can be "draw" or "text" (default: text)
-    signature_mode: str | None = None
+    id: str | None = None  # type: ignore[assignment]
+    enable_emails: bool | list[str] | None = Field(None, alias="enableEmails")  # type: ignore[assignment]
 
 
 class SignatureField(BaseModel):
@@ -190,60 +194,41 @@ class CreateEtchFilePayload(BaseModel):
     payloads: str | dict[str, FillPDFPayload]
 
 
-class CreateEtchPacketPayload(FileCompatibleBaseModel):
-    """
-    Payload for createEtchPacket.
+class CreateEtchPacketPayload(FileCompatibleBaseModel, operations.CreateEtchPacketArgs):
+    """The variables of the `createEtchPacket` mutation.
 
-    See the full packet payload defined here:
+    See `python_anvil.types.operations.CreateEtchPacketArgs` for every
+    variable, and the full packet payload defined here:
     https://www.useanvil.com/docs/api/e-signatures#tying-it-all-together
     """
 
     name: str
-    signers: list[EtchSigner]
+    signers: list[EtchSigner]  # type: ignore[assignment]
     # NOTE: This is a list of `AttachableEtchFile` objects, but we need to
     # override the default `FileCompatibleBaseModel` to handle multipart/form-data
     # uploads correctly. This field name is referenced in the models.py file.
-    files: list["AttachableEtchFile"]
-    signature_email_subject: str | None = None
-    signature_email_body: str | None = None
-    is_draft: bool | None = False
-    is_test: bool | None = True
-    merge_pdfs: bool | None = Field(None, alias="mergePDFs")
+    files: list["AttachableEtchFile"]  # type: ignore[assignment]
+    is_draft: bool | None = Field(False, alias="isDraft")
+    is_test: bool | None = Field(True, alias="isTest")
     data: CreateEtchFilePayload | None = None
-    signature_page_options: dict[Any, Any] | None = None
-    webhook_url: str | None = Field(None, alias="webhookURL")
-    reply_to_name: Any | None = None
-    reply_to_email: Any | None = None
-    enable_emails: bool | list[str] | None = None
-    create_cast_templates_from_uploads: bool | None = None
-    duplicate_casts: bool | None = None
-    organization_eid: str | None = None
-    allow_updates: bool | None = None
+    signature_page_options: dict[Any, Any] | None = Field(
+        None, alias="signaturePageOptions"
+    )
+    enable_emails: bool | list[str] | None = Field(None, alias="enableEmails")
 
 
-class ForgeSubmitPayload(BaseModel):
-    """
-    Payload for forgeSubmit.
+class ForgeSubmitPayload(operations.ForgeSubmitArgs):
+    """The variables of the `forgeSubmit` mutation.
 
-    See full payload defined here:
+    See `python_anvil.types.operations.ForgeSubmitArgs` for every variable,
+    and the full payload defined here:
     https://www.useanvil.com/docs/api/graphql/reference/#operation-forgesubmit-Mutations
     """
 
-    forge_eid: str
     payload: dict[str, Any]
-    weld_data_eid: str | None = None
-    submission_eid: str | None = None
-    # Defaults to True when not provided/is None
-    enforce_payload_valid_on_create: bool | None = None
-    current_step: int | None = None
-    complete: bool | None = None
     # Note that if using a development API key, this will be forced to `True`
     # even when `False` is used in the payload.
-    is_test: bool | None = True
-    timezone: str | None = None
-    webhook_url: HttpUrl | None = Field(None, alias="webhookURL")
-    group_array_id: str | None = None
-    group_array_index: int | None = None
+    is_test: bool | None = Field(True, alias="isTest")
 
 
 UploadableFile = Base64Upload | BufferedIOBase
