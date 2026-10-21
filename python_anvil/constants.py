@@ -1,25 +1,29 @@
-"""Basic constants used in the library."""
+"""Constants used throughout the library."""
 
-GRAPHQL_ENDPOINT: str = "https://graphql.useanvil.com"
-REST_ENDPOINT = "https://app.useanvil.com/api/v1"
-ANVIL_HOST = "https://app.useanvil.com"
+# Where requests go unless the client is given another `base_url`
+DEFAULT_BASE_URL = "https://app.useanvil.com"
 
-VALID_HOSTS = [
-    ANVIL_HOST,
-    REST_ENDPOINT,
-    GRAPHQL_ENDPOINT,
-]
+# Version number to use for latest versions (usually drafts)
+VERSION_LATEST = -1
+# Version number to use for the latest published version.
+# This is the default when a version is not provided.
+VERSION_LATEST_PUBLISHED = -2
 
-RETRIES_LIMIT = 5
-REQUESTS_LIMIT = {
-    "dev": {
-        "calls": 2,
-        "seconds": 1,
-    },
-    "prod": {
-        "calls": 40,
-        "seconds": 1,
-    },
-}
+# What a REST request's data comes back as
+DATA_TYPE_JSON = "json"
+DATA_TYPE_BYTES = "bytes"
+DATA_TYPE_STREAM = "stream"
+DATA_TYPES = (DATA_TYPE_JSON, DATA_TYPE_BYTES, DATA_TYPE_STREAM)
+BINARY_DATA_TYPES = (DATA_TYPE_BYTES, DATA_TYPE_STREAM)
 
-RATELIMIT_ENV = "dev"
+# Until the first response says what the account's rate limit is, the client
+# allows this many requests per interval
+DEFAULT_REQUEST_LIMIT = 1
+DEFAULT_REQUEST_LIMIT_MS = 1000
+
+# Added to every wait for the rate limit, and to a 429's Retry-After, to allow
+# for requests that were sent further apart than they arrive
+RETRY_BUFFER_MS = 50
+
+# Seconds to wait for a connection, and then for each read, before giving up
+DEFAULT_TIMEOUT = 300
