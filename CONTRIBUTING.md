@@ -27,6 +27,8 @@ Run a single test file or test with pytest directly:
 poetry run pytest tests/test_api.py -k fill_pdf
 ```
 
+The tests in `tests/test_http.py` run the real client against a local HTTP server (`tests/server.py`), so the auth encoding, multipart bodies, rate limit timing and error handling are checked on the wire. `tests/test_graphql_operations.py` validates the client's queries and mutations against the API schema in `schema/`.
+
 ## Testing against a real environment
 
 [`test-client.py`](test-client.py) runs every method against an Anvil environment and prints a `PASS`, `FAIL` or `SKIP` for each. Run it on a release before and after a change to see which behaviors changed. It uses staging by default, and needs an API key for that environment:
@@ -40,6 +42,22 @@ ANVIL_API_KEY=<your staging API key> make test-client
 * `ANVIL_FORGE_EID` - _optional_ The webform (Forge) in a Workflow to test `forge_submit` with. Defaults to the first one in your organization.
 
 Everything it creates is test data. It creates a test Etch packet each run, and removes the Workflow submission it creates.
+
+## The generated types
+
+`python_anvil/types` is generated from the API specs in `schema/`: `anvil_schema.graphql`, the GraphQL schema as published in the [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types) npm package (the same copy node-anvil validates against), and `openapi.json`, the API's OpenAPI spec. Neither needs an API key to fetch.
+
+```sh
+make update-schema  # refresh schema/ from @anvilco/types and production
+make generate       # regenerate python_anvil/types from schema/
+```
+
+`make generate` runs offline, and CI fails if the generated files don't match `schema/`, so run it after changing anything in `schema/`. See `dev/generate_types.py` for how each file is generated. The hand-written payload models in `python_anvil/api_resources/payload.py` extend the generated ones, so a change there is usually a matter of adjusting an override.
+
+The [Sync API Types workflow](.github/workflows/sync-api-types.yml) does both steps after each Anvil production deploy, and weekly as a backstop, and opens a PR when anything changed. It needs:
+
+* A `CI_GITHUB_TOKEN` repository secret: a token that can push branches and open PRs, so the PR gets its CI checks (the workflow's own `GITHUB_TOKEN` can't trigger workflows). anvil-js uses the same secret name.
+* `python-anvil` in the `--webhook-repos` list of Foundry's postsync step in anvil-infra, which sends the `anvil-production-deploy` dispatch. Until then, only the weekly run and manual runs happen.
 
 ## Publishing
 
