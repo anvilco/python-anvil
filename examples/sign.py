@@ -8,7 +8,6 @@
 # A signature request email is sent to SIGNER_EMAIL, so use your real email
 # address. The new packet also appears in your dashboard's e-sign area.
 
-# pylint: disable=duplicate-code
 
 import os
 
@@ -58,7 +57,7 @@ def main():
     # match the field IDs configured on the PDF template.
     packet.add_file_payloads(
         "sampleTemplate",
-        dict(data={"name": SIGNER_NAME, "email": SIGNER_EMAIL}),
+        {"data": {"name": SIGNER_NAME, "email": SIGNER_EMAIL}},
     )
 
     # Signers sign in the order they are added. `signer_type="email"` sends

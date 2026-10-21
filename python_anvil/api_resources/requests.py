@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 from python_anvil.constants import VALID_HOSTS
 from python_anvil.http import HTTPClient
@@ -35,7 +35,6 @@ class AnvilRequest:
         else:
             message = f"Error: {status_code}: {response} {extra}"
 
-        # pylint: disable=broad-exception-raised
         raise Exception(message)
 
     def process_response(self, response, status_code, headers, **kwargs):
@@ -107,7 +106,7 @@ class GraphqlRequest(AnvilRequest):
             raise AssertionError(
                 "Either `query` or `files` must be passed into this method."
             )
-        data: Dict[str, Any] = {}
+        data: dict[str, Any] = {}
 
         if query:
             data["query"] = query
@@ -127,7 +126,7 @@ class GraphqlRequest(AnvilRequest):
         content, status_code, headers = self._request(
             method,
             # URL blank here since graphql requests don't append to url
-            '',
+            "",
             # Queries need to be wrapped by curly braces(?) based on the
             # current API implementation.
             # The current library for graphql query generation doesn't do this(?)

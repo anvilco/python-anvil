@@ -1,40 +1,29 @@
-# pylint: disable=no-self-argument
-
-import sys
 from io import BufferedIOBase
+from typing import Any, Literal
 
-# Disabling pylint no-name-in-module because this is the documented way to
-# import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import (  # pylint: disable=no-name-in-module
+from pydantic import (
     ConfigDict,
     Field,
     HttpUrl,
     field_validator,
 )
-from typing import Any, Dict, List, Optional, Union
 
 from python_anvil.models import FileCompatibleBaseModel
 
 from .base import BaseModel
 
 
-if sys.version_info >= (3, 8):
-    from typing import Literal  # pylint: disable=no-name-in-module
-else:
-    from typing_extensions import Literal
-
-
 class EmbeddedLogo(BaseModel):
     src: str
-    max_width: Optional[int] = None
-    max_height: Optional[int] = None
+    max_width: int | None = None
+    max_height: int | None = None
 
 
 class FillPDFPayload(BaseModel):
-    data: Union[List[Dict[str, Any]], Dict[str, Any]]
-    title: Optional[str] = None
-    font_size: Optional[int] = None
-    text_color: Optional[str] = None
+    data: list[dict[str, Any]] | dict[str, Any]
+    title: str | None = None
+    font_size: int | None = None
+    text_color: str | None = None
 
     @field_validator("data")
     @classmethod
@@ -45,14 +34,14 @@ class FillPDFPayload(BaseModel):
 
 
 class GeneratePDFPayload(BaseModel):
-    data: Union[List[Dict[str, Any]], Dict[Literal["html", "css"], str]]
-    logo: Optional[EmbeddedLogo] = None
-    title: Optional[str] = None
-    type: Optional[Literal["markdown", "html"]] = "markdown"
-    page: Optional[Dict[str, Any]] = None
-    font_size: Optional[int] = None
-    font_family: Optional[str] = None
-    text_color: Optional[str] = None
+    data: list[dict[str, Any]] | dict[Literal["html", "css"], str]
+    logo: EmbeddedLogo | None = None
+    title: str | None = None
+    type: Literal["markdown", "html"] | None = "markdown"
+    page: dict[str, Any] | None = None
+    font_size: int | None = None
+    font_family: str | None = None
+    text_color: str | None = None
 
 
 class GenerateEtchSigningURLPayload(BaseModel):
@@ -70,16 +59,16 @@ class EtchSigner(BaseModel):
 
     name: str
     email: str
-    fields: List[SignerField]
+    fields: list[SignerField]
     signer_type: str = "email"
     # id will be generated if `None`
-    id: Optional[str] = None
-    routing_order: Optional[int] = None
-    redirect_url: Optional[str] = Field(None, alias="redirectURL")
-    accept_each_field: Optional[bool] = None
-    enable_emails: Optional[List[str]] = None
+    id: str | None = None
+    routing_order: int | None = None
+    redirect_url: str | None = Field(None, alias="redirectURL")
+    accept_each_field: bool | None = None
+    enable_emails: list[str] | None = None
     # signature_mode can be "draw" or "text" (default: text)
-    signature_mode: Optional[str] = None
+    signature_mode: str | None = None
 
 
 class SignatureField(BaseModel):
@@ -88,7 +77,7 @@ class SignatureField(BaseModel):
     page_num: int
     # Should be in a format similar to:
     # { x: 100.00, y: 121.21, width: 33.00 }
-    rect: Dict[str, float]
+    rect: dict[str, float]
 
 
 class Base64Upload(BaseModel):
@@ -98,27 +87,27 @@ class Base64Upload(BaseModel):
 
 
 class TableColumnAlignment(BaseModel):
-    align: Optional[Literal["left", "center", "right"]] = None
-    width: Optional[str] = None
+    align: Literal["left", "center", "right"] | None = None
+    width: str | None = None
 
 
 # https://www.useanvil.com/docs/api/generate-pdf#table
 class MarkdownTable(BaseModel):
-    rows: List[List[str]]
+    rows: list[list[str]]
 
     # defaults to `True` if not provided.
     # set to false for no header row on the table
-    first_row_headers: Optional[bool] = None
+    first_row_headers: bool | None = None
 
     # defaults to `False` if not provided.
     # set to true to display gridlines in-between rows or columns
-    row_grid_lines: Optional[bool] = True
-    column_grid_lines: Optional[bool] = False
+    row_grid_lines: bool | None = True
+    column_grid_lines: bool | None = False
 
     # defaults to 'top' if not provided.
     # adjust vertical alignment of table text
     # accepts 'top', 'center', or 'bottom'
-    vertical_align: Optional[Literal["top", "center", "bottom"]] = "center"
+    vertical_align: Literal["top", "center", "bottom"] | None = "center"
 
     # (optional) columnOptions - An array of columnOption objects.
     # You do not need to specify all columns. Accepts an
@@ -130,15 +119,15 @@ class MarkdownTable(BaseModel):
     # accepts 'left', 'center', or 'right'; defaults to 'left'
     # width (optional) - adjust the width of the column
     # accepts width in pixels or as percentage of the table width
-    column_options: Optional[List[TableColumnAlignment]] = None
+    column_options: list[TableColumnAlignment] | None = None
 
 
 # https://www.useanvil.com/docs/api/object-references/#verbatimfield
 class MarkdownContent(BaseModel):
-    label: Optional[str] = None
-    heading: Optional[str] = None
-    content: Optional[str] = None
-    table: Optional[MarkdownTable] = None
+    label: str | None = None
+    heading: str | None = None
+    content: str | None = None
+    table: MarkdownTable | None = None
     font_size: int = 14
     text_color: str = "#000000"
 
@@ -148,9 +137,9 @@ class DocumentMarkup(BaseModel):
 
     id: str
     filename: str
-    markup: Dict[Literal["html", "css"], str]
-    fields: Optional[List[SignatureField]] = None
-    title: Optional[str] = None
+    markup: dict[Literal["html", "css"], str]
+    fields: list[SignatureField] | None = None
+    title: str | None = None
     font_size: int = 14
     text_color: str = "#000000"
 
@@ -163,8 +152,8 @@ class DocumentMarkdown(BaseModel):
     # NOTE: Order matters here in the Union[].
     # If `SignatureField` is not first, the types are similar enough that it
     # will use `MarkdownContent` instead.
-    fields: Optional[List[Union[SignatureField, MarkdownContent]]] = None
-    title: Optional[str] = None
+    fields: list[SignatureField | MarkdownContent] | None = None
+    title: str | None = None
     font_size: int = 14
     text_color: str = "#000000"
 
@@ -184,7 +173,7 @@ class DocumentUpload(FileCompatibleBaseModel):
     # NOTE: This field name is referenced in the models.py file, if you change it you
     #   must change the reference
     file: Any = None
-    fields: List[SignatureField]
+    fields: list[SignatureField]
     font_size: int = 14
     text_color: str = "#000000"
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -198,7 +187,7 @@ class EtchCastRef(BaseModel):
 
 
 class CreateEtchFilePayload(BaseModel):
-    payloads: Union[str, Dict[str, FillPDFPayload]]
+    payloads: str | dict[str, FillPDFPayload]
 
 
 class CreateEtchPacketPayload(FileCompatibleBaseModel):
@@ -210,24 +199,24 @@ class CreateEtchPacketPayload(FileCompatibleBaseModel):
     """
 
     name: str
-    signers: List[EtchSigner]
+    signers: list[EtchSigner]
     # NOTE: This is a list of `AttachableEtchFile` objects, but we need to
     # override the default `FileCompatibleBaseModel` to handle multipart/form-data
     # uploads correctly. This field name is referenced in the models.py file.
-    files: List["AttachableEtchFile"]
-    signature_email_subject: Optional[str] = None
-    signature_email_body: Optional[str] = None
-    is_draft: Optional[bool] = False
-    is_test: Optional[bool] = True
-    merge_pdfs: Optional[bool] = Field(None, alias="mergePDFs")
-    data: Optional[CreateEtchFilePayload] = None
-    signature_page_options: Optional[Dict[Any, Any]] = None
-    webhook_url: Optional[str] = Field(None, alias="webhookURL")
-    reply_to_name: Optional[Any] = None
-    reply_to_email: Optional[Any] = None
-    enable_emails: Optional[Union[bool, List[str]]] = None
-    create_cast_templates_from_uploads: Optional[bool] = None
-    duplicate_casts: Optional[bool] = None
+    files: list["AttachableEtchFile"]
+    signature_email_subject: str | None = None
+    signature_email_body: str | None = None
+    is_draft: bool | None = False
+    is_test: bool | None = True
+    merge_pdfs: bool | None = Field(None, alias="mergePDFs")
+    data: CreateEtchFilePayload | None = None
+    signature_page_options: dict[Any, Any] | None = None
+    webhook_url: str | None = Field(None, alias="webhookURL")
+    reply_to_name: Any | None = None
+    reply_to_email: Any | None = None
+    enable_emails: bool | list[str] | None = None
+    create_cast_templates_from_uploads: bool | None = None
+    duplicate_casts: bool | None = None
 
 
 class ForgeSubmitPayload(BaseModel):
@@ -239,26 +228,24 @@ class ForgeSubmitPayload(BaseModel):
     """
 
     forge_eid: str
-    payload: Dict[str, Any]
-    weld_data_eid: Optional[str] = None
-    submission_eid: Optional[str] = None
+    payload: dict[str, Any]
+    weld_data_eid: str | None = None
+    submission_eid: str | None = None
     # Defaults to True when not provided/is None
-    enforce_payload_valid_on_create: Optional[bool] = None
-    current_step: Optional[int] = None
-    complete: Optional[bool] = None
+    enforce_payload_valid_on_create: bool | None = None
+    current_step: int | None = None
+    complete: bool | None = None
     # Note that if using a development API key, this will be forced to `True`
     # even when `False` is used in the payload.
-    is_test: Optional[bool] = True
-    timezone: Optional[str] = None
-    webhook_url: Optional[HttpUrl] = Field(None, alias="webhookURL")
-    group_array_id: Optional[str] = None
-    group_array_index: Optional[int] = None
+    is_test: bool | None = True
+    timezone: str | None = None
+    webhook_url: HttpUrl | None = Field(None, alias="webhookURL")
+    group_array_id: str | None = None
+    group_array_index: int | None = None
 
 
-UploadableFile = Union[Base64Upload, BufferedIOBase]
-AttachableEtchFile = Union[
-    DocumentUpload, EtchCastRef, DocumentMarkup, DocumentMarkdown
-]
+UploadableFile = Base64Upload | BufferedIOBase
+AttachableEtchFile = DocumentUpload | EtchCastRef | DocumentMarkup | DocumentMarkdown
 
 # Classes below use types wrapped in quotes avoid a circular dependency/weird
 # variable assignment locations with the aliases above. We need to manually
