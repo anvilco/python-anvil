@@ -25,6 +25,10 @@ test: install ## Run the unit tests with coverage
 .PHONY: ci
 ci: lint test ## Everything CI runs
 
+.PHONY: test-client
+test-client: install ## Run every method against a real environment (staging by default)
+	poetry run python test-client.py
+
 .PHONY: build
 build: install ## Build the sdist and wheel into dist/
 	rm -rf dist

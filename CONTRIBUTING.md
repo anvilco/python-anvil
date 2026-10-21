@@ -27,6 +27,20 @@ Run a single test file or test with pytest directly:
 poetry run pytest tests/test_api.py -k fill_pdf
 ```
 
+## Testing against a real environment
+
+[`test-client.py`](test-client.py) runs every method against an Anvil environment and prints a `PASS`, `FAIL` or `SKIP` for each. Run it on a release before and after a change to see which behaviors changed. It uses staging by default, and needs an API key for that environment:
+
+```sh
+ANVIL_API_KEY=<your staging API key> make test-client
+```
+
+* `ANVIL_BASE_URL` - _optional_ Test another environment instead, e.g. `http://localhost:3000`.
+* `ANVIL_PDF_TEMPLATE_ID` - _optional_ The PDF template to test `fill_pdf` with. Defaults to the first template in your organization that has example data.
+* `ANVIL_FORGE_EID` - _optional_ The webform (Forge) in a Workflow to test `forge_submit` with. Defaults to the first one in your organization.
+
+Everything it creates is test data. It creates a test Etch packet each run, and removes the Workflow submission it creates.
+
 ## Publishing
 
 Publishing to PyPI is done by the [Publish workflow](.github/workflows/publish.yml) when a version tag is pushed, in two steps: the workflow builds and checks the release, and a maintainer approves the publish job. Merging to `master` does not publish anything.

@@ -108,7 +108,7 @@ known-first-party = ["python_anvil"]
 [tool.mypy]
 python_version = "3.10"
 plugins = ["pydantic.mypy"]
-files = ["python_anvil", "tests", "examples", "dev"]
+files = ["python_anvil", "tests", "examples", "dev", "test-client.py"]
 ignore_missing_imports = true
 no_implicit_optional = true
 check_untyped_defs = true
