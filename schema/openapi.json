@@ -1,0 +1,1086 @@
+{
+  "components": {
+    "schemas": {
+      "EtchFinishPageOptions": {
+        "additionalProperties": false,
+        "description": "createEtchPacket's `finishPageOptions` argument: text for the page signers see when they're done.",
+        "properties": {
+          "completeDescription": {
+            "type": "string"
+          },
+          "completeTitle": {
+            "type": "string"
+          },
+          "incompleteDescription": {
+            "type": "string"
+          },
+          "incompleteTitle": {
+            "type": "string"
+          },
+          "signatureAsyncDescription": {
+            "type": "string"
+          },
+          "signatureAsyncTitle": {
+            "type": "string"
+          },
+          "signatureButtonText": {
+            "type": "string"
+          },
+          "signatureDescription": {
+            "type": "string"
+          },
+          "signatureTitle": {
+            "type": "string"
+          },
+          "signatureWaitingSignersAfterDescription": {
+            "type": "string"
+          },
+          "signatureWaitingSignersAfterTitle": {
+            "type": "string"
+          },
+          "signatureWaitingSignersBeforeDescription": {
+            "type": "string"
+          },
+          "signatureWaitingSignersBeforeTitle": {
+            "type": "string"
+          },
+          "zipName": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EtchSignaturePageOptions": {
+        "additionalProperties": false,
+        "description": "createEtchPacket's `signaturePageOptions` argument: text and styles for the signing page.",
+        "properties": {
+          "acceptButtonText": {
+            "type": "string"
+          },
+          "acceptDescription": {
+            "type": "string"
+          },
+          "acceptTitle": {
+            "type": "string"
+          },
+          "completedButtonText": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "drawInitialsButtonText": {
+            "type": "string"
+          },
+          "drawInitialsDescription": {
+            "type": "string"
+          },
+          "drawInitialsTitle": {
+            "type": "string"
+          },
+          "drawSignatureButtonText": {
+            "type": "string"
+          },
+          "drawSignatureDescription": {
+            "type": "string"
+          },
+          "drawSignatureTitle": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "initialLabel": {
+            "type": "string"
+          },
+          "notCurrentUserError": {
+            "type": "string"
+          },
+          "reviewButtonText": {
+            "type": "string"
+          },
+          "reviewDescription": {
+            "type": "string"
+          },
+          "reviewTitle": {
+            "type": "string"
+          },
+          "signButtonText": {
+            "type": "string"
+          },
+          "signConsentText": {
+            "type": "string"
+          },
+          "signDescription": {
+            "type": "string"
+          },
+          "signDescriptionCompleted": {
+            "type": "string"
+          },
+          "signEachCompletedMessage": {
+            "type": "string"
+          },
+          "signEachConsentText": {
+            "type": "string"
+          },
+          "signEachDescription": {
+            "type": "string"
+          },
+          "signEachErrorMessage": {
+            "type": "string"
+          },
+          "signEachFinishButtonText": {
+            "type": "string"
+          },
+          "signEachNextButtonText": {
+            "type": "string"
+          },
+          "signEachNotReadyMessage": {
+            "type": "string"
+          },
+          "signEachSignAllText": {
+            "type": "string"
+          },
+          "signEachSigningMessage": {
+            "type": "string"
+          },
+          "signEachStartButtonText": {
+            "type": "string"
+          },
+          "signEachSubmittingMessage": {
+            "type": "string"
+          },
+          "signTitle": {
+            "type": "string"
+          },
+          "signatureLabel": {
+            "type": "string"
+          },
+          "style": {
+            "properties": {
+              "infoColor": {
+                "format": "hexColor",
+                "type": "string"
+              },
+              "linkColor": {
+                "format": "hexColor",
+                "type": "string"
+              },
+              "primaryColor": {
+                "format": "hexColor",
+                "type": "string"
+              },
+              "stylesheetURL": {
+                "format": "publicUri",
+                "type": "string"
+              },
+              "successColor": {
+                "format": "hexColor",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "EtchSigner": {
+        "additionalProperties": false,
+        "description": "A signer in createEtchPacket's `signers` argument: who signs, which fields they sign, and how.",
+        "properties": {
+          "acceptEachField": {
+            "type": "boolean"
+          },
+          "accessCode": {
+            "type": "string"
+          },
+          "addTimestampToSignatures": {
+            "type": "boolean"
+          },
+          "addUuidToSignatures": {
+            "type": "boolean"
+          },
+          "allowEmailChange": {
+            "type": "boolean"
+          },
+          "allowNameChange": {
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "enableEmails": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "items": {
+                  "enum": [
+                    "etchComplete"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "fields": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "fieldId": {
+                      "type": "string"
+                    },
+                    "fileId": {
+                      "type": "string"
+                    },
+                    "signatureImageVerticalJustification": {
+                      "enum": [
+                        "dynamic",
+                        "bottom",
+                        "none"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "fileId",
+                    "fieldId"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "helpTip": {
+                      "type": "string"
+                    },
+                    "ignoreWhenFilled": {
+                      "type": "boolean"
+                    },
+                    "kind": {
+                      "enum": [
+                        "form"
+                      ],
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "optional": {
+                      "type": "boolean"
+                    },
+                    "options": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "payloadMaps": {
+                      "items": {
+                        "properties": {
+                          "fieldId": {
+                            "type": "string"
+                          },
+                          "fileId": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fileId",
+                          "fieldId"
+                        ],
+                        "type": "object"
+                      },
+                      "minItems": 1,
+                      "type": "array",
+                      "uniqueItems": true
+                    },
+                    "placeholder": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "payloadMaps",
+                    "kind"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "fieldsAreOrdered": {
+            "type": "boolean"
+          },
+          "id": {
+            "type": "string"
+          },
+          "idCheckPhone": {
+            "format": "phoneNumber",
+            "type": "string"
+          },
+          "isPending": {
+            "type": "boolean"
+          },
+          "name": {
+            "format": "displayableShortText",
+            "type": "string"
+          },
+          "redirectURL": {
+            "format": "redirectURL",
+            "type": "string"
+          },
+          "requireEmailOnLoad": {
+            "type": "boolean"
+          },
+          "requireIdCheck": {
+            "oneOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "enum": [
+                  "kb",
+                  "sms",
+                  "smskb",
+                  "idsms"
+                ],
+                "type": "string"
+              }
+            ]
+          },
+          "requireIdCheckInTest": {
+            "type": "boolean"
+          },
+          "requireNameOnLoad": {
+            "type": "boolean"
+          },
+          "routingOrder": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "showFinishSigningButton": {
+            "type": "boolean"
+          },
+          "signatureExperience": {
+            "enum": [
+              "signBeforeReviewing",
+              "signWhileReviewing",
+              "acknowledgeOnly",
+              "formCompletionOnly"
+            ],
+            "type": "string"
+          },
+          "signatureImageVerticalJustificationDefault": {
+            "enum": [
+              "dynamic",
+              "bottom",
+              "none"
+            ],
+            "type": "string"
+          },
+          "signatureMode": {
+            "enum": [
+              "draw",
+              "text"
+            ],
+            "type": "string"
+          },
+          "signerType": {
+            "enum": [
+              "email",
+              "embedded",
+              "in-person"
+            ],
+            "type": "string"
+          },
+          "tokenValidForMinutes": {
+            "maximum": 86400,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "tokenValidUntil": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "FillPdfRequest": {
+        "properties": {
+          "borderColor": {
+            "description": "Default border color for field bounding boxes, as a CSS hex color.",
+            "type": "string"
+          },
+          "data": {
+            "description": "The field data to fill into the template. Can be a single object keyed by\nfield ID or alias, or an array of objects for multi-page / repeating fills.\nEach value can be a primitive (string, number, boolean), or a value object\nwith a `value` key alongside styling overrides.\n",
+            "oneOf": [
+              {
+                "additionalProperties": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "description": "A value object with optional per-field styling overrides.",
+                      "properties": {
+                        "value": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            }
+                          ]
+                        }
+                      },
+                      "type": "object"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "items": {
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "properties": {
+                          "value": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              }
+                            ]
+                          }
+                        },
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "defaultCheckboxCharacter": {
+            "description": "The character used to represent a checked checkbox.",
+            "type": "string"
+          },
+          "defaultMakeCheckboxSquare": {
+            "description": "When true, checkbox fields are rendered as squares instead of the default shape.",
+            "type": "boolean"
+          },
+          "defaultReadOnly": {
+            "description": "Controls whether interactive AcroForm fields default to read-only.\nOnly applicable when `useInteractiveFields` is true. Defaults to false\nwhen `useInteractiveFields` is enabled.\n",
+            "type": "boolean"
+          },
+          "drawDebugBoxes": {
+            "description": "When true, draws visible bounding boxes around each field for debugging layout issues.",
+            "type": "boolean"
+          },
+          "fontFamily": {
+            "description": "Default font family name for all fields.",
+            "type": "string"
+          },
+          "fontSize": {
+            "description": "Default font size in points for all fields.",
+            "maximum": 30,
+            "minimum": 5,
+            "type": "integer"
+          },
+          "outputFormat": {
+            "default": "pdf",
+            "description": "Controls the response format. When set to `url`, the filled PDF is\nuploaded to cloud storage and a JSON response with a short-lived signed\nURL is returned instead of the binary PDF. The signed URL expires 5\nminutes after generation. Defaults to `pdf` (binary PDF response).\n",
+            "enum": [
+              "pdf",
+              "url"
+            ],
+            "type": "string"
+          },
+          "stripAnnotations": {
+            "description": "When true, removes all PDF annotations from the output.",
+            "type": "boolean"
+          },
+          "textColor": {
+            "description": "Default text color for all fields, as a CSS hex color (e.g. `#FF0000`).",
+            "type": "string"
+          },
+          "title": {
+            "description": "Custom title for the generated PDF. Overrides the template's default title.",
+            "type": "string"
+          },
+          "useInteractiveFields": {
+            "description": "When true, the filled PDF will contain interactive AcroForm fields\nthat can be edited by the recipient in a PDF viewer. Requires a paid plan.\n",
+            "type": "boolean"
+          },
+          "verticalAlignment": {
+            "description": "Default vertical alignment for text within fields.",
+            "enum": [
+              "top",
+              "middle",
+              "bottom"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "GenerateHtmlPdfRequest": {
+        "description": "Generate a PDF by rendering raw HTML and optional CSS.",
+        "properties": {
+          "data": {
+            "description": "The HTML content and optional CSS to render into a PDF.",
+            "properties": {
+              "css": {
+                "description": "Optional CSS stylesheet applied to the HTML content during rendering.",
+                "type": "string"
+              },
+              "html": {
+                "description": "The HTML markup to render. This is the full body content of the PDF.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "html"
+            ],
+            "type": "object"
+          },
+          "outputFormat": {
+            "default": "pdf",
+            "description": "Controls the response format. When set to `url`, the generated PDF is\nuploaded to cloud storage and a JSON response with a short-lived signed\nURL is returned instead of the binary PDF. The signed URL expires 5\nminutes after generation. Defaults to `pdf` (binary PDF response).\n",
+            "enum": [
+              "pdf",
+              "url"
+            ],
+            "type": "string"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageOptions"
+          },
+          "title": {
+            "description": "The document title. Used as the PDF metadata title and in the output filename.",
+            "type": "string"
+          },
+          "type": {
+            "description": "Set to `html` to explicitly select HTML-to-PDF rendering.",
+            "enum": [
+              "html"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "GenerateMarkdownPdfRequest": {
+        "description": "Generate a PDF from structured Markdown-style content blocks.\nEach item in the `data` array represents a content section that\ncan contain headings, labeled values, body text, or tables.\n",
+        "properties": {
+          "data": {
+            "description": "An array of content blocks that make up the PDF body. Each block\ncan contain one or more of: `heading`, `label`, `content`, `table`.\n",
+            "items": {
+              "properties": {
+                "content": {
+                  "description": "Body text content, rendered as a paragraph. Supports Markdown formatting.",
+                  "type": "string"
+                },
+                "fontFamily": {
+                  "description": "Font family override for this content block.",
+                  "type": "string"
+                },
+                "fontSize": {
+                  "description": "Font size override for this content block.",
+                  "maximum": 30,
+                  "minimum": 5,
+                  "type": "integer"
+                },
+                "heading": {
+                  "description": "A section heading rendered in a larger, bold font.",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "A label rendered in bold, typically used for key-value pairs.",
+                  "type": "string"
+                },
+                "table": {
+                  "description": "A table rendered inline in the PDF.",
+                  "properties": {
+                    "columnGridlines": {
+                      "description": "When true, vertical gridlines are drawn between columns.",
+                      "type": "boolean"
+                    },
+                    "columnOptions": {
+                      "description": "Per-column display options.",
+                      "items": {
+                        "properties": {
+                          "align": {
+                            "description": "Horizontal text alignment for this column.",
+                            "enum": [
+                              "left",
+                              "center",
+                              "right"
+                            ],
+                            "type": "string"
+                          },
+                          "width": {
+                            "description": "Column width as a percentage or pixel value (e.g. `25%`, `100px`).",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "firstRowHeaders": {
+                      "description": "When true, the first row is rendered as a header row with bold styling.",
+                      "type": "boolean"
+                    },
+                    "rowGridlines": {
+                      "description": "When true, horizontal gridlines are drawn between rows.",
+                      "type": "boolean"
+                    },
+                    "rows": {
+                      "description": "Table data as a 2D array of strings (array of rows, each row is an array of cell values).",
+                      "items": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "type": "array"
+                    },
+                    "verticalAlign": {
+                      "description": "Vertical alignment of cell content.",
+                      "enum": [
+                        "top",
+                        "center",
+                        "bottom"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "rows"
+                  ],
+                  "type": "object"
+                },
+                "textColor": {
+                  "description": "Text color override for this block, as a CSS hex color.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "fontFamily": {
+            "description": "Default font family for the document.",
+            "type": "string"
+          },
+          "fontSize": {
+            "description": "Default font size in points for the document.",
+            "maximum": 30,
+            "minimum": 5,
+            "type": "integer"
+          },
+          "includeTimestamp": {
+            "description": "When true, a timestamp is printed on the PDF showing when it was generated.",
+            "type": "boolean"
+          },
+          "logo": {
+            "description": "A logo image to display at the top of the PDF. Set to `false` to\nexplicitly disable any default logo. Provide an object with a\nbase64-encoded or URL image source to include a logo.\n",
+            "oneOf": [
+              {
+                "enum": [
+                  false
+                ],
+                "type": "boolean"
+              },
+              {
+                "properties": {
+                  "maxHeight": {
+                    "description": "Maximum height of the logo in pixels.",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "maxWidth": {
+                    "description": "Maximum width of the logo in pixels.",
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "src": {
+                    "description": "Image source: a base64-encoded data URI or an HTTPS URL.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "src"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "outputFormat": {
+            "default": "pdf",
+            "description": "Controls the response format. When set to `url`, the generated PDF is\nuploaded to cloud storage and a JSON response with a short-lived signed\nURL is returned instead of the binary PDF. The signed URL expires 5\nminutes after generation. Defaults to `pdf` (binary PDF response).\n",
+            "enum": [
+              "pdf",
+              "url"
+            ],
+            "type": "string"
+          },
+          "page": {
+            "$ref": "#/components/schemas/PageOptions"
+          },
+          "textColor": {
+            "description": "Default text color for the document, as a CSS hex color (e.g. `#333333`).",
+            "type": "string"
+          },
+          "title": {
+            "description": "The document title. Used as the PDF metadata title and in the output filename.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "PageOptions": {
+        "description": "Custom page dimensions and margins for the generated PDF.",
+        "properties": {
+          "height": {
+            "description": "Page height with unit (e.g. `11in`, `297mm`).",
+            "type": "string"
+          },
+          "margin": {
+            "description": "Shorthand margin for all sides (e.g. `0.5in`, `10mm 20mm`).",
+            "type": "string"
+          },
+          "marginBottom": {
+            "description": "Bottom margin with unit.",
+            "type": "string"
+          },
+          "marginLeft": {
+            "description": "Left margin with unit.",
+            "type": "string"
+          },
+          "marginRight": {
+            "description": "Right margin with unit.",
+            "type": "string"
+          },
+          "marginTop": {
+            "description": "Top margin with unit.",
+            "type": "string"
+          },
+          "pageCount": {
+            "description": "Position to render page numbers on each page.",
+            "enum": [
+              "topLeft",
+              "topRight",
+              "topCenter",
+              "bottomLeft",
+              "bottomRight",
+              "bottomCenter"
+            ],
+            "type": "string"
+          },
+          "width": {
+            "description": "Page width with unit (e.g. `8.5in`, `210mm`).",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "basicAuth": {
+        "description": "Use your API key as the username with an empty password.",
+        "scheme": "basic",
+        "type": "http"
+      },
+      "oauth2": {
+        "flows": {},
+        "type": "oauth2"
+      }
+    }
+  },
+  "info": {
+    "description": "REST APIs for Anvil's document automation platform. Includes PDF filling, PDF generation, and more.",
+    "title": "Anvil API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/document-group/{documentGroupEid}.zip": {
+      "get": {
+        "description": "Downloads every file in a document group as a single zip archive: for\nexample, the signed documents of an Etch signature packet, from its\n`documentGroup.eid`.\n\nInstead of streaming the zip, the response may be a `302` redirect to\na short-lived signed URL for it. Follow redirects to get the file.\n\nRequires API key (Basic auth) or OAuth authentication. Public OAuth\nclients need the `mcp:full` scope; no narrower scope covers this route.\n",
+        "operationId": "downloadDocuments",
+        "parameters": [
+          {
+            "description": "The EID of the document group, e.g. an Etch packet's `documentGroup.eid`.",
+            "in": "path",
+            "name": "documentGroupEid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The zip archive. `Content-Disposition` names it after the document\ngroup's parent object, such as the Etch packet.\n"
+          },
+          "302": {
+            "description": "Redirect to a short-lived signed URL for the zip."
+          },
+          "401": {
+            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+          },
+          "403": {
+            "description": "The OAuth token belongs to a public client without a scope that covers this route."
+          },
+          "404": {
+            "description": "Document group not found \u2014 no document group exists with the given EID, or the authenticated user lacks access to it."
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "oauth2": []
+          }
+        ],
+        "summary": "Download a document group's files as a zip",
+        "tags": [
+          "Documents"
+        ]
+      }
+    },
+    "/api/v1/fill/{castEid}.pdf": {
+      "post": {
+        "description": "Fills a PDF template (Cast) with the provided data and returns the resulting PDF.\n\nTemplates are created and managed in the Anvil dashboard or via the GraphQL `createCast` mutation.\nEach template defines named fields (text, date, checkbox, signature, etc.) that can be populated via\nthis endpoint. The field data can be supplied as a flat object keyed by field ID\nor alias, or as an array of objects for multi-page repeating templates.\n\nSupports both JSON and multipart/form-data request bodies. When using\nmultipart/form-data, string values for `fontSize` and `page` are automatically\nparsed.\n\nRequires API key (Basic auth) or OAuth authentication. Development API keys\nproduce watermarked PDFs; production keys produce clean PDFs and count toward\nyour plan's usage.\n",
+        "operationId": "fillPdf",
+        "parameters": [
+          {
+            "description": "The EID (external identifier) of the PDF template (Cast) to fill.",
+            "in": "path",
+            "name": "castEid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The version number of the template to use. If omitted, the latest\npublished version is used. Use this to pin fills to a specific\ntemplate revision.\n",
+            "in": "query",
+            "name": "versionNumber",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillPdfRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FillPdfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The filled PDF document."
+          },
+          "400": {
+            "description": "Validation error \u2014 invalid or missing fields in the request body."
+          },
+          "401": {
+            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+          },
+          "404": {
+            "description": "Template not found \u2014 no Cast exists with the given EID, or the authenticated user lacks access."
+          },
+          "415": {
+            "description": "Unsupported media type \u2014 Content-Type must be application/json or multipart/form-data."
+          },
+          "429": {
+            "description": "Concurrency limit exceeded \u2014 too many simultaneous requests on a development API key."
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "oauth2": []
+          }
+        ],
+        "summary": "Fill a PDF template",
+        "tags": [
+          "PDF"
+        ]
+      }
+    },
+    "/api/v1/generate-pdf": {
+      "post": {
+        "description": "Generates a PDF document from either Markdown content or raw HTML/CSS.\nThe generation mode is determined automatically: if the request body\ncontains `type: \"html\"` or the `data` property includes an `html` key,\nHTML-to-PDF rendering is used; otherwise, Markdown-to-PDF rendering is used.\n\n**Markdown mode** accepts structured content blocks (headings, labels,\nbody text, and tables) and renders them into a styled PDF with optional\nlogo, timestamp, and custom page dimensions.\n\n**HTML mode** accepts raw HTML and optional CSS, rendering them directly\ninto a PDF with optional custom page dimensions.\n\nSupports both JSON and multipart/form-data request bodies. Requires API\nkey (Basic auth) or OAuth authentication.\n",
+        "operationId": "generatePdf",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/GenerateMarkdownPdfRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/GenerateHtmlPdfRequest"
+                  }
+                ]
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/GenerateMarkdownPdfRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/GenerateHtmlPdfRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The generated PDF document."
+          },
+          "400": {
+            "description": "Validation error \u2014 invalid or missing fields in the request body."
+          },
+          "401": {
+            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+          },
+          "415": {
+            "description": "Unsupported media type \u2014 Content-Type must be application/json or multipart/form-data."
+          },
+          "429": {
+            "description": "Concurrency limit exceeded \u2014 too many simultaneous requests on a development API key."
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "oauth2": []
+          }
+        ],
+        "summary": "Generate a PDF from HTML or Markdown",
+        "tags": [
+          "PDF"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Production",
+      "url": "https://app.useanvil.com"
+    }
+  ],
+  "tags": []
+}
