@@ -29,6 +29,10 @@ ci: lint test ## Everything CI runs
 test-client: install ## Run every method against a real environment (staging by default)
 	poetry run python test-client.py
 
+.PHONY: update-schema
+update-schema: install ## Refresh schema/anvil_schema.graphql from the published @anvilco/types
+	poetry run python dev/fetch_schema.py
+
 .PHONY: build
 build: install ## Build the sdist and wheel into dist/
 	rm -rf dist

@@ -55,21 +55,15 @@ def main():
     file_dir = os.path.dirname(os.path.realpath(__file__))
     file_path = os.path.join(file_dir, filename)
 
-    # You can check manually if your file exists, however, the validator being
-    # used in the `GraphqlUpload` below will also check if the file exists.
+    # `prepare_graphql_file` marks the file for a multipart upload: it's streamed
+    # with the request rather than base64 encoded into the JSON. It takes a
+    # path, bytes, or an open binary file object. A path is opened when the
+    # request is sent.
     #
-    # if not os.path.exists(file_path):
-    #     raise FileNotFoundError('File does not exist. Please check `file_path` '
-    #                             'and ensure it points to an existing file.')
-
-    # file data must be read in as _bytes_, not text.
-    file = open(file_path, "rb")  # noqa: SIM115
-
-    # You can also provide a custom `content_type` if you needed.
-    # The Anvil library will guess the file's content_type by its file
-    # extension automatically, but this can be used to force a different
-    # content_type.
-    # f1.content_type = "application/pdf"
+    # The filename and mimetype are taken from the path. Pass `filename=` and
+    # `mimetype=` to override them, or when uploading bytes or a file object
+    # that has no name, like a BytesIO.
+    file = Anvil.prepare_graphql_file(file_path)
 
     # Upload the file and define signer field locations.
     file1 = DocumentUpload(
@@ -140,11 +134,8 @@ def main():
     # Create your packet
     # If overriding/adding new fields, use the modified payload from
     # `packet.create_payload()`
-    try:
-        res = anvil.create_etch_packet(payload=packet)
-        print(res)
-    finally:
-        file.close()
+    res = anvil.create_etch_packet(payload=packet)
+    print(res)
 
 
 if __name__ == "__main__":

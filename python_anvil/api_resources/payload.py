@@ -217,6 +217,8 @@ class CreateEtchPacketPayload(FileCompatibleBaseModel):
     enable_emails: bool | list[str] | None = None
     create_cast_templates_from_uploads: bool | None = None
     duplicate_casts: bool | None = None
+    organization_eid: str | None = None
+    allow_updates: bool | None = None
 
 
 class ForgeSubmitPayload(BaseModel):
