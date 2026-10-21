@@ -28,21 +28,21 @@ def main():
         type="markdown",
         title="Example Invoice",
         data=[
-            dict(label="Name", content="Sally Jones"),
-            dict(
-                content=(
+            {"label": "Name", "content": "Sally Jones"},
+            {
+                "content": (
                     "Lorem **ipsum** dolor sit _amet_, consectetur "
                     "adipiscing elit, sed "
                     "[do eiusmod](https://www.useanvil.com/docs) "
                     "tempor incididunt ut labore et dolore magna aliqua."
                 )
-            ),
-            dict(
-                table=dict(
-                    firstRowHeaders=True,
-                    rows=invoice_rows,
-                )
-            ),
+            },
+            {
+                "table": {
+                    "firstRowHeaders": True,
+                    "rows": invoice_rows,
+                }
+            },
         ],
     )
 

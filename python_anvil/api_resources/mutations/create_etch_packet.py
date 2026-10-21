@@ -1,9 +1,8 @@
-# pylint: disable=too-many-instance-attributes
 import logging
 from io import BufferedIOBase
 from logging import Logger
 from mimetypes import guess_type
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
@@ -89,25 +88,25 @@ class CreateEtchPacket(BaseQuery):
     mutation = CREATE_ETCH_PACKET
     mutation_res_query = DEFAULT_RESPONSE_QUERY
 
-    def __init__(  # pylint: disable=too-many-locals
+    def __init__(
         self,
-        name: Optional[str] = None,
-        signature_email_subject: Optional[str] = None,
-        signature_email_body: Optional[str] = None,
-        signers: Optional[List[EtchSigner]] = None,
-        files: Optional[List[AttachableEtchFile]] = None,
-        file_payloads: Optional[dict] = None,
-        signature_page_options: Optional[Dict[Any, Any]] = None,
+        name: str | None = None,
+        signature_email_subject: str | None = None,
+        signature_email_body: str | None = None,
+        signers: list[EtchSigner] | None = None,
+        files: list[AttachableEtchFile] | None = None,
+        file_payloads: dict | None = None,
+        signature_page_options: dict[Any, Any] | None = None,
         is_draft: bool = False,
         is_test: bool = True,
-        payload: Optional[CreateEtchPacketPayload] = None,
-        webhook_url: Optional[str] = None,
-        reply_to_name: Optional[str] = None,
-        reply_to_email: Optional[str] = None,
-        merge_pdfs: Optional[bool] = None,
-        enable_emails: Optional[Union[bool, List[str]]] = None,
-        create_cast_templates_from_uploads: Optional[bool] = None,
-        duplicate_casts: Optional[bool] = None,
+        payload: CreateEtchPacketPayload | None = None,
+        webhook_url: str | None = None,
+        reply_to_name: str | None = None,
+        reply_to_email: str | None = None,
+        merge_pdfs: bool | None = None,
+        enable_emails: bool | list[str] | None = None,
+        create_cast_templates_from_uploads: bool | None = None,
+        duplicate_casts: bool | None = None,
     ):
         # `name` is required when `payload` is not present.
         if not payload and not name:
@@ -135,7 +134,7 @@ class CreateEtchPacket(BaseQuery):
         self.duplicate_casts = duplicate_casts
 
     @classmethod
-    def create_from_dict(cls, payload: Dict) -> 'CreateEtchPacket':
+    def create_from_dict(cls, payload: dict) -> "CreateEtchPacket":
         """Create a new instance of `CreateEtchPacket` from a dict payload."""
         try:
             mutation = cls(
@@ -155,7 +154,7 @@ class CreateEtchPacket(BaseQuery):
 
         return mutation
 
-    def add_signer(self, signer: Union[dict, EtchSigner]):
+    def add_signer(self, signer: dict | EtchSigner):
         """Add a signer to the mutation payload.
 
         :param signer: Signer object to add to the payload

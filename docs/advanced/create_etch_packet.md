@@ -30,7 +30,7 @@ from python_anvil.api_resources.payload import (
     FillPDFPayload,
 )
 
-API_KEY = 'your_api_key_here'
+API_KEY = "your_api_key_here"
 
 anvil = Anvil(api_key=API_KEY)
 
@@ -50,10 +50,12 @@ signer1 = EtchSigner(
     # This basically says: "In the 'introPages' file (defined as
     # `pdf_template` above), assign the signature field with cast id of
     # 'def456' to this signer." You can add multiple signer fields here.
-    fields=[SignerField(
-        file_id="fileAlias",
-        field_id="signOne",
-    )],
+    fields=[
+        SignerField(
+            file_id="fileAlias",
+            field_id="signOne",
+        )
+    ],
     # By default, `signer_type` will be "email" which will automatically
     # send emails when this etch packet is created.
     # It can also be set to "embedded" which will _not_ send emails, and
@@ -89,13 +91,15 @@ file1 = DocumentUpload(
     # Currently, this library does not do this for you, so make sure that
     # the file data is ready at this point.
     file="BASE64 ENCODED DATA HERE",
-    fields=[SignatureField(
-        id="firstSignature",
-        type="signature",
-        page_num=0,
-        # The position and size of the field
-        rect=dict(x=100, y=100, width=100, height=100)
-    )]
+    fields=[
+        SignatureField(
+            id="firstSignature",
+            type="signature",
+            page_num=0,
+            # The position and size of the field
+            rect=dict(x=100, y=100, width=100, height=100),
+        )
+    ],
 )
 
 # You can reference an existing PDF Template from your Anvil account
@@ -112,7 +116,7 @@ file2 = EtchCastRef(
     # This can be any string, but should be unique if adding multiple files.
     id="fileAlias",
     # The eid of the cast you want to use from "API Info" or through the CLI
-    cast_eid="CAST_EID_GOES_HERE"
+    cast_eid="CAST_EID_GOES_HERE",
 )
 
 # Add files to your payload
@@ -121,9 +125,9 @@ packet.add_file(file2)
 
 # Optionally, you can pre-fill fields in the PDFs you've used above.
 # This reuses the payload shape used when using the `fill_pdf` method.
-packet.add_file_payloads("fileAlias", FillPDFPayload(data={
-    "aTextFieldId": "This is pre-filled."
-}))
+packet.add_file_payloads(
+    "fileAlias", FillPDFPayload(data={"aTextFieldId": "This is pre-filled."})
+)
 
 anvil.create_etch_packet(payload=packet)
 ```

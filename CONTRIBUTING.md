@@ -1,90 +1,82 @@
-# Setup
+# Contributing
 
-## Requirements
+How to work on the client and publish it. For using the client, see the [README](README.md).
 
-* Make:
-    * macOS: `$ xcode-select --install`
-    * Linux: [https://www.gnu.org/software/make](https://www.gnu.org/software/make)
-    * Windows: [https://mingw.org/download/installer](https://mingw.org/download/installer)
-* Python: `$ pyenv install`
-* Poetry: [https://poetry.eustace.io/docs/#installation](https://poetry.eustace.io/docs/#installation)
-* Graphviz:
-    * macOS: `$ brew install graphviz`
-    * Linux: [https://graphviz.org/download](https://graphviz.org/download/)
-    * Windows: [https://graphviz.org/download](https://graphviz.org/download/)
+## Development
 
-To confirm these system dependencies are configured correctly:
+The client supports Python 3.10 through 3.15, and `.python-version` pins the version to develop with. Any way of installing that Python works, e.g. [uv](https://docs.astral.sh/uv/) (`uv python install`) or [pyenv](https://github.com/pyenv/pyenv) (`pyenv install`). Dependencies are managed with [Poetry](https://python-poetry.org/docs/#installation) 2.
 
-```text
-$ make doctor
+Install the package, the `cli` extra and the dev dependencies into `.venv`:
+
+```sh
+make install
 ```
 
-## Installation
+Lint, type-check, and run the unit tests:
 
-Install project dependencies into a virtual environment:
-
-```text
-$ make install
+```sh
+make lint
+make test
 ```
 
-# Development Tasks
+`make format` formats the code and fixes what the linter can. [Ruff](https://docs.astral.sh/ruff/) does both the linting and the formatting, and [mypy](https://mypy-lang.org/) the type-checking; their settings are in `pyproject.toml`. There is also a [pre-commit](https://pre-commit.com/) config that runs ruff.
 
-## Manual
+Run a single test file or test with pytest directly:
 
-Run the tests:
-
-```text
-$ make test
+```sh
+poetry run pytest tests/test_api.py -k fill_pdf
 ```
 
-Run static analysis:
+## Testing against a real environment
 
-```text
-$ make check
+[`test-client.py`](test-client.py) runs every method against an Anvil environment and prints a `PASS`, `FAIL` or `SKIP` for each. Run it on a release before and after a change to see which behaviors changed. It uses staging by default, and needs an API key for that environment:
+
+```sh
+ANVIL_API_KEY=<your staging API key> make test-client
 ```
 
-Build the documentation:
+* `ANVIL_BASE_URL` - _optional_ Test another environment instead, e.g. `http://localhost:3000`.
+* `ANVIL_PDF_TEMPLATE_ID` - _optional_ The PDF template to test `fill_pdf` with. Defaults to the first template in your organization that has example data.
+* `ANVIL_FORGE_EID` - _optional_ The webform (Forge) in a Workflow to test `forge_submit` with. Defaults to the first one in your organization.
 
-```text
-$ make docs
-```
+Everything it creates is test data. It creates a test Etch packet each run, and removes the Workflow submission it creates.
 
-## Automatic
+## Publishing
 
-Keep all of the above tasks running on change:
+Publishing to PyPI is done by the [Publish workflow](.github/workflows/publish.yml) when a version tag is pushed, in two steps: the workflow builds and checks the release, and a maintainer approves the publish job. Merging to `master` does not publish anything.
 
-```text
-$ make watch
-```
+1. On a branch, bump the version and release the `[Unreleased]` section of `CHANGELOG.md`:
+   ```sh
+   poetry run python dev/release.py prepare 6.0.0
+   ```
+   This sets `version` in `pyproject.toml`, renames `[Unreleased]` to `[v6.0.0]` with today's date, and commits. If you're on `master`, it creates a `release/v6.0.0` branch first. Push the branch, open a PR, and merge it to `master`.
+1. Tag that commit on `master` and push the tag:
+   ```sh
+   git checkout master && git pull
+   poetry run python dev/release.py tag
+   ```
+   This checks that `master` is up to date with `origin/master`, that `v6.0.0` doesn't already exist, and that `CHANGELOG.md` has a `[v6.0.0]` section, then tags and pushes.
+1. When the workflow's build job has finished, approve its publish job on the workflow run's page. The job then publishes to PyPI and creates the GitHub release.
 
-> In order to have OS X notifications, `brew install terminal-notifier`.
+Both commands accept `--dry-run`. For a pre-release, run `poetry run python dev/release.py prepare 6.0.0rc1`: it bumps the version but leaves `CHANGELOG.md` alone, so the notes stay under `[Unreleased]` for the final release. Versions follow [PEP 440](https://peps.python.org/pep-0440/), so pre-releases are `6.0.0a1`, `6.0.0b1` or `6.0.0rc1`, and tagged `v6.0.0rc1`.
 
-# Continuous Integration
+The workflow then:
 
-The CI server will report overall build status:
+1. Checks the tag is on `master` and matches the `pyproject.toml` version.
+1. Lints, tests and builds the commit that was tagged.
+1. Waits for a maintainer to approve the `pypi` environment, then publishes the build to PyPI with [trusted publishing](https://docs.pypi.org/trusted-publishers/).
+1. Creates a GitHub release, using that version's `CHANGELOG.md` section as the release notes. Pre-releases are marked as such on GitHub.
 
-```text
-$ make ci
-```
+### Setup
 
-# Demo Tasks
+The workflow uses PyPI trusted publishing, so there is no PyPI token to store in GitHub secrets. Before the first release:
 
-Run the program:
+1. A maintainer of the PyPI project adds a trusted publisher on pypi.org, under the project's **Publishing** settings:
+   * Publisher: GitHub
+   * Owner: `anvilco`
+   * Repository name: `python-anvil`
+   * Workflow name: `publish.yml`
+   * Environment name: `pypi`
+1. A repository admin creates a `pypi` [environment](https://github.com/anvilco/python-anvil/settings/environments) on GitHub with **Required reviewers** set to the maintainers who may approve a release, and with deployment branches and tags limited to tags matching `v*`. The required reviewers are what makes a publish wait for approval; without them, the job publishes as soon as the build passes.
 
-```text
-$ make run
-````
-
-Launch an IPython session:
-
-```text
-$ make ipython
-```
-
-# Release Tasks
-
-Release to PyPI:
-
-```text
-$ make upload
-```
+No GitHub secrets are needed: the release is created with the workflow's own `GITHUB_TOKEN`.

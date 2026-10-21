@@ -1,5 +1,3 @@
-# pylint: disable=redefined-outer-name,unused-variable,expression-not-assigned,singleton-comparison
-
 from python_anvil.utils import build_batch_filenames, camel_to_snake, create_unique_id
 
 
@@ -34,6 +32,6 @@ def describe_create_unique_id():
 
 def describe_camel_to_snake():
     def test_it():
-        assert camel_to_snake('oneToTwo') == 'one_to_two'
-        assert camel_to_snake('one') == 'one'
-        assert camel_to_snake('TwoTwo') == 'two_two'
+        assert camel_to_snake("oneToTwo") == "one_to_two"
+        assert camel_to_snake("one") == "one"
+        assert camel_to_snake("TwoTwo") == "two_two"

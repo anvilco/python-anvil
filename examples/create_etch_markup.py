@@ -1,5 +1,3 @@
-# pylint: disable=duplicate-code
-
 import os
 
 from python_anvil.api import Anvil
@@ -75,7 +73,7 @@ def main():
                 page_num=0,
                 # The position and size of the field. The coordinates provided here
                 # (x=300, y=300) is the top-left of the rectangle.
-                rect=dict(x=300, y=300, width=250, height=30),
+                rect={"x": 300, "y": 300, "width": 250, "height": 30},
             )
         ],
     )
@@ -142,5 +140,5 @@ def main():
     print(res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from python_anvil.api import Anvil
 from python_anvil.api_resources.payload import ForgeSubmitPayload
@@ -21,10 +21,10 @@ def main():
 
     # Create a payload with the payload model.
     payload = ForgeSubmitPayload(
-        forge_eid=forge_eid, payload=dict(field1="Initial forgeSubmit")
+        forge_eid=forge_eid, payload={"field1": "Initial forgeSubmit"}
     )
 
-    res: Dict[str, Any] = anvil.forge_submit(payload=payload)
+    res: dict[str, Any] = anvil.forge_submit(payload=payload)
 
     data = res.get("forgeSubmit", {})
 
@@ -43,9 +43,9 @@ def main():
         # NOTE: If using a development key, this will `is_test` will always
         # be `True` even if it's set as `False` here.
         is_test=False,
-        payload=dict(
-            field1=f"Edited this field {datetime.now()}",
-        ),
+        payload={
+            "field1": f"Edited this field {datetime.now()}",
+        },
     )
 
     res = anvil.forge_submit(payload=payload)

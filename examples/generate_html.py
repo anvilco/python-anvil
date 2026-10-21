@@ -42,7 +42,7 @@ def main():
     payload = GeneratePDFPayload(
         type="html",
         title="Example HTML to PDF",
-        data=dict(html=HTML, css=CSS),
+        data={"html": HTML, "css": CSS},
     )
 
     # Returns the PDF binary

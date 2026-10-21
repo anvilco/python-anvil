@@ -2,6 +2,7 @@ import base64
 import os
 from io import BufferedReader, BytesIO
 from mimetypes import guess_type
+
 from pydantic import BaseModel, ConfigDict
 
 from python_anvil.api_resources.base import underscore_to_camel
@@ -34,8 +35,8 @@ class FileCompatibleBaseModel(BaseModel):
             return reader
 
     def _check_if_serialization_iterator(self, value):
-        return str(type(value).__name__) == 'SerializationIterator' and hasattr(
-            value, '__next__'
+        return str(type(value).__name__) == "SerializationIterator" and hasattr(
+            value, "__next__"
         )
 
     def _process_file_data(self, file_obj):
@@ -44,32 +45,35 @@ class FileCompatibleBaseModel(BaseModel):
         file_content = file_obj.read()
 
         # Get filename - handle both regular files and BytesIO objects
-        filename = getattr(file_obj, 'name', "document.pdf")
+        filename = getattr(file_obj, "name", "document.pdf")
 
         if isinstance(filename, (bytes, bytearray)):
-            filename = filename.decode('utf-8')
+            filename = filename.decode("utf-8")
 
         # manage mimetype based on file extension
-        mimetype = guess_type(filename)[0] or 'application/pdf'
+        mimetype = guess_type(filename)[0] or "application/pdf"
 
         return {
-            'data': base64.b64encode(file_content).decode('utf-8'),
-            'mimetype': mimetype,
-            'filename': os.path.basename(filename),
+            "data": base64.b64encode(file_content).decode("utf-8"),
+            "mimetype": mimetype,
+            "filename": os.path.basename(filename),
         }
 
     def model_dump(self, **kwargs):
         data = super().model_dump(**kwargs)
         for key, value in data.items():
-            if key == 'file' and self._check_if_serialization_iterator(value):
+            if key == "file" and self._check_if_serialization_iterator(value):
                 # Direct file case
                 file_obj = self._iterator_to_buffered_reader(value)
                 data[key] = self._process_file_data(file_obj)
-            elif key == 'files' and isinstance(value, list):
+            elif key == "files" and isinstance(value, list):
                 # List of objects case
                 for index, item in enumerate(value):
-                    if isinstance(item, dict) and 'file' in item:
-                        if self._check_if_serialization_iterator(item['file']):
-                            file_obj = self._iterator_to_buffered_reader(item['file'])
-                            data[key][index]['file'] = self._process_file_data(file_obj)
+                    if (
+                        isinstance(item, dict)
+                        and "file" in item
+                        and self._check_if_serialization_iterator(item["file"])
+                    ):
+                        file_obj = self._iterator_to_buffered_reader(item["file"])
+                        data[key][index]["file"] = self._process_file_data(file_obj)
         return data

@@ -47,11 +47,7 @@ Example:
 from python_anvil.api import Anvil
 
 anvil = Anvil(api_key="MY KEY")
-data = {
-    "title": "Some Title",
-    "font_size": 10,
-    "data": {"textField": "Some data"}
-}
+data = {"title": "Some Title", "font_size": 10, "data": {"textField": "Some data"}}
 response = anvil.fill_pdf("some_template", data)
 
 # A version number can also be passed in. This will retrieve a specific
@@ -82,9 +78,9 @@ data = {
     "type": "html",
     "title": "Some Title",
     "data": {
-      "html": "<h2>HTML Heading</h2>",
-      "css": "h2 { color: red }",
-    }
+        "html": "<h2>HTML Heading</h2>",
+        "css": "h2 { color: red }",
+    },
 }
 response = anvil.generate_pdf(data)
 ```
@@ -224,9 +220,9 @@ from python_anvil.api_resources.payload import EtchSigner, SignerField
 
 # Use `EtchSigner`
 signer = EtchSigner(
-  name="Taylor Doe",
-  email="tdoe@example.com",
-  fields=[SignerField(file_id="file1", field_id="sig1")]
+    name="Taylor Doe",
+    email="tdoe@example.com",
+    fields=[SignerField(file_id="file1", field_id="sig1")],
 )
 
 # Previously, adding this next field would raise an error, or would be removed from the resulting JSON payload, but this

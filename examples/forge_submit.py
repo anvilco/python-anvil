@@ -19,10 +19,10 @@ def main():
     # More info here: https://www.useanvil.com/docs/api/graphql/reference/#definition-Forge
     payload = ForgeSubmitPayload(
         forge_eid="myForgeEidHere",
-        payload=dict(
-            forge16401fc09c3e11ed85f5a91873b464b4="FirstName LastName",
-            forge1b57aeb09c3e11ed85f5a91873b464b4="myemail@example.com",
-        ),
+        payload={
+            "forge16401fc09c3e11ed85f5a91873b464b4": "FirstName LastName",
+            "forge1b57aeb09c3e11ed85f5a91873b464b4": "myemail@example.com",
+        },
     )
 
     # Submit the above payload
@@ -30,5 +30,5 @@ def main():
     print(res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

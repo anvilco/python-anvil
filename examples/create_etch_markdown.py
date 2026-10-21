@@ -1,5 +1,3 @@
-# pylint: disable=duplicate-code
-
 import os
 
 from python_anvil.api import Anvil
@@ -61,14 +59,14 @@ def main():
         fields=[
             # This is markdown content
             MarkdownContent(
-                table=dict(
-                    rows=[
-                        ['Description', 'Quantity', 'Price'],
-                        ['3x Roof Shingles', '15', '$60.00'],
-                        ['5x Hardwood Plywood', '10', '$300.00'],
-                        ['80x Wood Screws', '80', '$45.00'],
+                table={
+                    "rows": [
+                        ["Description", "Quantity", "Price"],
+                        ["3x Roof Shingles", "15", "$60.00"],
+                        ["5x Hardwood Plywood", "10", "$300.00"],
+                        ["80x Wood Screws", "80", "$45.00"],
                     ],
-                )
+                }
             ),
             SignatureField(
                 page_num=0,
@@ -76,7 +74,7 @@ def main():
                 type="signature",
                 # The position and size of the field. The coordinates provided here
                 # (x=300, y=300) is the top-left of the rectangle.
-                rect=dict(x=300, y=300, width=250, height=30),
+                rect={"x": 300, "y": 300, "width": 250, "height": 30},
             ),
         ],
     )
@@ -137,5 +135,5 @@ def main():
     print(res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

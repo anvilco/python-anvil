@@ -1,9 +1,6 @@
-# pylint: disable=no-self-argument
 import re
 
-# Disabling pylint no-name-in-module because this is the documented way to
-# import `BaseModel` and it's not broken, so let's keep it.
-from pydantic import (  # pylint: disable=no-name-in-module
+from pydantic import (
     BaseModel as _BaseModel,
     ConfigDict,
 )
