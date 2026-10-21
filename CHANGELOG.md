@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `fill_pdf` sends `version_number=0` (it used to drop it), and `generate_etch_signing_url` is also available as `generate_etch_sign_url`.
 - The client's queries and mutations are checked against the API schema in CI, and `make update-schema` refreshes the schema from the published `@anvilco/types` package.
 - Add `test-client.py`, which runs every method against a real environment: `ANVIL_API_KEY=... make test-client`.
+- Add `python_anvil.types`: pydantic models generated from the API's OpenAPI spec and GraphQL schema, the Python counterpart of `@anvilco/types`. `types.rest` has the REST request bodies, `types.graphql` every type in the schema, and `types.operations` the arguments of every query and mutation, like `CreateEtchPacketArgs`. The client's payload models extend them, so `FillPDFPayload`, `EtchSigner`, `CreateEtchPacketPayload` and `ForgeSubmitPayload` now accept every option the API has, and reject misspelled enum values. `ForgeSubmitPayload.webhook_url` is a plain `str` now, not an `HttpUrl`.
+- A Sync API Types workflow refreshes `schema/` and regenerates `python_anvil/types` after each production deploy, opening a PR when anything changed. `make update-schema generate` does the same by hand.
 
 ## [v5.0.3] - 2025-02-24
 

@@ -30,8 +30,16 @@ test-client: install ## Run every method against a real environment (staging by 
 	poetry run python test-client.py
 
 .PHONY: update-schema
-update-schema: install ## Refresh schema/anvil_schema.graphql from the published @anvilco/types
+update-schema: install ## Refresh schema/ from the published @anvilco/types and the API's OpenAPI spec
 	poetry run python dev/fetch_schema.py
+
+.PHONY: generate
+generate: install ## Regenerate python_anvil/types from schema/
+	poetry run python dev/generate_types.py
+
+.PHONY: check-generated
+check-generated: generate ## Fail if python_anvil/types is out of date with schema/
+	git diff --exit-code -- python_anvil/types
 
 .PHONY: build
 build: install ## Build the sdist and wheel into dist/
