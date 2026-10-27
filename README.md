@@ -105,6 +105,7 @@ A plain `dict` works everywhere a model does, and extra fields are kept, so a fe
 * [Constants](#constants)
 * [Errors](#errors)
 * [Rate limits](#rate-limits)
+* [Retries](#retries)
 * [Command line tool](#command-line-tool)
 
 ### Instance methods
@@ -562,6 +563,10 @@ Anvil(
     # fails with a requests.Timeout. A (connect, read) tuple works too; None waits forever.
     timeout=300,
 
+    # How many times to retry a request that got a 500, 502, 503 or 504, or a
+    # connection error. See Retries. 0 turns retries off.
+    max_retries=5,
+
     # A requests.Session to send requests with, e.g. one configured with a proxy.
     # Defaults to a session of the client's own.
     session=None,
@@ -648,13 +653,19 @@ When a request can't be made at all, e.g. because of a network error or a timeou
 
 ### Rate limits
 
-Our API has request rate limits in place. The initial request made by this client will parse the limits for your account from the `X-RateLimit-Limit` and `X-RateLimit-Interval-Ms` response headers, and then handle the throttling of subsequent requests for you automatically. Any requests made while waiting for that first response will wait for it before being sent. The client is thread-safe, so requests from several threads share one limit.
+Our API has request rate limits in place. The initial request made by this client will parse the limits for your account from the `X-RateLimit-Limit` and `X-RateLimit-Interval-Ms` response headers, and then handle the throttling of subsequent requests for you automatically. Any requests made while waiting for that first response will wait for it before being sent.
+
+The limit is your account's, so every client in the process with the same `base_url` and credentials shares one limiter, and the limits it learned. An app that makes a new client for each request is limited as a whole, and the client is thread-safe, so requests from several threads share the limit too. The `request_limit` and `request_limit_ms` options are the starting limits until the first response, and only apply to the first client made for those credentials. Separate processes, like web server workers, each learn the limits for themselves.
 
 Like the API, the client counts requests over a sliding window: it only holds a request back when `X-RateLimit-Limit` requests have already been sent in the last `X-RateLimit-Interval-Ms`.
 
-In the event that this client still receives a `429 Too Many Requests` error response, it will wait for the number of seconds in the `Retry-After` header, plus 50ms, then retry the request.
+In the event that this client still receives a `429 Too Many Requests` error response, it will wait for the number of seconds in the `Retry-After` header, plus 50ms, then retry the request. Without a `Retry-After` it waits a second.
 
 See the [Anvil API docs](https://www.useanvil.com/docs/api/getting-started/#rate-limits) for more information on the specifics of the rate limits.
+
+### Retries
+
+A request that gets a `500`, `502`, `503` or `504`, or that can't connect, is retried up to `max_retries` times (5 by default) with exponential backoff: 100ms before the first retry, then 200ms, 400ms, and so on, or a `503`'s `Retry-After` when it has one. Retries wait for the rate limit like any request, and an upload is sent in full again. Mutations are retried as well, so a request the API processed but answered with a `5xx` could be sent twice; pass `max_retries=0` to turn retries off for a client that must not do that. A request that still fails raises an [`AnvilRequestError`](#errors) with the last response, or the `requests.ConnectionError`.
 
 ## Command line tool
 
