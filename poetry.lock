@@ -519,14 +519,14 @@ websockets = ["websockets (>=10.1,<14)"]
 
 [[package]]
 name = "graphql-core"
-version = "3.3.0"
-description = "GraphQL-core is a Python port of GraphQL.js, the JavaScript reference implementation for GraphQL."
+version = "3.3.0a3"
+description = "GraphQL-core is a Python port of GraphQL.js,the JavaScript reference implementation for GraphQL."
 optional = false
-python-versions = ">=3.10"
+python-versions = ">=3.7,<4.0"
 groups = ["main"]
 files = [
-    {file = "graphql_core-3.3.0-py3-none-any.whl", hash = "sha256:d37fac6ef4dfc3eaa5daa59dcb498d7cbb118439d240993c68fddc4cb1bade44"},
-    {file = "graphql_core-3.3.0.tar.gz", hash = "sha256:fd3424e88af3f3211931c6ff96350f1cd9069cf0f1a31b9972899e35d39136b5"},
+    {file = "graphql_core-3.3.0a3-py3-none-any.whl", hash = "sha256:b441346e61b2d7465a6f4001334ba1ddb123498a7e9dfe76cd323db8159aa707"},
+    {file = "graphql_core-3.3.0a3.tar.gz", hash = "sha256:065d23881d00d0b52b9a7c0a8d63451585549c13f3f05a214923b20dabbda290"},
 ]
 
 [[package]]
@@ -1813,4 +1813,4 @@ cli = ["click", "tabulate"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.16"
-content-hash = "34af4bdd082996a53439214f71319162fc7055e70a0f0949b11f60aaa2a5a557"
+content-hash = "1a8bc9355021cbad4152bbe95ee07d757483b1e579ad2e0784b7b7f6f0917cdd"
