@@ -47,8 +47,26 @@ def describe_rate_limiter():
 
         limiter.run(lambda: response())
 
-        assert limiter.has_set_from_response
+        assert not limiter.has_set_from_response
         assert (limiter.limit, limiter.interval_ms) == (3, 500)
+
+    def it_takes_the_limits_from_the_first_response_that_has_them():
+        limiter = RateLimiter(3, 500)
+
+        limiter.run(lambda: response(status=502))
+        limiter.run(
+            lambda: response(
+                headers={"x-ratelimit-limit": "40", "x-ratelimit-interval-ms": "1000"}
+            )
+        )
+        limiter.run(
+            lambda: response(
+                headers={"x-ratelimit-limit": "2", "x-ratelimit-interval-ms": "100"}
+            )
+        )
+
+        assert limiter.has_set_from_response
+        assert (limiter.limit, limiter.interval_ms) == (40, 1000)
 
     def it_holds_other_requests_until_the_first_response():
         limiter = RateLimiter(10, 1000)
@@ -98,7 +116,7 @@ def describe_rate_limiter():
 
         # Would hang if the setup gate were still closed
         limiter.run(lambda: response())
-        assert limiter.has_set_from_response
+        assert limiter._gate_open
 
     def it_waits_when_the_limit_is_reached():
         limiter = RateLimiter(2, 200)
@@ -151,6 +169,7 @@ def describe_retry_delay_seconds():
         assert retry_delay_seconds("0.5") == 0.55
         assert retry_delay_seconds("-1") == 1.05
 
-    def it_is_only_the_buffer_without_retry_after():
-        assert retry_delay_seconds(None) == 0.05
-        assert retry_delay_seconds("soon") == 0.05
+    def it_waits_a_second_without_a_usable_retry_after():
+        assert retry_delay_seconds(None) == 1.05
+        assert retry_delay_seconds("soon") == 1.05
+        assert retry_delay_seconds("Wed, 21 Oct 2026 07:28:00 GMT") == 1.05

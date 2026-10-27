@@ -93,6 +93,7 @@ class Anvil:
     def __init__(
         self,
         api_key: str | None = None,
+        environment: str | None = None,
         *,
         access_token: str | None = None,
         base_url: str = DEFAULT_BASE_URL,
@@ -101,7 +102,6 @@ class Anvil:
         request_limit_ms: int = DEFAULT_REQUEST_LIMIT_MS,
         timeout: float | tuple[float, float] | None = DEFAULT_TIMEOUT,
         session: requests.Session | None = None,
-        environment: str | None = None,
         endpoint_url: str | None = None,
     ):
         if endpoint_url is not None:

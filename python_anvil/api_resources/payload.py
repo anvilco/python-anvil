@@ -4,7 +4,6 @@ from typing import Any, Literal
 from pydantic import (
     ConfigDict,
     Field,
-    HttpUrl,
     field_validator,
 )
 
@@ -241,7 +240,7 @@ class ForgeSubmitPayload(BaseModel):
     # even when `False` is used in the payload.
     is_test: bool | None = True
     timezone: str | None = None
-    webhook_url: HttpUrl | None = Field(None, alias="webhookURL")
+    webhook_url: str | None = Field(None, alias="webhookURL")
     group_array_id: str | None = None
     group_array_index: int | None = None
 

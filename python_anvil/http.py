@@ -22,7 +22,6 @@ from python_anvil.constants import (
 )
 from python_anvil.errors import (
     AnvilRequestError,
-    looks_like_json_error,
     normalize_exception,
     normalize_json_errors,
 )
@@ -61,12 +60,25 @@ class HTTPClient:
         self.auth_header = build_auth_header(api_key, access_token)
         self.user_agent = user_agent or default_user_agent()
         self.timeout = timeout
+        self._owns_session = session is None
         self.session = session or requests.Session()
         self.rate_limiter = RateLimiter(request_limit, request_limit_ms)
 
     def url(self, path_or_url: str) -> str:
-        """The full URL for a path like `/api/v1/fill/abc.pdf`. A full URL on the base URL is used as-is."""
-        if path_or_url.startswith(self.base_url):
+        """The full URL for a path like `/api/v1/fill/abc.pdf`.
+
+        A full URL is used as-is if it is on the base URL. One on another host
+        is refused: it would get this client's credentials.
+        """
+        parts = urlsplit(path_or_url)
+        if parts.scheme or parts.netloc:
+            base = urlsplit(self.base_url)
+            if (parts.scheme, parts.netloc) != (base.scheme, base.netloc):
+                raise ValueError(
+                    f"{path_or_url!r} is not on this client's base_url, "
+                    f"{self.base_url}. Pass a path like /api/v1/..., or make a "
+                    "client with that base_url."
+                )
             return path_or_url
         return f"{self.base_url}/{path_or_url.lstrip('/')}"
 
@@ -115,7 +127,9 @@ class HTTPClient:
         return self.rate_limiter.run(send)
 
     def close(self) -> None:
-        self.session.close()
+        """Close the HTTP session, if it is the client's own."""
+        if self._owns_session:
+            self.session.close()
 
 
 def process_response(
@@ -123,8 +137,9 @@ def process_response(
 ) -> Any:
     """The data in a response, or an `AnvilRequestError` if it is an error.
 
-    Whatever was asked for, a JSON response is parsed and checked for errors:
-    the API answers every request with JSON when something is wrong.
+    An error is any status outside 2xx, or a 2xx GraphQL response with
+    `errors`. Whatever was asked for, a JSON response is parsed: the API
+    answers every request with JSON when something is wrong.
     """
     if data_type not in DATA_TYPES:
         raise ValueError(f"data_type must be one of: {'|'.join(DATA_TYPES)}")
@@ -144,13 +159,20 @@ def process_response(
                 "Problem parsing the JSON response for status %s: %s", status_code, e
             )
 
-    if parse_error or looks_like_json_error(json_body) or status_code >= 300:
+    graphql_errors = isinstance(json_body, Mapping) and bool(json_body.get("errors"))
+    if parse_error or graphql_errors or status_code >= 300:
+        status_text = response.reason or "Unknown Error"
         if parse_error:
             errors = normalize_exception(parse_error)
+        elif is_json:
+            errors = normalize_json_errors(json_body, status_text)
         else:
-            errors = normalize_json_errors(
-                json_body, response.reason or "Unknown Error"
-            )
+            # Not JSON, so not from the API itself: a proxy or a load balancer.
+            # Keep some of the body, which is all there is to go on.
+            errors = normalize_json_errors(None, status_text)
+            body = _body_snippet(response)
+            if body:
+                errors[0]["body"] = body
         # A GraphQL response can have data alongside its errors
         data = json_body.get("data") if isinstance(json_body, Mapping) else None
         response.close()
@@ -162,8 +184,16 @@ def process_response(
             response=response,
         )
 
-    if is_json or data_type == DATA_TYPE_JSON:
-        return json_body if is_json else response.json()
+    if is_json:
+        return json_body
+    if data_type == DATA_TYPE_JSON:
+        try:
+            return response.json()
+        except ValueError as e:
+            raise ValueError(
+                f"Expected a JSON response, but got {content_type or 'no content type'}. "
+                "Pass data_type='bytes' or 'stream' for a binary endpoint."
+            ) from e
     if data_type == DATA_TYPE_BYTES:
         return response.content
     if data_type == DATA_TYPE_STREAM:
@@ -171,6 +201,13 @@ def process_response(
     raise ValueError(
         f"data_type must be one of: {'|'.join(DATA_TYPES)}"
     )  # pragma: no cover
+
+
+def _body_snippet(response: requests.Response, limit: int = 2000) -> str:
+    try:
+        return response.content[:limit].decode(response.encoding or "utf-8", "replace")
+    except Exception:
+        return ""
 
 
 def normalize_base_url(base_url: str) -> str:

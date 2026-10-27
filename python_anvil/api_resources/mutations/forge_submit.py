@@ -15,7 +15,7 @@ class ForgeSubmit(BaseQuery):
     default_response_query = DEFAULT_RESPONSE_QUERY
 
     def get_mutation(self, response_query: str | None = None) -> str:
-        return generate_mutation(response_query or self.default_response_query)
+        return generate_mutation(self.response_fields(response_query))
 
     def __init__(
         self,

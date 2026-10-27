@@ -8,6 +8,7 @@ import io
 import threading
 import time
 from pathlib import Path
+from unittest import mock
 
 import pytest
 import requests
@@ -216,8 +217,34 @@ def describe_rate_limiting():
         client.request_rest("GET", "/api/v1/x")
 
         limiter = client.client.rate_limiter
-        assert limiter.has_set_from_response
+        assert not limiter.has_set_from_response
         assert (limiter.limit, limiter.interval_ms) == (4, 500)
+
+    def it_takes_the_limits_from_a_later_response_when_the_first_had_none(
+        server, client
+    ):
+        server.respond_in_turn(
+            {
+                "status": 502,
+                "body": b"bad gateway",
+                "headers": {"x-ratelimit-limit": "", "x-ratelimit-interval-ms": ""},
+            },
+            {
+                "json": {},
+                "headers": {
+                    "x-ratelimit-limit": "7",
+                    "x-ratelimit-interval-ms": "3000",
+                },
+            },
+        )
+
+        with pytest.raises(AnvilRequestError):
+            client.request_rest("GET", "/api/v1/x")
+        client.request_rest("GET", "/api/v1/x")
+
+        limiter = client.client.rate_limiter
+        assert limiter.has_set_from_response
+        assert (limiter.limit, limiter.interval_ms) == (7, 3000)
 
     def it_holds_concurrent_requests_until_the_first_response_sets_the_limits(
         server, client
@@ -336,16 +363,14 @@ def describe_rate_limiting():
         first, second = server.requests
         assert second.received_at - first.responded_at >= 0.25
 
-    def it_retries_a_429_after_only_the_buffer_when_there_is_no_retry_after(
-        server, client
-    ):
+    def it_retries_a_429_after_a_second_when_there_is_no_retry_after(server, client):
         server.respond_in_turn({"status": 429, "body": b""}, {"json": {"ok": True}})
 
         data = client.request_rest("GET", "/api/v1/x")
 
         assert data == {"ok": True}
         first, second = server.requests
-        assert 0.05 <= second.received_at - first.responded_at < 0.5
+        assert 1.0 <= second.received_at - first.responded_at < 2
 
     def it_keeps_retrying_until_the_request_is_not_rate_limited(server, client):
         server.respond_in_turn(
@@ -432,8 +457,56 @@ def describe_errors():
 
         assert excinfo.value.status_code == 502
         assert excinfo.value.errors == [
-            {"name": "Bad Gateway", "message": "Bad Gateway"}
+            {
+                "name": "Bad Gateway",
+                "message": "Bad Gateway",
+                "body": "<html>Bad Gateway</html>",
+            }
         ]
+
+    def it_keeps_the_body_of_a_non_json_error_when_streaming(server, client):
+        server.respond(
+            {
+                "status": 503,
+                "body": b"upstream down",
+                "headers": {"content-type": "text/plain"},
+            }
+        )
+
+        with pytest.raises(AnvilRequestError) as excinfo:
+            client.download_documents("dg", data_type="stream")
+
+        assert excinfo.value.errors[0]["body"] == "upstream down"
+
+    def it_does_not_treat_a_2xx_json_body_with_a_name_as_an_error(server, client):
+        server.respond({"json": {"name": "My Cast", "eid": "abc"}})
+
+        assert client.request_rest("GET", "/api/v1/x") == {
+            "name": "My Cast",
+            "eid": "abc",
+        }
+
+    def it_treats_a_4xx_json_body_with_a_name_as_an_error(server, client):
+        server.respond({"status": 404, "json": {"name": "NotFound", "message": "Nope"}})
+
+        with pytest.raises(AnvilRequestError, match=r"404: NotFound: Nope"):
+            client.request_rest("GET", "/api/v1/x")
+
+    def it_explains_json_asked_of_a_binary_endpoint(server, client):
+        server.respond(
+            {"body": b"%PDF-", "headers": {"content-type": "application/pdf"}}
+        )
+
+        with pytest.raises(
+            ValueError, match=r"Expected a JSON response, but got application/pdf"
+        ):
+            client.request_rest("GET", "/api/v1/x")
+
+    def it_refuses_a_full_url_on_another_host(client):
+        with pytest.raises(ValueError, match=r"is not on this client's base_url"):
+            client.request_rest("GET", "https://app.useanvil.com/api/v1/x")
+        with pytest.raises(ValueError):
+            client.request_rest("GET", "https://app.useanvil.com.evil.example/x")
 
     def it_uses_the_status_text_for_an_empty_error_response(server, client):
         server.respond({"status": 500, "body": b""})
@@ -704,7 +777,24 @@ def describe_responses():
 
         assert server.requests[0].headers["x-from-session"] == "yes"
 
-    def it_closes_the_session_as_a_context_manager(make_client):
+    def it_closes_its_own_session_as_a_context_manager(make_client):
         with make_client() as client:
             session = client.client.session
         assert isinstance(session, requests.Session)
+
+    def it_does_not_close_a_session_it_was_given(server, make_client):
+        session = requests.Session()
+        with mock.patch.object(session, "close") as close, make_client(session=session):
+            pass
+        close.assert_not_called()
+
+    def it_sends_a_plain_variable_called_file_as_json(server, client):
+        server.respond({"json": {"data": {"x": 1}}})
+
+        client.request_graphql(
+            "mutation ($file: String!) { x(file: $file) }", {"file": "abc"}
+        )
+
+        request = server.requests[0]
+        assert request.headers["content-type"] == "application/json"
+        assert request.json["variables"] == {"file": "abc"}

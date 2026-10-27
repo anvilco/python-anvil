@@ -81,9 +81,37 @@ def describe_init():
         with pytest.warns(DeprecationWarning, match="`environment` does nothing"):
             Anvil(DEV_KEY, environment="prod")
 
-    def it_only_takes_the_api_key_positionally():
+    def it_still_takes_environment_positionally_with_a_warning():
+        with pytest.warns(DeprecationWarning, match="`environment` does nothing"):
+            client = Anvil(DEV_KEY, "prod")
+        assert client.base_url == "https://app.useanvil.com"
+
+    def it_takes_the_other_options_by_keyword_only():
         with pytest.raises(TypeError):
-            Anvil(DEV_KEY, "https://staging.useanvil.com")  # type: ignore[misc]
+            Anvil(DEV_KEY, "prod", "https://staging.useanvil.com")  # type: ignore[misc]
+
+    def it_honours_mutation_res_query_from_before_6(anvil, graphql):
+        from python_anvil.api_resources.mutations import CreateEtchPacket
+
+        builder = CreateEtchPacket(name="Packet")
+        builder.mutation_res_query = "{ eid }"
+        anvil.create_etch_packet(builder)
+        assert graphql.call_args.args[
+            0
+        ] == mutations.create_etch_packet.generate_mutation("{ eid }")
+        # An explicit response_query still wins
+        anvil.create_etch_packet(builder, response_query="{ eid name }")
+        assert graphql.call_args.args[
+            0
+        ] == mutations.create_etch_packet.generate_mutation("{ eid name }")
+
+    def it_sends_a_forge_submit_webhook_url(anvil, graphql):
+        anvil.forge_submit(
+            {"forge_eid": "f", "payload": {}, "webhook_url": "https://example.com/hook"}
+        )
+        variables = graphql.call_args.args[1]
+        assert variables["webhookURL"] == "https://example.com/hook"
+        json.dumps(variables)
 
 
 def describe_version_constants():

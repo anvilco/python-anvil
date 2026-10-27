@@ -24,6 +24,8 @@ DEFAULT_REQUEST_LIMIT_MS = 1000
 # Added to every wait for the rate limit, and to a 429's Retry-After, to allow
 # for requests that were sent further apart than they arrive
 RETRY_BUFFER_MS = 50
+# How long to wait before retrying a 429 that has no usable Retry-After header
+DEFAULT_RETRY_AFTER_MS = 1000
 
 # Seconds to wait for a connection, and then for each read, before giving up
 DEFAULT_TIMEOUT = 300

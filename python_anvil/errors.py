@@ -35,19 +35,25 @@ class AnvilRequestError(AnvilError):
 
     def __init__(
         self,
-        errors: list[dict[str, Any]],
+        errors: list[dict[str, Any]] | str,
         *,
-        status_code: int,
+        status_code: int = 0,
         headers: Mapping[str, str] | None = None,
         data: Any = None,
         response: requests.Response | None = None,
     ):
+        # A plain message, the way AnvilRequestException was raised before 6.0.0
+        if isinstance(errors, str):
+            errors = [{"message": errors}]
         self.errors = errors
         self.status_code = status_code
         self.headers: Mapping[str, str] = headers or {}
         self.data = data
         self.response = response
-        super().__init__(f"{status_code}: {'; '.join(format_error(e) for e in errors)}")
+        description = "; ".join(format_error(e) for e in errors) or "Unknown Error"
+        super().__init__(
+            f"{status_code}: {description}" if status_code else description
+        )
 
     @property
     def message(self) -> str:

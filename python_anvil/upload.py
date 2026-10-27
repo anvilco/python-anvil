@@ -173,7 +173,11 @@ def validate_upload_schema(
         # Another form of the Upload scalar, like {"url": ...}
         return True
 
-    return is_file(value)
+    if isinstance(value, (list, tuple)):
+        return all(validate_upload_schema(child, value) for child in value)
+
+    # A file, or a plain value that happens to be called `file`
+    return True
 
 
 class MultipartRequest:

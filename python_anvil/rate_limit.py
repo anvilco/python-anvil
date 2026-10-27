@@ -27,6 +27,7 @@ import requests
 from python_anvil.constants import (
     DEFAULT_REQUEST_LIMIT,
     DEFAULT_REQUEST_LIMIT_MS,
+    DEFAULT_RETRY_AFTER_MS,
     RETRY_BUFFER_MS,
 )
 
@@ -54,9 +55,12 @@ class RateLimiter:
 
         # When the requests in the current window were sent, oldest first
         self._request_times: deque[float] = deque()
-        # Whether the limits have been set from an API response
+        # Whether the limits have been set from an API response. Until they
+        # have, every response is checked for the headers.
         self.has_set_from_response = False
-        # Whether a request is out whose response will set the limits
+        # Whether the first response has arrived, whatever it carried. Until
+        # it has, only the request whose response it will be may go.
+        self._gate_open = False
         self._setting_in_progress = False
 
     def set_limits(self, limit: Any, interval_ms: Any) -> bool:
@@ -73,23 +77,31 @@ class RateLimiter:
         return True
 
     def update_from_headers(self, headers: Mapping[str, Any]) -> None:
-        """Set the limits from a response's rate limit headers, the first time only."""
+        """Set the limits from a response's rate limit headers.
+
+        The first response, whatever it carries, lets the requests waiting on
+        it go. The limits are taken from the first response that has them: a
+        response from a proxy, or an error served before the API's rate limit
+        middleware, doesn't fix the client at its starting limits for good.
+        """
         with self._condition:
-            if self.has_set_from_response:
-                return
-            self.has_set_from_response = True
+            self._gate_open = True
             self._setting_in_progress = False
             self._condition.notify_all()
 
-        if not self.set_limits(
-            _header(headers, LIMIT_HEADER), _header(headers, INTERVAL_HEADER)
-        ):
-            logger.debug(
-                "The response had no valid rate limit headers; keeping %s requests "
-                "per %sms",
-                self.limit,
-                self.interval_ms,
-            )
+            if self.has_set_from_response:
+                return
+            if self.set_limits(
+                _header(headers, LIMIT_HEADER), _header(headers, INTERVAL_HEADER)
+            ):
+                self.has_set_from_response = True
+            else:
+                logger.debug(
+                    "The response had no valid rate limit headers; keeping %s "
+                    "requests per %sms until one does",
+                    self.limit,
+                    self.interval_ms,
+                )
 
     def run(self, send: Callable[[], requests.Response]) -> requests.Response:
         """Call `send` when the rate limit allows, retrying it after any 429.
@@ -124,11 +136,11 @@ class RateLimiter:
 
     def _wait_for_turn(self) -> None:
         with self._condition:
-            # Until the first response has set the limits, only the request
-            # whose response will set them may go
-            while self._setting_in_progress and not self.has_set_from_response:
+            # Until the first response has arrived, only the request whose
+            # response it will be may go
+            while self._setting_in_progress and not self._gate_open:
                 self._condition.wait()
-            if not self.has_set_from_response:
+            if not self._gate_open:
                 self._setting_in_progress = True
 
             # Wait until another request would keep us within `limit` requests
@@ -151,17 +163,22 @@ class RateLimiter:
 
     def _release_setup_gate(self) -> None:
         with self._condition:
-            if not self.has_set_from_response:
+            if not self._gate_open:
                 self._setting_in_progress = False
                 self._condition.notify_all()
 
 
 def retry_delay_seconds(retry_after: Any) -> float:
-    """How long to wait before retrying a 429: its Retry-After seconds plus the buffer."""
+    """How long to wait before retrying a 429: its Retry-After seconds plus the buffer.
+
+    Without a usable Retry-After (the header is optional, and may be an HTTP
+    date), a second: retrying every 50ms would hammer a server that is
+    already turning requests away.
+    """
     try:
         seconds = abs(float(retry_after))
     except (TypeError, ValueError):
-        seconds = 0.0
+        seconds = DEFAULT_RETRY_AFTER_MS / 1000
     return seconds + RETRY_BUFFER_MS / 1000
 
 

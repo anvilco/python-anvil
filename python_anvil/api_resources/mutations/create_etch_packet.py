@@ -80,7 +80,7 @@ class CreateEtchPacket(BaseQuery):
         self.allow_updates = allow_updates
 
     def get_mutation(self, response_query: str | None = None) -> str:
-        return generate_mutation(response_query or self.default_response_query)
+        return generate_mutation(self.response_fields(response_query))
 
     @classmethod
     def create_from_dict(cls, payload: dict) -> "CreateEtchPacket":

@@ -118,6 +118,12 @@ def describe_anvil_request_error():
         )
         assert str(error) == "400: ValidationError (data: Required, Too long)"
 
+    def it_can_be_raised_with_just_a_message_like_before_6():
+        error = AnvilRequestError("Rate limit exceeded")
+        assert str(error) == "Rate limit exceeded"
+        assert error.errors == [{"message": "Rate limit exceeded"}]
+        assert error.status_code == 0
+
     def it_is_an_anvil_error_and_an_exception():
         error = AnvilRequestError([], status_code=500)
         assert isinstance(error, AnvilError)
