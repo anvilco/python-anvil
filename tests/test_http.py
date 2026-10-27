@@ -225,8 +225,8 @@ def describe_rate_limiting():
     ):
         server.respond_in_turn(
             {
-                "status": 502,
-                "body": b"bad gateway",
+                "status": 401,
+                "body": b"unauthorized",
                 "headers": {"x-ratelimit-limit": "", "x-ratelimit-interval-ms": ""},
             },
             {
@@ -798,3 +798,198 @@ def describe_responses():
         request = server.requests[0]
         assert request.headers["content-type"] == "application/json"
         assert request.json["variables"] == {"file": "abc"}
+
+
+def describe_retries():
+    def it_retries_a_503_and_returns_the_eventual_response(server, client):
+        server.respond_in_turn(
+            {"status": 503, "body": b"upstream down"}, {"json": {"ok": True}}
+        )
+
+        assert client.request_rest("GET", "/api/v1/x") == {"ok": True}
+        first, second = server.requests
+        assert second.received_at - first.responded_at >= 0.1
+
+    @pytest.mark.parametrize("status", [500, 502, 503, 504])
+    def it_retries_each_5xx_that_gql_retried(server, client, status):
+        server.respond_in_turn({"status": status, "body": b""}, {"json": {"ok": True}})
+
+        assert client.request_rest("GET", "/api/v1/x") == {"ok": True}
+        assert len(server.requests) == 2
+
+    def it_does_not_retry_a_4xx(server, client):
+        server.respond({"status": 400, "json": {"message": "Bad"}})
+
+        with pytest.raises(AnvilRequestError):
+            client.request_rest("GET", "/api/v1/x")
+        assert len(server.requests) == 1
+
+    def it_gives_up_after_max_retries(server, make_client):
+        client = make_client(max_retries=2)
+        server.respond({"status": 502, "body": b"nope"})
+
+        with pytest.raises(AnvilRequestError) as excinfo:
+            client.request_rest("GET", "/api/v1/x")
+
+        assert excinfo.value.status_code == 502
+        assert len(server.requests) == 3
+
+    def it_can_be_turned_off(server, make_client):
+        client = make_client(max_retries=0)
+        server.respond({"status": 503, "body": b""})
+
+        with pytest.raises(AnvilRequestError):
+            client.request_rest("GET", "/api/v1/x")
+        assert len(server.requests) == 1
+
+    def it_backs_off_exponentially(server, make_client):
+        client = make_client(max_retries=3)
+        server.respond_in_turn(
+            {"status": 503, "body": b""},
+            {"status": 503, "body": b""},
+            {"status": 503, "body": b""},
+            {"json": {"ok": True}},
+        )
+
+        client.request_rest("GET", "/api/v1/x")
+
+        gaps = [
+            later.received_at - earlier.responded_at
+            for earlier, later in zip(
+                server.requests, server.requests[1:], strict=False
+            )
+        ]
+        assert gaps[0] >= 0.1 and gaps[1] >= 0.2 and gaps[2] >= 0.4
+
+    def it_waits_for_retry_after_on_a_503(server, client):
+        server.respond_in_turn(
+            {"status": 503, "body": b"", "headers": {"retry-after": "0.5"}},
+            {"json": {"ok": True}},
+        )
+
+        client.request_rest("GET", "/api/v1/x")
+
+        first, second = server.requests
+        assert second.received_at - first.responded_at >= 0.5
+
+    def it_retries_a_mutation_with_its_files(server, client):
+        server.respond_in_turn({"status": 502, "body": b""}, {"json": {"data": {}}})
+
+        client.request_graphql(
+            "mutation { x }",
+            {"input": {"file": Anvil.prepare_graphql_file(str(DUMMY_PDF))}},
+        )
+
+        first, second = server.requests
+        assert first.multipart_parts()["1"].body == DUMMY_PDF.read_bytes()
+        assert second.multipart_parts()["1"].body == DUMMY_PDF.read_bytes()
+
+    def it_retries_a_connection_error(make_client):
+        session = mock.Mock(spec=requests.Session)
+        good = mock.Mock(status_code=200, headers={"content-type": "application/json"})
+        good.json.return_value = {"ok": True}
+        session.request.side_effect = [
+            requests.ConnectionError("refused"),
+            requests.ConnectionError("refused"),
+            good,
+        ]
+        client = make_client(session=session, max_retries=2)
+
+        assert client.request_rest("GET", "/api/v1/x") == {"ok": True}
+        assert session.request.call_count == 3
+
+    def it_raises_the_connection_error_after_max_retries(make_client):
+        session = mock.Mock(spec=requests.Session)
+        session.request.side_effect = requests.ConnectionError("refused")
+        client = make_client(session=session, max_retries=1)
+
+        with pytest.raises(requests.ConnectionError):
+            client.request_rest("GET", "/api/v1/x")
+        assert session.request.call_count == 2
+
+    def it_counts_retries_against_the_rate_limit(server, make_client):
+        client = make_client(request_limit=1, request_limit_ms=300)
+        server.respond_in_turn(
+            {
+                "status": 503,
+                "body": b"",
+                "headers": {"x-ratelimit-limit": "1", "x-ratelimit-interval-ms": "300"},
+            },
+            {"json": {"ok": True}},
+        )
+
+        client.request_rest("GET", "/api/v1/x")
+
+        first, second = server.requests
+        assert second.received_at - first.received_at >= 0.3
+
+
+def describe_the_shared_rate_limiter():
+    def it_is_shared_by_clients_with_the_same_base_url_and_credentials(
+        server, make_client
+    ):
+        first, second = make_client(api_key="k"), make_client(api_key="k")
+        server.respond(
+            {
+                "json": {},
+                "headers": {
+                    "x-ratelimit-limit": "7",
+                    "x-ratelimit-interval-ms": "3000",
+                },
+            }
+        )
+
+        first.request_rest("GET", "/api/v1/x")
+
+        assert second.client.rate_limiter is first.client.rate_limiter
+        assert (
+            second.client.rate_limiter.limit,
+            second.client.rate_limiter.interval_ms,
+        ) == (7, 3000)
+
+    def it_is_separate_for_other_credentials_or_hosts(make_client):
+        base = make_client(api_key="k")
+        assert (
+            make_client(api_key="other").client.rate_limiter
+            is not base.client.rate_limiter
+        )
+        assert (
+            Anvil("k", base_url="https://app.useanvil.com").client.rate_limiter
+            is not base.client.rate_limiter
+        )
+
+    def it_limits_clients_together(server, make_client):
+        server.respond(
+            {
+                "json": {},
+                "headers": {"x-ratelimit-limit": "2", "x-ratelimit-interval-ms": "300"},
+            }
+        )
+        clients = [
+            make_client(api_key="k", request_limit=2, request_limit_ms=300)
+            for _ in range(3)
+        ]
+
+        threads = [
+            threading.Thread(target=c.request_rest, args=("GET", "/api/v1/x"))
+            for c in clients
+            for _ in range(2)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        times = sorted(request.received_at for request in server.requests)
+        assert len(times) == 6
+        for i in range(len(times) - 2):
+            assert times[i + 2] - times[i] >= 0.3
+
+    def it_takes_the_starting_limits_from_the_first_client(make_client):
+        first = make_client(api_key="k", request_limit=5, request_limit_ms=2000)
+        second = make_client(api_key="k", request_limit=1, request_limit_ms=1000)
+        assert (
+            second.client.rate_limiter.limit,
+            second.client.rate_limiter.interval_ms,
+        ) == (5, 2000)
+        assert second.client.rate_limiter is first.client.rate_limiter

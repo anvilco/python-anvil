@@ -29,3 +29,11 @@ DEFAULT_RETRY_AFTER_MS = 1000
 
 # Seconds to wait for a connection, and then for each read, before giving up
 DEFAULT_TIMEOUT = 300
+
+# How many times to retry a request that failed with one of these statuses or
+# with a connection error, and the backoff before the first retry, doubled
+# each time: 100ms, 200ms, 400ms, 800ms, 1.6s. The same policy gql's transport
+# applied before 6.0.0.
+DEFAULT_MAX_RETRIES = 5
+RETRY_STATUSES = (500, 502, 503, 504)
+RETRY_BACKOFF_MS = 100

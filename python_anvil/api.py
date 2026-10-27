@@ -28,6 +28,7 @@ from python_anvil.constants import (
     DATA_TYPE_BYTES,
     DATA_TYPE_JSON,
     DEFAULT_BASE_URL,
+    DEFAULT_MAX_RETRIES,
     DEFAULT_REQUEST_LIMIT,
     DEFAULT_REQUEST_LIMIT_MS,
     DEFAULT_TIMEOUT,
@@ -80,8 +81,16 @@ class Anvil:
     :param timeout: Seconds to wait for a connection, and then for each read,
         before a request fails. A `(connect, read)` tuple is also accepted.
         Defaults to 5 minutes; `None` waits forever.
+    :param max_retries: How many times to retry a request that got a 500,
+        502, 503 or 504, or a connection error, with exponential backoff
+        from 100ms. Defaults to 5; `0` disables retries. Mutations are
+        retried too, as they were before 6.0.0.
     :param session: A `requests.Session` to send requests with, e.g. one
         configured with a proxy. Defaults to a session of the client's own.
+
+    Every client in the process with the same `base_url` and credentials
+    shares one rate limiter, and so the limits the API taught it. The
+    starting `request_limit` only applies to the first of them.
     """
 
     # Version number to use for latest versions (usually drafts)
@@ -101,6 +110,7 @@ class Anvil:
         request_limit: int = DEFAULT_REQUEST_LIMIT,
         request_limit_ms: int = DEFAULT_REQUEST_LIMIT_MS,
         timeout: float | tuple[float, float] | None = DEFAULT_TIMEOUT,
+        max_retries: int = DEFAULT_MAX_RETRIES,
         session: requests.Session | None = None,
         endpoint_url: str | None = None,
     ):
@@ -128,6 +138,7 @@ class Anvil:
             request_limit=request_limit,
             request_limit_ms=request_limit_ms,
             timeout=timeout,
+            max_retries=max_retries,
             session=session,
         )
 

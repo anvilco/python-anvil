@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Callable, Mapping
 from typing import Any
 from urllib.parse import urlsplit
@@ -16,16 +17,19 @@ from python_anvil.constants import (
     DATA_TYPE_STREAM,
     DATA_TYPES,
     DEFAULT_BASE_URL,
+    DEFAULT_MAX_RETRIES,
     DEFAULT_REQUEST_LIMIT,
     DEFAULT_REQUEST_LIMIT_MS,
     DEFAULT_TIMEOUT,
+    RETRY_BACKOFF_MS,
+    RETRY_STATUSES,
 )
 from python_anvil.errors import (
     AnvilRequestError,
     normalize_exception,
     normalize_json_errors,
 )
-from python_anvil.rate_limit import RateLimiter
+from python_anvil.rate_limit import RateLimiter, shared_limiter
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +45,8 @@ class HTTPClient:
     """Sends requests to one Anvil environment with one set of credentials.
 
     Every request gets the Authorization and User-Agent headers, waits for the
-    rate limit, and is retried after a 429. See `RateLimiter`.
+    rate limit, and is retried after a 429 (see `RateLimiter`), a 5xx or a
+    connection error (see `max_retries`).
     """
 
     def __init__(
@@ -54,15 +59,20 @@ class HTTPClient:
         request_limit: int = DEFAULT_REQUEST_LIMIT,
         request_limit_ms: int = DEFAULT_REQUEST_LIMIT_MS,
         timeout: float | tuple[float, float] | None = DEFAULT_TIMEOUT,
+        max_retries: int = DEFAULT_MAX_RETRIES,
         session: requests.Session | None = None,
+        rate_limiter: RateLimiter | None = None,
     ):
         self.base_url = normalize_base_url(base_url)
         self.auth_header = build_auth_header(api_key, access_token)
         self.user_agent = user_agent or default_user_agent()
         self.timeout = timeout
+        self.max_retries = max(int(max_retries), 0)
         self._owns_session = session is None
         self.session = session or requests.Session()
-        self.rate_limiter = RateLimiter(request_limit, request_limit_ms)
+        self.rate_limiter = rate_limiter or shared_limiter(
+            self.base_url, self.auth_header, request_limit, request_limit_ms
+        )
 
     def url(self, path_or_url: str) -> str:
         """The full URL for a path like `/api/v1/fill/abc.pdf`.
@@ -95,7 +105,7 @@ class HTTPClient:
         stream: bool = False,
         timeout: float | tuple[float, float] | None = None,
     ) -> requests.Response:
-        """Send a request, within the rate limit and retried after any 429.
+        """Send a request, within the rate limit, retried after a 429, a 5xx or a connection error.
 
         The response is returned as the server sent it, errors and all. Use
         `process_response` to turn it into data or an `AnvilRequestError`.
@@ -124,7 +134,39 @@ class HTTPClient:
                 timeout=timeout,
             )
 
-        return self.rate_limiter.run(send)
+        attempt = 0
+        while True:
+            try:
+                response = self.rate_limiter.run(send)
+            except requests.ConnectionError as e:
+                if attempt >= self.max_retries:
+                    raise
+                delay = _backoff_seconds(attempt)
+                logger.warning(
+                    "%s %s failed (%s). Retrying in %.1f seconds.",
+                    method,
+                    url,
+                    e,
+                    delay,
+                )
+            else:
+                if (
+                    response.status_code not in RETRY_STATUSES
+                    or attempt >= self.max_retries
+                ):
+                    return response
+                delay = _backoff_seconds(attempt, response.headers.get("retry-after"))
+                # Nothing will read the body, so free the connection for the retry
+                response.close()
+                logger.warning(
+                    "%s %s returned %s. Retrying in %.1f seconds.",
+                    method,
+                    url,
+                    response.status_code,
+                    delay,
+                )
+            time.sleep(delay)
+            attempt += 1
 
     def close(self) -> None:
         """Close the HTTP session, if it is the client's own."""
@@ -201,6 +243,14 @@ def process_response(
     raise ValueError(
         f"data_type must be one of: {'|'.join(DATA_TYPES)}"
     )  # pragma: no cover
+
+
+def _backoff_seconds(attempt: int, retry_after: Any = None) -> float:
+    """How long to wait before retry number `attempt + 1`: a 503's Retry-After, or exponential backoff."""
+    try:
+        return abs(float(retry_after))
+    except (TypeError, ValueError):
+        return RETRY_BACKOFF_MS / 1000 * 2**attempt
 
 
 def _body_snippet(response: requests.Response, limit: int = 2000) -> str:

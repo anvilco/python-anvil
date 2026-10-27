@@ -33,6 +33,14 @@ class TestServer(Server):
         self.handler = lambda request, index: responses[min(index, len(responses) - 1)]
 
 
+@pytest.fixture(autouse=True)
+def fresh_shared_limiters(monkeypatch):
+    """Clients in different tests must not share rate limiters."""
+    from python_anvil import rate_limit
+
+    monkeypatch.setattr(rate_limit, "_shared", {})
+
+
 @pytest.fixture
 def server():
     test_server = TestServer()

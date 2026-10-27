@@ -11,6 +11,11 @@ after it. Requests made in the meantime wait for that first response.
 
 A request that still gets a `429 Too Many Requests` is retried after the
 `Retry-After` in the response, plus a small buffer.
+
+The API's limit is per account, so every client in the process with the
+same base URL and credentials shares one limiter (`shared_limiter`), and
+with it the limits the first response taught. Separate processes can't
+share one; each learns the limits for itself.
 """
 
 from __future__ import annotations
@@ -166,6 +171,29 @@ class RateLimiter:
             if not self._gate_open:
                 self._setting_in_progress = False
                 self._condition.notify_all()
+
+
+_shared: dict[tuple[str, str], RateLimiter] = {}
+_shared_lock = threading.Lock()
+
+
+def shared_limiter(
+    base_url: str,
+    auth_header: str,
+    limit: Any = DEFAULT_REQUEST_LIMIT,
+    interval_ms: Any = DEFAULT_REQUEST_LIMIT_MS,
+) -> RateLimiter:
+    """The limiter every client with this base URL and credentials shares.
+
+    The starting limits only apply when this makes the limiter, i.e. for the
+    first client; after that the limits come from the API anyway.
+    """
+    key = (base_url, auth_header)
+    with _shared_lock:
+        limiter = _shared.get(key)
+        if limiter is None:
+            limiter = _shared[key] = RateLimiter(limit, interval_ms)
+        return limiter
 
 
 def retry_delay_seconds(retry_after: Any) -> float:
