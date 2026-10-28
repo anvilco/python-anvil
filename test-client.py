@@ -22,8 +22,11 @@ Workflow submission is a test submission that gets removed at the end.
 
 from __future__ import annotations
 
+import logging
 import os
 import sys
+import threading
+import time
 from collections.abc import Callable
 from pathlib import Path
 
@@ -49,6 +52,18 @@ results: list[tuple[str, str]] = []
 
 class Skip(Exception):
     pass
+
+
+class RateLimitLog(logging.Handler):
+    """Collects the client's warnings about requests the API rate limited."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.rate_limited = 0
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if "Rate limited" in record.getMessage():
+            self.rate_limited += 1
 
 
 def check(method: str, fn: Callable[[], str | None]) -> None:
@@ -140,6 +155,57 @@ def main() -> None:
         return f"organization {organization['eid']}"
 
     check("request_graphql", request_graphql)
+
+    def rate_limiting() -> str:
+        # The first response taught the client the account's limit. Send more
+        # requests than it allows at once: the client must hold the extra ones
+        # back for a full interval, and the API should never have to answer 429.
+        limiter = client.client.rate_limiter
+        if not limiter.has_set_from_response:
+            raise AssertionError(
+                "The first response had no X-RateLimit-Limit and X-RateLimit-Interval-Ms headers"
+            )
+        limit, interval_ms = limiter.limit, limiter.interval_ms
+        count = limit + 2
+        if count > 50:
+            raise Skip(
+                f"The limit is {limit} per {interval_ms}ms: too many to test in one burst"
+            )
+
+        log = RateLimitLog()
+        logging.getLogger("python_anvil.rate_limit").addHandler(log)
+        failures: list[Exception] = []
+
+        def one() -> None:
+            try:
+                client.request_graphql("{ currentUser { eid } }")
+            except Exception as e:
+                failures.append(e)
+
+        threads = [threading.Thread(target=one) for _ in range(count)]
+        started = time.monotonic()
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        elapsed = time.monotonic() - started
+        logging.getLogger("python_anvil.rate_limit").removeHandler(log)
+
+        if failures:
+            raise failures[0]
+        if elapsed < interval_ms / 1000:
+            raise AssertionError(
+                f"{count} requests went out in {elapsed:.2f}s, faster than {limit} per {interval_ms}ms allows"
+            )
+        if log.rate_limited:
+            raise AssertionError(
+                f"{log.rate_limited} of {count} requests got a 429 and were retried. The client "
+                "paces requests so the API never has to answer 429; another process using this "
+                "API key at the same time can cause it."
+            )
+        return f"{limit} per {interval_ms}ms learned from the API; {count} requests took {elapsed:.2f}s, no 429s"
+
+    check("rate limiting", rate_limiting)
 
     def request_rest() -> str:
         data = client.request_rest(
