@@ -217,3 +217,9 @@ def describe_retry_delay_seconds():
         assert retry_delay_seconds(None) == 1.05
         assert retry_delay_seconds("soon") == 1.05
         assert retry_delay_seconds("Wed, 21 Oct 2026 07:28:00 GMT") == 1.05
+        assert retry_delay_seconds("nan") == 1.05
+        assert retry_delay_seconds("inf") == 1.05
+
+    def it_caps_retry_after_at_a_minute():
+        assert retry_delay_seconds("1e9") == 60.05
+        assert retry_delay_seconds("3600") == 60.05

@@ -82,9 +82,11 @@ class Anvil:
         before a request fails. A `(connect, read)` tuple is also accepted.
         Defaults to 5 minutes; `None` waits forever.
     :param max_retries: How many times to retry a request that got a 500,
-        502, 503 or 504, or a connection error, with exponential backoff
+        502, 503 or 504, or that couldn't connect, with exponential backoff
         from 100ms. Defaults to 5; `0` disables retries. Mutations are
-        retried too, as they were before 6.0.0.
+        retried too, as they were before 6.0.0. A request that was sent but
+        got no complete response, like a read timeout, is not retried, since
+        the API may have processed it.
     :param session: A `requests.Session` to send requests with, e.g. one
         configured with a proxy. Defaults to a session of the client's own.
 

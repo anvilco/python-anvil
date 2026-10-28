@@ -24,16 +24,20 @@ DEFAULT_REQUEST_LIMIT_MS = 1000
 # Added to every wait for the rate limit, and to a 429's Retry-After, to allow
 # for requests that were sent further apart than they arrive
 RETRY_BUFFER_MS = 50
-# How long to wait before retrying a 429 that has no usable Retry-After header
+# How long to wait before retrying a 429 that has no usable Retry-After header,
+# and the most a Retry-After header can make the client wait
 DEFAULT_RETRY_AFTER_MS = 1000
+MAX_RETRY_AFTER_MS = 60_000
 
 # Seconds to wait for a connection, and then for each read, before giving up
 DEFAULT_TIMEOUT = 300
 
 # How many times to retry a request that failed with one of these statuses or
-# with a connection error, and the backoff before the first retry, doubled
-# each time: 100ms, 200ms, 400ms, 800ms, 1.6s. The same policy gql's transport
-# applied before 6.0.0.
+# couldn't connect, and the backoff before the first retry, doubled each time:
+# 100ms, 200ms, 400ms, 800ms, 1.6s. The statuses and count are what gql's
+# transport retried before 6.0.0. A request that was sent but got no complete
+# response (a read timeout, a connection dropped mid-response) is not retried:
+# the API may have processed it.
 DEFAULT_MAX_RETRIES = 5
 RETRY_STATUSES = (500, 502, 503, 504)
 RETRY_BACKOFF_MS = 100

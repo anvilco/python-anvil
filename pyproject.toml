@@ -53,6 +53,7 @@ mypy = ">=1.18"
 pytest = ">=8"
 pytest-cov = ">=6"
 pytest-describe = ">=2.2"
+pytest-timeout = ">=2.3"
 types-requests = ">=2.28"
 types-tabulate = ">=0.9"
 # To check the client's queries and mutations against the API schema
@@ -117,6 +118,8 @@ cache_dir = ".cache/mypy"
 
 [tool.pytest.ini_options]
 addopts = "--strict-markers -r sxX"
+# A rate limiter regression would hang a test rather than fail it
+timeout = 60
 testpaths = ["tests"]
 cache_dir = ".cache/pytest"
 

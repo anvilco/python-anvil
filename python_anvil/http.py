@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import time
 from collections.abc import Callable, Mapping
 from typing import Any
@@ -21,6 +22,7 @@ from python_anvil.constants import (
     DEFAULT_REQUEST_LIMIT,
     DEFAULT_REQUEST_LIMIT_MS,
     DEFAULT_TIMEOUT,
+    MAX_RETRY_AFTER_MS,
     RETRY_BACKOFF_MS,
     RETRY_STATUSES,
 )
@@ -112,6 +114,8 @@ class HTTPClient:
 
         :param files: A function that returns the multipart parts to send, so
             they can be built again for a retry.
+        :param data: A raw body. A file object is rewound for a retry; one
+            that can't be is refused rather than sent empty.
         """
         url = self.url(path_or_url)
         all_headers = {
@@ -120,8 +124,13 @@ class HTTPClient:
             **(headers or {}),
         }
         timeout = self.timeout if timeout is None else timeout
+        sends = 0
 
         def send() -> requests.Response:
+            nonlocal sends
+            if sends:
+                _rewind(data)
+            sends += 1
             return self.session.request(
                 method.upper(),
                 url,
@@ -246,11 +255,45 @@ def process_response(
 
 
 def _backoff_seconds(attempt: int, retry_after: Any = None) -> float:
-    """How long to wait before retry number `attempt + 1`: a 503's Retry-After, or exponential backoff."""
-    try:
-        return abs(float(retry_after))
-    except (TypeError, ValueError):
+    """How long to wait before retry number `attempt + 1`: the response's Retry-After, or exponential backoff."""
+    seconds = parse_retry_after(retry_after)
+    if seconds is None:
         return RETRY_BACKOFF_MS / 1000 * 2**attempt
+    return seconds
+
+
+def parse_retry_after(retry_after: Any) -> float | None:
+    """A Retry-After header as seconds, capped, or None if it isn't a number of seconds.
+
+    The header may also be an HTTP date, which isn't honored. A cap, because
+    the header is the server's to set, and a proxy's mistake shouldn't block
+    a thread for an hour.
+    """
+    try:
+        seconds = abs(float(retry_after))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(seconds):
+        return None
+    return min(seconds, MAX_RETRY_AFTER_MS / 1000)
+
+
+def _rewind(data: Any) -> None:
+    """Put a file-like body back at its start for a retry, or refuse to send it again."""
+    if (
+        data is None
+        or isinstance(data, (bytes, bytearray, str))
+        or not hasattr(data, "read")
+    ):
+        return
+    if getattr(data, "seekable", lambda: False)():
+        data.seek(0)
+        return
+    raise ValueError(
+        "Can't send the request's body again because it has already been read. "
+        "To send a body in a request that may be retried, pass bytes or a "
+        "seekable file object."
+    )
 
 
 def _body_snippet(response: requests.Response, limit: int = 2000) -> str:

@@ -36,9 +36,11 @@ class TestServer(Server):
 @pytest.fixture(autouse=True)
 def fresh_shared_limiters(monkeypatch):
     """Clients in different tests must not share rate limiters."""
+    import weakref
+
     from python_anvil import rate_limit
 
-    monkeypatch.setattr(rate_limit, "_shared", {})
+    monkeypatch.setattr(rate_limit, "_shared", weakref.WeakValueDictionary())
 
 
 @pytest.fixture

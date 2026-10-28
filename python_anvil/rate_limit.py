@@ -28,9 +28,12 @@ share one; each learns the limits for itself.
 
 from __future__ import annotations
 
+import hashlib
 import logging
+import math
 import threading
 import time
+import weakref
 from collections import deque
 from collections.abc import Callable, Mapping
 from typing import Any
@@ -41,6 +44,7 @@ from python_anvil.constants import (
     DEFAULT_REQUEST_LIMIT,
     DEFAULT_REQUEST_LIMIT_MS,
     DEFAULT_RETRY_AFTER_MS,
+    MAX_RETRY_AFTER_MS,
     RETRY_BUFFER_MS,
 )
 
@@ -126,14 +130,19 @@ class RateLimiter:
         request again.
         """
         while True:
-            self._wait_for_turn()
+            # `_wait_for_turn` takes a slot, which `_finish` must give back
+            # whatever happens, even an interrupt that lands between the two
+            acquired = False
             try:
+                self._wait_for_turn()
+                acquired = True
                 response = send()
             except BaseException:
                 # The request may still have reached the API, so it counts.
                 # There won't be a response to set the limits from, so let
                 # the requests waiting for one go ahead.
-                self._finish()
+                if acquired:
+                    self._finish()
                 self._release_setup_gate()
                 raise
             self._finish()
@@ -199,7 +208,12 @@ class RateLimiter:
                 self._condition.notify_all()
 
 
-_shared: dict[tuple[str, str], RateLimiter] = {}
+# Keyed on a hash of the credentials, not the credentials, and holding each
+# limiter only as long as a client does: a service that makes a client per
+# OAuth token must not keep every token it has ever seen.
+_shared: weakref.WeakValueDictionary[tuple[str, str], RateLimiter] = (
+    weakref.WeakValueDictionary()
+)
 _shared_lock = threading.Lock()
 
 
@@ -212,9 +226,11 @@ def shared_limiter(
     """The limiter every client with this base URL and credentials shares.
 
     The starting limits only apply when this makes the limiter, i.e. for the
-    first client; after that the limits come from the API anyway.
+    first client; after that the limits come from the API anyway. A limiter
+    lives as long as a client holds it; the next client made after the last
+    one is gone learns the limits again from its first response.
     """
-    key = (base_url, auth_header)
+    key = (base_url, hashlib.sha256(auth_header.encode()).hexdigest())
     with _shared_lock:
         limiter = _shared.get(key)
         if limiter is None:
@@ -233,7 +249,9 @@ def retry_delay_seconds(retry_after: Any) -> float:
         seconds = abs(float(retry_after))
     except (TypeError, ValueError):
         seconds = DEFAULT_RETRY_AFTER_MS / 1000
-    return seconds + RETRY_BUFFER_MS / 1000
+    if not math.isfinite(seconds):
+        seconds = DEFAULT_RETRY_AFTER_MS / 1000
+    return min(seconds, MAX_RETRY_AFTER_MS / 1000) + RETRY_BUFFER_MS / 1000
 
 
 def _header(headers: Mapping[str, Any], name: str) -> Any:

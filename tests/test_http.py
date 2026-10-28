@@ -325,7 +325,7 @@ def describe_rate_limiting():
         server, make_client
     ):
         # A port nothing listens on, then the real server
-        client = make_client(request_limit=10)
+        client = make_client(request_limit=10, max_retries=0)
         client.client.base_url = "http://127.0.0.1:1"
 
         def first_fails():
@@ -859,7 +859,9 @@ def describe_retries():
                 server.requests, server.requests[1:], strict=False
             )
         ]
-        assert gaps[0] >= 0.1 and gaps[1] >= 0.2 and gaps[2] >= 0.4
+        assert 0.1 <= gaps[0] < 0.2
+        assert 0.2 <= gaps[1] < 0.4
+        assert 0.4 <= gaps[2] < 0.8
 
     def it_waits_for_retry_after_on_a_503(server, client):
         server.respond_in_turn(
@@ -870,7 +872,59 @@ def describe_retries():
         client.request_rest("GET", "/api/v1/x")
 
         first, second = server.requests
-        assert second.received_at - first.responded_at >= 0.5
+        assert 0.5 <= second.received_at - first.responded_at < 0.9
+
+    def it_caps_a_huge_retry_after(server, client):
+        server.respond_in_turn(
+            {"status": 503, "body": b"", "headers": {"retry-after": "1e9"}},
+            {"json": {"ok": True}},
+        )
+        with mock.patch("python_anvil.http.time.sleep") as sleep:
+            client.request_rest("GET", "/api/v1/x")
+        assert sleep.call_args.args[0] == 60
+
+    def it_backs_off_for_a_retry_after_that_is_not_a_number(server, client):
+        server.respond_in_turn(
+            {"status": 503, "body": b"", "headers": {"retry-after": "nan"}},
+            {
+                "status": 503,
+                "body": b"",
+                "headers": {"retry-after": "Wed, 21 Oct 2026 07:28:00 GMT"},
+            },
+            {"json": {"ok": True}},
+        )
+        with mock.patch("python_anvil.http.time.sleep") as sleep:
+            client.request_rest("GET", "/api/v1/x")
+        assert [call.args[0] for call in sleep.call_args_list] == [0.1, 0.2]
+
+    def it_rewinds_a_file_body_for_a_retry(server, client):
+        server.respond_in_turn({"status": 503, "body": b""}, {"json": {"ok": True}})
+
+        client.request_rest("POST", "/api/v1/x", data=io.BytesIO(b"hello world"))
+
+        first, second = server.requests
+        assert first.body == b"hello world"
+        assert second.body == b"hello world"
+
+    def it_refuses_to_resend_a_body_that_cannot_be_rewound(server, client):
+        server.respond_in_turn({"status": 503, "body": b""}, {"json": {"ok": True}})
+
+        class OnceOnly(io.BytesIO):
+            def seekable(self) -> bool:
+                return False
+
+        with pytest.raises(ValueError, match=r"Can't send the request's body again"):
+            client.request_rest("POST", "/api/v1/x", data=OnceOnly(b"hello"))
+        assert len(server.requests) == 1
+
+    def it_does_not_retry_a_read_timeout(make_client):
+        session = mock.Mock(spec=requests.Session)
+        session.request.side_effect = requests.ReadTimeout("slow")
+        client = make_client(session=session)
+
+        with pytest.raises(requests.ReadTimeout):
+            client.request_rest("GET", "/api/v1/x")
+        assert session.request.call_count == 1
 
     def it_retries_a_mutation_with_its_files(server, client):
         server.respond_in_turn({"status": 502, "body": b""}, {"json": {"data": {}}})
@@ -984,6 +1038,34 @@ def describe_the_shared_rate_limiter():
         assert len(times) == 6
         for i in range(len(times) - 2):
             assert times[i + 2] - times[i] >= 0.3
+
+    def it_accepts_a_limiter_of_its_own(server, make_client):
+        from python_anvil.http import HTTPClient
+        from python_anvil.rate_limit import RateLimiter
+
+        own = RateLimiter(3, 300)
+        client = HTTPClient("k", base_url=server.base_url, rate_limiter=own)
+        assert client.rate_limiter is own
+        assert make_client(api_key="k").client.rate_limiter is not own
+
+    def it_forgets_a_limiter_once_no_client_holds_it(server, make_client):
+        import gc
+        import weakref
+
+        first = make_client(api_key="k")
+        limiter = weakref.ref(first.client.rate_limiter)
+        del first
+        gc.collect()
+        assert limiter() is None
+        assert make_client(api_key="k").client.rate_limiter is not None
+
+    def it_does_not_keep_the_credentials_in_the_registry(server, make_client):
+        from python_anvil import rate_limit
+
+        make_client(api_key="super-secret-key")
+        for key in list(rate_limit._shared):
+            assert "super-secret-key" not in repr(key)
+            assert "Basic" not in repr(key)
 
     def it_takes_the_starting_limits_from_the_first_client(make_client):
         first = make_client(api_key="k", request_limit=5, request_limit_ms=2000)
