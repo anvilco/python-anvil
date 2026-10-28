@@ -1,3 +1,6 @@
+from python_anvil.graphql.selection import selection
+
+
 DEFAULT_RESPONSE_QUERY = """{
   eid
   name
@@ -29,6 +32,7 @@ DEFAULT_RESPONSE_QUERY = """{
 
 
 def generate_mutation(response_query: str | None = None) -> str:
+    response_query = selection(response_query)
     return f"""
   mutation CreateEtchPacket(
     $name: String,

@@ -10,6 +10,10 @@ from python_anvil.graphql.mutations.forge_submit import (
 from python_anvil.utils import camel_to_snake
 
 
+# The mutation, under the name it had before 6.0.0
+FORGE_SUBMIT = generate_mutation()
+
+
 class ForgeSubmit(BaseQuery):
     """Builds a `forgeSubmit` mutation and its variables."""
 

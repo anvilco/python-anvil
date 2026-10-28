@@ -133,6 +133,7 @@ def describe_fill_pdf():
             json={"data": {"jsonData": "yes"}},
             params=None,
             data_type="bytes",
+            timeout=None,
         )
 
     def it_posts_a_json_payload(anvil, rest):
@@ -198,6 +199,7 @@ def describe_generate_pdf():
             json={"data": [{"d1": "data"}], "type": "markdown"},
             params=None,
             data_type="bytes",
+            timeout=None,
         )
 
     def it_posts_a_json_payload(anvil, rest):
@@ -239,7 +241,7 @@ def describe_download_documents():
     def it_gets_the_zip(anvil, rest):
         anvil.download_documents("dg123")
         rest.assert_called_once_with(
-            "GET", "/api/document-group/dg123.zip", data_type="bytes"
+            "GET", "/api/document-group/dg123.zip", data_type="bytes", timeout=None
         )
 
 
@@ -275,17 +277,19 @@ def describe_request_graphql():
 
     def it_is_also_called_query(anvil, graphql):
         anvil.query("{ x }", {"a": 1})
-        graphql.assert_called_once_with("{ x }", {"a": 1})
+        graphql.assert_called_once_with("{ x }", {"a": 1}, timeout=None)
 
     def it_is_also_called_mutate(anvil, graphql):
         anvil.mutate("mutation { x }", {"a": 1})
-        graphql.assert_called_once_with("mutation { x }", {"a": 1})
+        graphql.assert_called_once_with("mutation { x }", {"a": 1}, timeout=None)
 
     def it_mutates_with_a_mutation_class(anvil, graphql):
         builder = CreateEtchPacket(name="Packet")
         anvil.mutate(builder, {"name": "Packet"})
         graphql.assert_called_once_with(
-            mutations.create_etch_packet.generate_mutation(), {"name": "Packet"}
+            mutations.create_etch_packet.generate_mutation(),
+            {"name": "Packet"},
+            timeout=None,
         )
 
 
@@ -433,7 +437,9 @@ def describe_get_etch_packet():
 
         assert packet == {"eid": "p1", "status": "sent"}
         graphql.assert_called_once_with(
-            queries.etch_packet.generate_query(), {"eid": "p1"}
+            queries.etch_packet.generate_query(),
+            {"eid": "p1"},
+            timeout=None,
         )
 
     def it_sends_a_custom_response_query(anvil, graphql):
@@ -458,6 +464,7 @@ def describe_generate_etch_signing_url():
         graphql.assert_called_once_with(
             mutations.generate_etch_sign_url.generate_mutation(),
             {"signerEid": "someId", "clientUserId": "anotherId"},
+            timeout=None,
         )
 
     def it_is_also_called_generate_etch_sign_url(anvil, graphql):
@@ -550,7 +557,9 @@ def describe_remove_weld_data():
 
         assert anvil.remove_weld_data("wd1") is True
         graphql.assert_called_once_with(
-            mutations.remove_weld_data.generate_mutation(), {"eid": "wd1"}
+            mutations.remove_weld_data.generate_mutation(),
+            {"eid": "wd1"},
+            timeout=None,
         )
 
     def it_sends_a_custom_mutation(anvil, graphql):

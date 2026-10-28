@@ -4,6 +4,8 @@ from logging import Logger
 from mimetypes import guess_type
 from typing import Any
 
+from pydantic import TypeAdapter
+
 from python_anvil.api_resources.mutations.base import BaseQuery
 from python_anvil.api_resources.payload import (
     AttachableEtchFile,
@@ -20,6 +22,11 @@ from python_anvil.utils import camel_to_snake, create_unique_id
 
 
 logger: Logger = logging.getLogger(__name__)
+
+_ATTACHABLE_FILE: TypeAdapter[AttachableEtchFile] = TypeAdapter(AttachableEtchFile)
+
+# The mutation, under the name it had before 6.0.0
+CREATE_ETCH_PACKET = generate_mutation()
 
 
 class CreateEtchPacket(BaseQuery):
@@ -54,10 +61,7 @@ class CreateEtchPacket(BaseQuery):
     ):
         # `name` is required when `payload` is not present.
         if not payload and not name:
-            raise TypeError(
-                "Missing 2 required positional arguments: 'name' and "
-                "'signature_email_subject'"
-            )
+            raise TypeError("`name` is required")
 
         self.name = name
         self.signature_email_subject = signature_email_subject
@@ -97,13 +101,11 @@ class CreateEtchPacket(BaseQuery):
             raise ValueError(
                 f"`payload` must be a valid CreateEtchPacket instance or dict. {e}"
             ) from e
-        if "signers" in payload:
-            for signer in payload["signers"]:
-                mutation.add_signer(EtchSigner(**signer))
+        for signer in payload.get("signers") or []:
+            mutation.add_signer(signer)
 
-        if "files" in payload:
-            for file in payload["files"]:
-                mutation.add_file(DocumentUpload(**file))
+        for file in payload.get("files") or []:
+            mutation.add_file(file)
 
         return mutation
 
@@ -120,11 +122,6 @@ class CreateEtchPacket(BaseQuery):
         else:
             raise ValueError("Signer must be either a dict or EtchSigner type")
 
-        if data.signer_type not in ["embedded", "email"]:
-            raise ValueError(
-                "Etch signer `signer_type` must be only 'embedded' or 'email"
-            )
-
         if not data.id:
             data.id = create_unique_id("signer")
         if not data.routing_order:
@@ -140,12 +137,16 @@ class CreateEtchPacket(BaseQuery):
 
         self.signers.append(data)
 
-    def add_file(self, file: AttachableEtchFile):
-        """Add file to a pending list of Upload objects.
+    def add_file(self, file: AttachableEtchFile | dict):
+        """Add a file to a pending list of files.
 
-        Files will not be uploaded when running this method. They will be
-        uploaded when the mutation actually runs.
+        A `DocumentUpload`, `EtchCastRef`, `DocumentMarkdown` or `DocumentMarkup`,
+        or a dict of one of those, with snake_case or camelCase keys. Files
+        will not be uploaded when running this method. They will be uploaded
+        when the mutation actually runs.
         """
+        if isinstance(file, dict):
+            file = _ATTACHABLE_FILE.validate_python(file)
         if (
             isinstance(file, DocumentUpload)
             and isinstance(file.file, BufferedIOBase)
@@ -192,7 +193,7 @@ class CreateEtchPacket(BaseQuery):
             return self.payload
 
         if not self.name:
-            raise TypeError("`name` and `signature_email_subject` cannot be None")
+            raise TypeError("`name` is required")
 
         payload = CreateEtchPacketPayload(
             is_test=self.is_test,

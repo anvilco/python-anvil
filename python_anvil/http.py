@@ -66,6 +66,8 @@ class HTTPClient:
         rate_limiter: RateLimiter | None = None,
     ):
         self.base_url = normalize_base_url(base_url)
+        self.api_key = api_key
+        self.access_token = access_token
         self.auth_header = build_auth_header(api_key, access_token)
         self.user_agent = user_agent or default_user_agent()
         self.timeout = timeout

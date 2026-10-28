@@ -39,15 +39,20 @@ class FillPDFPayload(rest.FillPdfRequest):
         return v
 
 
-class GeneratePDFPayload(BaseModel):
-    data: list[dict[str, Any]] | dict[Literal["html", "css"], str]
-    logo: EmbeddedLogo | None = None
-    title: str | None = None
+class GeneratePDFPayload(rest.GenerateMarkdownPdfRequest):
+    """The body of a generate PDF request, from Markdown (the default) or HTML.
+
+    See `python_anvil.types.rest.GenerateMarkdownPdfRequest` and
+    `GenerateHtmlPdfRequest` for every option.
+    """
+
+    data: list[dict[str, Any]] | dict[Literal["html", "css"], str]  # type: ignore[assignment]
+    logo: EmbeddedLogo | Literal[False] | None = None  # type: ignore[assignment]
     type: Literal["markdown", "html"] | None = "markdown"
-    page: dict[str, Any] | None = None
-    font_size: int | None = None
-    font_family: str | None = None
-    text_color: str | None = None
+    # As before 6.0.0, any size; the API says what it accepts
+    font_size: int | None = Field(None, alias="fontSize")
+    # The API defaults this to "pdf"; leave it out rather than always sending it
+    output_format: Literal["pdf", "url"] | None = Field(None, alias="outputFormat")
 
 
 class GenerateEtchSigningURLPayload(BaseModel):
