@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 import os
 
 from python_anvil.api import Anvil
@@ -64,7 +63,7 @@ def main():
     #                             'and ensure it points to an existing file.')
 
     # file data must be read in as _bytes_, not text.
-    file = open(file_path, "rb")  # pylint: disable=consider-using-with
+    file = open(file_path, "rb")  # noqa: SIM115
 
     # You can also provide a custom `content_type` if you needed.
     # The Anvil library will guess the file's content_type by its file
@@ -84,7 +83,7 @@ def main():
                 page_num=0,
                 # The position and size of the field. The coordinates provided here
                 # (x=100, y=100) is the top-left of the rectangle.
-                rect=dict(x=183, y=100, width=250, height=50),
+                rect={"x": 183, "y": 100, "width": 250, "height": 50},
             )
         ],
     )
@@ -148,5 +147,5 @@ def main():
         file.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

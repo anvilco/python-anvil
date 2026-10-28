@@ -41,4 +41,4 @@ def remove_empty_items(dict_obj: dict):
 
 
 def camel_to_snake(name: str) -> str:
-    return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()

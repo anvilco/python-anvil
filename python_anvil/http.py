@@ -1,16 +1,15 @@
 import os
+from base64 import b64encode
+from logging import getLogger
 
 # import json
 import requests
-from base64 import b64encode
 from gql import Client
 from gql.dsl import DSLSchema
 from gql.transport.requests import RequestsHTTPTransport
-from logging import getLogger
 from ratelimit import limits, sleep_and_retry
 from ratelimit.exception import RateLimitException
 from requests.auth import HTTPBasicAuth
-from typing import Optional
 
 from python_anvil.exceptions import AnvilRequestException
 
@@ -24,7 +23,7 @@ def _handle_request_error(e: Exception):
     raise e
 
 
-def get_local_schema(raise_on_error=False) -> Optional[str]:
+def get_local_schema(raise_on_error=False) -> str | None:
     """
     Retrieve local GraphQL schema.
 
@@ -36,7 +35,7 @@ def get_local_schema(raise_on_error=False) -> Optional[str]:
         file_path = os.path.join(file_dir, "..", "schema", "anvil_schema.graphql")
         with open(file_path, encoding="utf-8") as file:
             schema = file.read()
-    except Exception:  # pylint: disable
+    except Exception:
         logger.warning(
             "Unable to find local schema. Will not use schema for local "
             "validation. Use `fetch_schema_from_transport=True` to allow "
@@ -70,8 +69,8 @@ class GQLClient:
     @staticmethod
     def get_client(
         api_key: str,
-        environment: str = "dev",  # pylint: disable=unused-argument
-        endpoint_url: Optional[str] = None,
+        environment: str = "dev",
+        endpoint_url: str | None = None,
         fetch_schema_from_transport: bool = False,
         force_local_schema: bool = False,
     ) -> Client:
@@ -101,7 +100,7 @@ class HTTPClient:
     def __init__(self, api_key=None, environment="dev"):
         self._session = requests.Session()
         self.api_key = api_key
-        global RATELIMIT_ENV  # pylint: disable=global-statement
+        global RATELIMIT_ENV
         RATELIMIT_ENV = environment
 
     def get_auth(self, encode=False) -> str:
@@ -151,10 +150,9 @@ class HTTPClient:
                 time_to_wait = int(res.headers.get("Retry-After", 1))
                 if retry:
                     logger.warning(
-                        "Rate-limited: request not accepted. Retrying in "
-                        "%i second%s.",
+                        "Rate-limited: request not accepted. Retrying in %i second%s.",
                         time_to_wait,
-                        's' if time_to_wait > 1 else '',
+                        "s" if time_to_wait > 1 else "",
                     )
 
                     # This exception will raise up to the `sleep_and_retry` decorator
@@ -220,7 +218,7 @@ class HTTPClient:
                 # HTTP client: https://github.com/stripe/stripe-python/blob/afa872c538bee0a1e14c8e131df52dd3c24ff05a/stripe/http_client.py#L304-L308
                 content = res.content
             status_code = res.status_code
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:
             _handle_request_error(e)
 
         return content, status_code, res.headers

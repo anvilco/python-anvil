@@ -1,11 +1,8 @@
-from typing import Optional
-
-
 class BaseQuery:
     """Base class for any GraphQL queries/mutations."""
 
-    mutation: Optional[str] = None
-    mutation_res_query: Optional[str] = None
+    mutation: str | None = None
+    mutation_res_query: str | None = None
 
     def get_mutation(self):
         if self.mutation and self.mutation_res_query:

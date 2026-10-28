@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
 #
 # ANVIL_API_KEY=YOUR_KEY python examples/create_etch_upload_file.py
 
@@ -63,7 +62,7 @@ def main():
         b64file = base64.b64encode(f.read())
 
     if not b64file:
-        raise ValueError('base64-encoded file not found')
+        raise ValueError("base64-encoded file not found")
 
     # Upload the file and define signer field locations.
     file1 = DocumentUpload(
@@ -85,7 +84,7 @@ def main():
                 page_num=0,
                 # The position and size of the field. The coordinates provided here
                 # (x=100, y=100) is the top-left of the rectangle.
-                rect=dict(x=183, y=100, width=250, height=50),
+                rect={"x": 183, "y": 100, "width": 250, "height": 50},
             )
         ],
     )
@@ -146,5 +145,5 @@ def main():
     print(res)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

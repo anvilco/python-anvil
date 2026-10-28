@@ -1,0 +1,130 @@
+name: Publish
+
+# Publishes to PyPI when a version tag (like v6.0.0 or v6.0.0rc1) is pushed.
+# The publish job waits for a maintainer's approval through the `pypi`
+# GitHub environment. See "Publishing" in CONTRIBUTING.md.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Lints, tests and builds without any permission to publish, so nothing that
+  # runs here could get a publishing token.
+  build:
+    name: Build
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    outputs:
+      prerelease: ${{ steps.version.outputs.prerelease }}
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        # So we can check that the tag is on master
+        fetch-depth: 0
+        persist-credentials: false
+
+    - name: Check the tag is on master
+      run: |
+        if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/master; then
+          echo "::error::$GITHUB_REF_NAME is not on master. Only tag commits that are on master."
+          exit 1
+        fi
+
+    - run: pipx install poetry
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version-file: '.python-version'
+        # Don't restore a cache in a release
+        cache: ''
+
+    - name: Check the tag matches pyproject.toml
+      id: version
+      run: |
+        PACKAGE_VERSION="v$(poetry version --short)"
+        if [ "$PACKAGE_VERSION" != "$GITHUB_REF_NAME" ]; then
+          echo "::error::Tag $GITHUB_REF_NAME does not match the pyproject.toml version $PACKAGE_VERSION."
+          exit 1
+        fi
+        # v6.0.0 -> false, v6.0.0a1 / v6.0.0b1 / v6.0.0rc1 -> true
+        if echo "$GITHUB_REF_NAME" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+(a|b|rc)[0-9]+$'; then
+          echo "prerelease=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "prerelease=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - run: make install
+    - run: make lint
+    - run: make test
+    - run: make build
+
+    - name: Collect the release
+      run: |
+        mkdir release
+        mv dist release/dist
+
+        # Use this version's CHANGELOG section as the release notes, if there is one
+        awk -v header="## [$GITHUB_REF_NAME]" '
+          index($0, header) == 1 { found = 1; next }
+          /^## \[/ { if (found) exit }
+          found
+        ' CHANGELOG.md > release/release-notes.md
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: release
+        path: release/
+        if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Waits for a maintainer's approval, if the environment requires reviewers.
+    # See "Setup" under "Publishing" in CONTRIBUTING.md.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/python-anvil/${{ github.ref_name }}
+    permissions:
+      # To create the GitHub release
+      contents: write
+      # For PyPI trusted publishing (OIDC). No PyPI token needed.
+      id-token: write
+
+    steps:
+    - uses: actions/download-artifact@v8
+      with:
+        name: release
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: dist/
+
+    - name: Create the GitHub release
+      env:
+        GH_TOKEN: ${{ github.token }}
+        PRERELEASE: ${{ needs.build.outputs.prerelease }}
+      run: |
+        if [ -s release-notes.md ]; then
+          NOTES=(--notes-file release-notes.md)
+        else
+          NOTES=(--generate-notes)
+        fi
+
+        if [ "$PRERELEASE" = "true" ]; then
+          LATEST=(--prerelease)
+        else
+          LATEST=(--latest)
+        fi
+
+        gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag \
+          --title "$GITHUB_REF_NAME" "${NOTES[@]}" "${LATEST[@]}" dist/*

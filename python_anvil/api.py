@@ -1,7 +1,9 @@
 import logging
+from collections.abc import Callable
+from typing import Any, AnyStr
+
 from gql import gql
 from graphql import DocumentNode
-from typing import Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
 
 from .api_resources.mutations import (
     BaseQuery,
@@ -22,7 +24,7 @@ from .http import GQLClient, HTTPClient
 logger = logging.getLogger(__name__)
 
 
-def _get_return(res: Dict, get_data: Callable[[Dict], Union[Dict, List]]):
+def _get_return(res: dict, get_data: Callable[[dict], dict | list]):
     """Process response and get data from path if provided."""
     _res = res
     if "response" in res and "headers" in res:
@@ -50,12 +52,12 @@ class Anvil:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         environment="dev",
         endpoint_url=None,
     ):
         if not api_key:
-            raise ValueError('`api_key` must be a valid string')
+            raise ValueError("`api_key` must be a valid string")
 
         self.client = HTTPClient(api_key=api_key, environment=environment)
         self.gql_client = GQLClient.get_client(
@@ -66,8 +68,8 @@ class Anvil:
 
     def query(
         self,
-        query: Union[str, DocumentNode],
-        variables: Optional[Dict[str, Any]] = None,
+        query: str | DocumentNode,
+        variables: dict[str, Any] | None = None,
         **kwargs,
     ):
         """Execute a GraphQL query.
@@ -87,8 +89,8 @@ class Anvil:
         return self.gql_client.execute(query, variable_values=variables, **kwargs)
 
     def mutate(
-        self, query: Union[str, BaseQuery], variables: Dict[str, Any], **kwargs
-    ) -> Dict[str, Any]:
+        self, query: str | BaseQuery, variables: dict[str, Any], **kwargs
+    ) -> dict[str, Any]:
         """
         Execute a GraphQL mutation.
 
@@ -113,16 +115,16 @@ class Anvil:
 
         return self.gql_client.execute(use_query, variable_values=variables, **kwargs)
 
-    def request_rest(self, options: Optional[dict] = None):
+    def request_rest(self, options: dict | None = None):
         api = RestRequest(self.client, options=options)
         return api
 
-    def request_fully_qualified(self, options: Optional[dict] = None):
+    def request_fully_qualified(self, options: dict | None = None):
         api = FullyQualifiedRequest(self.client, options=options)
         return api
 
     def fill_pdf(
-        self, template_id: str, payload: Union[dict, AnyStr, FillPDFPayload], **kwargs
+        self, template_id: str, payload: dict | AnyStr | FillPDFPayload, **kwargs
     ):
         """Fill an existing template with provided payload data.
 
@@ -155,7 +157,7 @@ class Anvil:
 
         version_number = kwargs.pop("version_number", None)
         if version_number:
-            kwargs["params"] = dict(versionNumber=version_number)
+            kwargs["params"] = {"versionNumber": version_number}
 
         api = RestRequest(client=self.client)
         return api.post(
@@ -164,7 +166,7 @@ class Anvil:
             **kwargs,
         )
 
-    def generate_pdf(self, payload: Union[AnyStr, Dict, GeneratePDFPayload], **kwargs):
+    def generate_pdf(self, payload: AnyStr | dict | GeneratePDFPayload, **kwargs):
         if not payload:
             raise ValueError("`payload` must be a valid JSON string or a dict")
 
@@ -188,11 +190,11 @@ class Anvil:
     def get_cast(
         self,
         eid: str,
-        fields: Optional[List[str]] = None,
-        version_number: Optional[int] = None,
-        cast_args: Optional[List[Tuple[str, str]]] = None,
+        fields: list[str] | None = None,
+        version_number: int | None = None,
+        cast_args: list[tuple[str, str]] | None = None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
 
         if not fields:
             # Use default fields
@@ -224,14 +226,14 @@ class Anvil:
             **kwargs,
         )
 
-        def get_data(r: dict) -> Dict[str, Any]:
+        def get_data(r: dict) -> dict[str, Any]:
             return r["cast"]
 
         return _get_return(res, get_data=get_data)
 
     def get_casts(
-        self, fields: Optional[List[str]] = None, show_all: bool = False, **kwargs
-    ) -> List[Dict[str, Any]]:
+        self, fields: list[str] | None = None, show_all: bool = False, **kwargs
+    ) -> list[dict[str, Any]]:
         """Retrieve all Cast objects for the current user across all organizations.
 
         :param fields: List of fields to retrieve for each cast object
@@ -300,7 +302,7 @@ class Anvil:
 
         return _get_return(res, get_data=lambda r: r["currentUser"])
 
-    def get_welds(self, **kwargs) -> Union[List, Tuple[List, Dict]]:
+    def get_welds(self, **kwargs) -> list | tuple[list, dict]:
         res = self.query(
             gql(
                 """{
@@ -353,7 +355,7 @@ class Anvil:
                 }
             }"""
             ),
-            variables=dict(eid=eid),
+            variables={"eid": eid},
             **kwargs,
         )
 
@@ -364,14 +366,11 @@ class Anvil:
 
     def create_etch_packet(
         self,
-        payload: Optional[
-            Union[
-                dict,
-                CreateEtchPacketPayload,
-                CreateEtchPacket,
-                AnyStr,
-            ]
-        ] = None,
+        payload: dict
+        | CreateEtchPacketPayload
+        | CreateEtchPacket
+        | AnyStr
+        | None = None,
         json=None,
         **kwargs,
     ):
@@ -379,7 +378,7 @@ class Anvil:
         # Create an etch packet payload instance excluding signers and files
         # (if any). We'll need to add those separately. below.
         if not any([payload, json]):
-            raise TypeError('One of the arguments `payload` or `json` must exist')
+            raise TypeError("One of the arguments `payload` or `json` must exist")
 
         if json:
             payload = CreateEtchPacketPayload.model_validate_json(json)
@@ -418,13 +417,13 @@ class Anvil:
 
     def forge_submit(
         self,
-        payload: Optional[Union[Dict[str, Any], ForgeSubmitPayload]] = None,
+        payload: dict[str, Any] | ForgeSubmitPayload | None = None,
         json=None,
         **kwargs,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a Webform (forge) submission via a graphql mutation."""
         if not any([json, payload]):
-            raise TypeError('One of arguments `json` or `payload` are required')
+            raise TypeError("One of arguments `json` or `payload` are required")
 
         if json:
             payload = ForgeSubmitPayload.model_validate_json(json)

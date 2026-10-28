@@ -1,4 +1,5 @@
 import os
+
 from gql.dsl import DSLQuery, dsl_gql
 
 from python_anvil.api import Anvil
@@ -19,28 +20,6 @@ def call_current_user_query(anvil: Anvil) -> dict:
     """
     # See the reference docs for examples of all queries and mutations:
     # https://www.useanvil.com/docs/api/graphql/reference/
-    # pylint: disable=unused-variable
-    user_query = """
-        query CurrentUser {
-          currentUser {
-            eid
-            name
-            organizations {
-              eid
-              slug
-              name
-              casts {
-                eid
-                name
-              }
-              welds {
-                eid
-                name
-              }
-            }
-          }
-        }
-    """
 
     # You can also use `gql`'s query builder. Below is the equivalent of the
     # string above, but can potentially be a better interface if you're
@@ -83,26 +62,6 @@ def call_weld_query(anvil: Anvil, weld_eid: str):
     :type weld_eid: str
     :return:
     """
-
-    # pylint: disable=unused-variable
-    weld_query = """
-        query WeldQuery (
-          $eid: String,
-        ) {
-          weld (
-            eid: $eid,
-          ) {
-            eid
-            name
-            forges {
-              eid
-              slug
-              name
-            }
-          }
-        }
-    """
-    variables = {"eid": weld_eid}
 
     # You can also use `gql`'s query builder. Below is the equivalent of the
     # string above, but can potentially be a better interface if you're

@@ -1,10 +1,17 @@
-import click
 import os
 from csv import DictReader
 from logging import getLogger
-from tabulate import tabulate
 from time import sleep
-from typing import List
+
+
+try:
+    import click
+    from tabulate import tabulate
+except ImportError as e:  # pragma: no cover
+    raise ImportError(
+        "The anvil command line tool needs the `cli` extra: "
+        "pip install 'python-anvil[cli]'"
+    ) from e
 
 from python_anvil import utils
 
@@ -107,7 +114,6 @@ def weld(ctx, eid, list_all):
         return
 
     if not eid:
-        # pylint: disable=broad-exception-raised
         raise Exception("You need to pass in a weld eid")
 
     res = anvil.get_weld(eid)
@@ -191,7 +197,7 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
     debug = ctx.obj["debug"]
 
     if all([template_id, out_filename, payload_csv]):
-        payloads = []  # type: List[FillPDFPayload]
+        payloads: list[FillPDFPayload] = []
         with click.open_file(payload_csv, "r") as csv_file:
             reader = DictReader(csv_file)
             # NOTE: This is potentially problematic for larger datasets and/or
@@ -227,7 +233,7 @@ def fill_pdf(ctx, template_id, out_filename, payload_csv):
     "-p",
     "--payload",
     "payload",
-    type=click.File('rb'),
+    type=click.File("rb"),
     required=True,
     help="File that contains JSON payload",
 )
@@ -324,14 +330,14 @@ def download_documents(ctx, document_group_eid, filename, stdout):
         if not filename:
             filename = f"{document_group_eid}.zip"
 
-        with click.open_file(filename, 'wb') as out_file:
+        with click.open_file(filename, "wb") as out_file:
             out_file.write(res)
         click.echo(f"Saved as '{click.format_filename(filename)}'")
     else:
         click.echo(res)
 
 
-@cli.command('gql-query', help="Run a raw graphql query")
+@cli.command("gql-query", help="Run a raw graphql query")
 @click.option(
     "-q",
     "--query",
@@ -360,4 +366,4 @@ def gql_query(ctx, query, variables):
 
 
 if __name__ == "__main__":  # pragma: no cover
-    cli()  # pylint: disable=no-value-for-parameter
+    cli()

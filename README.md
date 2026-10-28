@@ -26,7 +26,7 @@ General API documentation: [Anvil API docs](https://www.useanvil.com/docs)
 
 ## Requirements
 
-* Python >=3.8
+* Python >=3.10
 
 ## Installation
 
@@ -40,4 +40,10 @@ or add it to your [Poetry](https://python-poetry.org/) project:
 
 ```shell
 $ poetry add python-anvil
+```
+
+The `anvil` command line tool is an optional extra:
+
+```shell
+$ pip install 'python-anvil[cli]'
 ```
