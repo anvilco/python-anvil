@@ -35,3 +35,7 @@ def describe_camel_to_snake():
         assert camel_to_snake("oneToTwo") == "one_to_two"
         assert camel_to_snake("one") == "one"
         assert camel_to_snake("TwoTwo") == "two_two"
+        assert camel_to_snake("webhookURL") == "webhook_url"
+        assert camel_to_snake("mergePDFs") == "merge_pdfs"
+        assert camel_to_snake("signURLForUser") == "sign_url_for_user"
+        assert camel_to_snake("already_snake") == "already_snake"

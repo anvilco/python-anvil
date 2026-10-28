@@ -385,6 +385,20 @@ def describe_create_etch_packet():
         assert variables == cep.model_dump(by_alias=True, exclude_none=True)
         assert variables["newFeature"] is True
 
+    def it_takes_camel_case_keys_in_a_dict(anvil, graphql):
+        anvil.create_etch_packet(
+            {
+                "name": "Packet name",
+                "signatureEmailSubject": "The subject",
+                "webhookURL": "https://example.com/hook",
+                "mergePDFs": True,
+            }
+        )
+        variables = graphql.call_args.args[1]
+        assert variables["signatureEmailSubject"] == "The subject"
+        assert variables["webhookURL"] == "https://example.com/hook"
+        assert variables["mergePDFs"] is True
+
     def it_sends_a_custom_response_query(anvil, graphql):
         anvil.create_etch_packet(
             {"name": "Packet name"}, response_query="{ eid status }"
@@ -490,6 +504,16 @@ def describe_forge_submit():
             )
         )
         assert graphql.call_args.args[1] == expected_data
+
+    def it_takes_camel_case_keys_in_a_dict(anvil, graphql):
+        anvil.forge_submit(
+            {
+                "forgeEid": "forge1234",
+                "payload": {"field1": "Some data"},
+                "weldDataEid": "wd1",
+            }
+        )
+        assert graphql.call_args.args[1] == {**expected_data, "weldDataEid": "wd1"}
 
     def it_sends_an_update_to_a_submission(anvil, graphql):
         payload = ForgeSubmitPayload(

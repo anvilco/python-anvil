@@ -41,4 +41,9 @@ def remove_empty_items(dict_obj: dict):
 
 
 def camel_to_snake(name: str) -> str:
-    return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+    """Convert camelCase to snake_case, keeping acronyms and their plurals whole: webhookURL -> webhook_url."""
+    # An acronym followed by a word: "URLFor" -> "URL_For". Two lowercase letters
+    # or more make a word, so a plural "s" stays with its acronym: "mergePDFs".
+    name = re.sub(r"([A-Z]+)([A-Z][a-z]{2,})", r"\1_\2", name)
+    name = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", name)
+    return name.lower()

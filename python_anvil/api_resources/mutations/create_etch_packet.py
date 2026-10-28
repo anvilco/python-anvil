@@ -16,7 +16,7 @@ from python_anvil.graphql.mutations.create_etch_packet import (
     DEFAULT_RESPONSE_QUERY,
     generate_mutation,
 )
-from python_anvil.utils import create_unique_id
+from python_anvil.utils import camel_to_snake, create_unique_id
 
 
 logger: Logger = logging.getLogger(__name__)
@@ -84,7 +84,11 @@ class CreateEtchPacket(BaseQuery):
 
     @classmethod
     def create_from_dict(cls, payload: dict) -> "CreateEtchPacket":
-        """Create a new instance of `CreateEtchPacket` from a dict payload."""
+        """Create a new instance of `CreateEtchPacket` from a dict payload.
+
+        Keys may be snake_case or camelCase, like the mutation's variables.
+        """
+        payload = {camel_to_snake(k): v for k, v in payload.items()}
         try:
             mutation = cls(
                 **{k: v for k, v in payload.items() if k not in ["signers", "files"]}
