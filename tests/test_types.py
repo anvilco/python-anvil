@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
@@ -165,6 +166,27 @@ def describe_the_payload_models():
             "allowNameChange": True,
             "redirectURL": "https://example.com/done",
         }
+
+    def etch_signer_passes_dates_through_as_strings():
+        # A datetime object would not survive the JSON encoder, and a date with
+        # no timezone must still be the API's call
+        for value in ("2030-01-01T00:00:00Z", "2030-01-01T00:00:00"):
+            signer = EtchSigner(
+                name="S", email="s@example.com", fields=[], tokenValidUntil=value
+            )
+            dumped = signer.model_dump(by_alias=True, exclude_none=True)
+            assert dumped["tokenValidUntil"] == value
+            json.dumps(dumped)
+
+    def payloads_keep_accepting_any_font_size_and_routing_order():
+        assert (
+            FillPDFPayload(data={"a": 1}, font_size=36).model_dump(by_alias=True)[
+                "fontSize"
+            ]
+            == 36
+        )
+        signer = EtchSigner(name="S", email="s@example.com", fields=[], routing_order=0)
+        assert signer.model_dump(by_alias=True, exclude_none=True)["routingOrder"] == 0
 
     def etch_signer_rejects_an_unknown_signer_type():
         with pytest.raises(ValidationError):

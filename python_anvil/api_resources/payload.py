@@ -26,6 +26,8 @@ class FillPDFPayload(rest.FillPdfRequest):
     """
 
     data: list[dict[str, Any]] | dict[str, Any]
+    # As before 6.0.0, any size; the API says what it accepts
+    font_size: int | None = Field(None, alias="fontSize")
     # The API defaults this to "pdf"; leave it out rather than always sending it
     output_format: Literal["pdf", "url"] | None = Field(None, alias="outputFormat")
 
@@ -72,6 +74,8 @@ class EtchSigner(rest.EtchSigner):
     )
     # id will be generated if `None`
     id: str | None = None  # type: ignore[assignment]
+    # As before 6.0.0, any order; the API says what it accepts
+    routing_order: int | None = Field(None, alias="routingOrder")
     enable_emails: bool | list[str] | None = Field(None, alias="enableEmails")  # type: ignore[assignment]
 
 

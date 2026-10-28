@@ -27,6 +27,7 @@ jobs:
   sync-api-types:
     name: Sync API Types
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -89,12 +90,21 @@ jobs:
             exit 0
           fi
 
-          # Note the sync in the changelog, once per release
-          if ! grep -q "Sync the generated API types" CHANGELOG.md; then
-            sed -i '/^## \[Unreleased\]$/a\
-\
-- Sync the generated API types in `python_anvil.types` with the production API.' CHANGELOG.md
-          fi
+          # Note the sync under Unreleased in the changelog, once per release
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("CHANGELOG.md")
+          text = path.read_text(encoding="utf-8")
+          note = "- Sync the generated API types in `python_anvil.types` with the production API."
+          match = re.search(r"^## \[Unreleased\]\n(?P<body>.*?)(?=^## \[|\Z)", text, re.M | re.S)
+          if match and note not in match["body"]:
+              body = match["body"].rstrip("\n")
+              section = f"{body}\n{note}\n\n" if body else f"\n{note}\n\n"
+              text = text[: match.start("body")] + section + text[match.end("body") :]
+              path.write_text(text, encoding="utf-8")
+          PY
 
           if [ "$EVENT_NAME" = repository_dispatch ]; then
             TRIGGER="Anvil production deploy \`$DEPLOY_VERSION\` ($DEPLOY_PR_URL), deployed $DEPLOYED_AT."

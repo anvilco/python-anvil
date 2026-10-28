@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import AwareDatetime, ConfigDict, Field
+from pydantic import ConfigDict, Field
 
 from python_anvil.types._base import GeneratedModel
 
@@ -260,9 +260,7 @@ class EtchSigner(GeneratedModel):
     token_valid_for_minutes: Annotated[
         int | None, Field(alias="tokenValidForMinutes", ge=1, le=86400)
     ] = None
-    token_valid_until: Annotated[
-        AwareDatetime | None, Field(alias="tokenValidUntil")
-    ] = None
+    token_valid_until: Annotated[str | None, Field(alias="tokenValidUntil")] = None
 
 
 class Data(GeneratedModel):

@@ -61,7 +61,8 @@ types-tabulate = ">=0.9"
 # To check the client's queries and mutations against the API schema, and to
 # generate python_anvil/types from it and the OpenAPI spec (dev/generate_types.py)
 graphql-core = ">=3.2"
-datamodel-code-generator = ">=0.35"
+# Pinned to a minor: `make check-generated` byte-compares its output
+datamodel-code-generator = "~0.86"
 # So the CLI and its tests run from a dev install without --all-extras
 click = ">=8.0,<9"
 tabulate = ">=0.9,<0.11"

@@ -16,4 +16,6 @@ class GeneratedModel(BaseModel):
         extra="allow",
         populate_by_name=True,
         use_enum_values=True,
+        # The API may well have a field that starts with `model_`
+        protected_namespaces=(),
     )

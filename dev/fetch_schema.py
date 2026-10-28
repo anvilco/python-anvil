@@ -40,18 +40,21 @@ OPENAPI_PATH = SCHEMA_DIR / "openapi.json"
 def fetch_graphql_schema(version: str = "latest") -> tuple[str, str]:
     """The schema SDL in the given version of @anvilco/types, and that version."""
     metadata_url = f"{REGISTRY}/{PACKAGE.replace('/', '%2F')}"
-    with urllib.request.urlopen(metadata_url) as response:
+    with urllib.request.urlopen(metadata_url, timeout=60) as response:
         metadata = json.load(response)
 
     if version == "latest":
         version = metadata["dist-tags"]["latest"]
     tarball_url = metadata["versions"][version]["dist"]["tarball"]
 
-    with urllib.request.urlopen(tarball_url) as response:
+    with urllib.request.urlopen(tarball_url, timeout=60) as response:
         tarball = response.read()
 
     with tarfile.open(fileobj=io.BytesIO(tarball), mode="r:gz") as archive:
-        member = archive.extractfile(SCHEMA_IN_PACKAGE)
+        try:
+            member = archive.extractfile(SCHEMA_IN_PACKAGE)
+        except KeyError:
+            member = None
         if member is None:
             raise FileNotFoundError(
                 f"{SCHEMA_IN_PACKAGE} is not in {PACKAGE}@{version}"
@@ -61,7 +64,7 @@ def fetch_graphql_schema(version: str = "latest") -> tuple[str, str]:
 
 def fetch_openapi_spec() -> str:
     """The OpenAPI spec, pretty-printed with sorted keys so the diff is only real changes."""
-    with urllib.request.urlopen(OPENAPI_URL) as response:
+    with urllib.request.urlopen(OPENAPI_URL, timeout=60) as response:
         spec = json.load(response)
     if "openapi" not in spec or "paths" not in spec:
         raise ValueError(f"{OPENAPI_URL} did not return an OpenAPI spec")
@@ -74,11 +77,11 @@ def main() -> None:
     schema, version = fetch_graphql_schema(version)
     openapi = fetch_openapi_spec()
 
-    SCHEMA_PATH.write_text(schema)
+    SCHEMA_PATH.write_text(schema, encoding="utf-8")
     print(
         f"Wrote the GraphQL schema from {PACKAGE}@{version} to {_relative(SCHEMA_PATH)}"
     )
-    OPENAPI_PATH.write_text(openapi)
+    OPENAPI_PATH.write_text(openapi, encoding="utf-8")
     print(f"Wrote the OpenAPI spec from {OPENAPI_URL} to {_relative(OPENAPI_PATH)}")
 
 

@@ -1829,4 +1829,4 @@ cli = ["click", "tabulate"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<3.16"
-content-hash = "a6693f980103db79983c05a97f7abbef2d536863b5e9eeb4557de2df980d8faf"
+content-hash = "763a763217229c900896b5bc45df05a804d656d5400bd7ceb32bd4c576420b0b"
