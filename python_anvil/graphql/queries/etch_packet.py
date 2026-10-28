@@ -1,3 +1,6 @@
+from python_anvil.graphql.selection import selection
+
+
 DEFAULT_RESPONSE_QUERY = """{
   id
   eid
@@ -30,6 +33,7 @@ DEFAULT_RESPONSE_QUERY = """{
 
 
 def generate_query(response_query: str | None = None) -> str:
+    response_query = selection(response_query)
     return f"""
   query EtchPacket (
     $eid: String!,

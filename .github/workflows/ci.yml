@@ -22,6 +22,8 @@ jobs:
 
     - run: make install
     - run: make lint
+    # python_anvil/types must be regenerated when schema/ changes
+    - run: make check-generated
 
   test:
     name: Test

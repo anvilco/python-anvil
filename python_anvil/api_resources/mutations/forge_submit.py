@@ -7,6 +7,11 @@ from python_anvil.graphql.mutations.forge_submit import (
     DEFAULT_RESPONSE_QUERY,
     generate_mutation,
 )
+from python_anvil.utils import camel_to_snake
+
+
+# The mutation, under the name it had before 6.0.0
+FORGE_SUBMIT = generate_mutation()
 
 
 class ForgeSubmit(BaseQuery):
@@ -57,9 +62,8 @@ class ForgeSubmit(BaseQuery):
 
     @classmethod
     def create_from_dict(cls, payload: dict[str, Any]):
-        # Parse the data through the model class to validate and pass it back
-        # as variables in this class.
-        return cls(**payload)
+        """Create a `ForgeSubmit` from a dict. Keys may be snake_case or camelCase."""
+        return cls(**{camel_to_snake(k): v for k, v in payload.items()})
 
     def create_payload(self):
         # If provided a payload and no forge_eid, we'll assume that it's the

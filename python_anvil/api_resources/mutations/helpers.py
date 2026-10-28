@@ -1,4 +1,4 @@
-from python_anvil.api_resources.base import BaseModel
+from pydantic import BaseModel
 
 
 def get_payload_attrs(payload_model: type[BaseModel]) -> list[str]:

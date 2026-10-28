@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json as json_lib
 import logging
+import os
 import warnings
 from collections.abc import Mapping
 from typing import Any, TypeVar
@@ -66,7 +67,8 @@ class Anvil:
     Every method raises an `AnvilRequestError` when the API responds with an
     error, and a `requests` exception when a request can't be made at all.
 
-    :param api_key: Your API key, from your organization's settings.
+    :param api_key: Your API key, from your organization's settings. Read from
+        the `ANVIL_API_KEY` environment variable when not given.
     :param access_token: An OAuth access token, instead of an API key. If both
         are given, the access token is used.
     :param base_url: Where to send requests. Defaults to production,
@@ -130,7 +132,12 @@ class Anvil:
                 stacklevel=2,
             )
         if not (api_key or access_token):
-            raise ValueError("`api_key` or `access_token` is required")
+            # The way every example and the CLI find the key
+            api_key = os.environ.get("ANVIL_API_KEY") or None
+        if not (api_key or access_token):
+            raise ValueError(
+                "`api_key` or `access_token` is required, or set ANVIL_API_KEY"
+            )
 
         self.client = HTTPClient(
             api_key,
@@ -215,6 +222,7 @@ class Anvil:
         version_number: int | None = None,
         data_type: str = DATA_TYPE_BYTES,
         params: Mapping[str, Any] | None = None,
+        timeout: float | tuple[float, float] | None = None,
     ) -> Any:
         """Fill a PDF template with your data. Returns the PDF.
 
@@ -226,6 +234,7 @@ class Anvil:
             recent version, published or not.
         :param data_type: `"bytes"` (the default) or `"stream"`. See `request_rest`.
         :param params: Extra query string parameters.
+        :param timeout: Overrides the client's timeout for this request.
         """
         data = _parse_payload(payload, FillPDFPayload)
         _check_binary_data_type(data_type)
@@ -240,6 +249,7 @@ class Anvil:
             json=data.model_dump(by_alias=True, exclude_none=True),
             params=query or None,
             data_type=data_type,
+            timeout=timeout,
         )
 
     def generate_pdf(
@@ -248,6 +258,7 @@ class Anvil:
         *,
         data_type: str = DATA_TYPE_BYTES,
         params: Mapping[str, Any] | None = None,
+        timeout: float | tuple[float, float] | None = None,
     ) -> Any:
         """Generate a PDF from Markdown or HTML. Returns the PDF.
 
@@ -268,10 +279,15 @@ class Anvil:
             json=data.model_dump(by_alias=True, exclude_none=True),
             params=params,
             data_type=data_type,
+            timeout=timeout,
         )
 
     def download_documents(
-        self, document_group_eid: str, *, data_type: str = DATA_TYPE_BYTES
+        self,
+        document_group_eid: str,
+        *,
+        data_type: str = DATA_TYPE_BYTES,
+        timeout: float | tuple[float, float] | None = None,
     ) -> Any:
         """Download the documents of an Etch packet's document group as a zip file.
 
@@ -284,6 +300,7 @@ class Anvil:
             "GET",
             f"/api/document-group/{document_group_eid}.zip",
             data_type=data_type,
+            timeout=timeout,
         )
 
     # GraphQL
@@ -291,19 +308,25 @@ class Anvil:
     def request_graphql(
         self,
         query: str,
-        variables: Mapping[str, Any] | None = None,
+        variables: Mapping[str, Any] | str | bytes | None = None,
         *,
         timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Send a GraphQL query or mutation. For operations without a method of their own.
 
         Returns the response's `data`. Files anywhere in `variables` are sent
-        as a multipart upload: see `prepare_graphql_file`.
+        as a multipart upload: see `prepare_graphql_file`. `variables` may be
+        a JSON string.
 
         See the GraphQL reference for every query and mutation:
         https://www.useanvil.com/docs/api/graphql/reference/
         """
-        operations = {"query": query, "variables": dict(variables or {})}
+        given = (
+            json_lib.loads(variables)
+            if isinstance(variables, (str, bytes))
+            else variables
+        )
+        operations = {"query": query, "variables": dict(given or {})}
 
         # Checks for both file uploads and base64 uploads
         if not validate_upload_schema(operations["variables"]):
@@ -330,25 +353,39 @@ class Anvil:
         return body["data"] or {}
 
     def query(
-        self, query: str, variables: Mapping[str, Any] | None = None
+        self,
+        query: str,
+        variables: Mapping[str, Any] | str | bytes | None = None,
+        *,
+        timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Send a GraphQL query. The same as `request_graphql`."""
-        return self.request_graphql(query, variables)
+        return self.request_graphql(query, variables, timeout=timeout)
 
     def mutate(
-        self, query: str | BaseQuery, variables: Mapping[str, Any] | None = None
+        self,
+        query: str | BaseQuery,
+        variables: Mapping[str, Any] | str | bytes | None = None,
+        *,
+        timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Send a GraphQL mutation, as a string or a mutation class. The same as `request_graphql`."""
         mutation = query if isinstance(query, str) else query.get_mutation()
-        return self.request_graphql(mutation, variables)
+        return self.request_graphql(mutation, variables, timeout=timeout)
 
     def create_etch_packet(
         self,
-        payload: dict | CreateEtchPacketPayload | CreateEtchPacket | None = None,
+        payload: dict
+        | str
+        | bytes
+        | CreateEtchPacketPayload
+        | CreateEtchPacket
+        | None = None,
         json: str | bytes | None = None,
         *,
         response_query: str | None = None,
         mutation: str | None = None,
+        timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Create an Etch e-sign packet, and send it to the first signer unless it's a draft.
 
@@ -364,11 +401,13 @@ class Anvil:
         :param mutation: Your own `createEtchPacket` mutation, with its response
             fields, instead of the client's. `response_query` is then ignored.
         """
-        if payload is None and json is None:
+        if not payload and json is None:
             raise TypeError("One of the arguments `payload` or `json` must exist")
 
         if json is not None:
             payload = CreateEtchPacketPayload.model_validate_json(json)
+        elif isinstance(payload, (str, bytes)):
+            payload = CreateEtchPacketPayload.model_validate_json(payload)
 
         if isinstance(payload, dict):
             builder = CreateEtchPacket.create_from_dict(payload)
@@ -385,11 +424,15 @@ class Anvil:
             by_alias=True, exclude_none=True
         )
         return self.request_graphql(
-            mutation or builder.get_mutation(response_query), variables
+            mutation or builder.get_mutation(response_query), variables, timeout=timeout
         )
 
     def get_etch_packet(
-        self, eid: str, *, response_query: str | None = None
+        self,
+        eid: str,
+        *,
+        response_query: str | None = None,
+        timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Get an Etch packet's details and status. Returns the packet.
 
@@ -397,11 +440,19 @@ class Anvil:
         :param response_query: The fields to select, instead of the defaults.
         """
         data = self.request_graphql(
-            queries.etch_packet.generate_query(response_query), {"eid": eid}
+            queries.etch_packet.generate_query(response_query),
+            {"eid": eid},
+            timeout=timeout,
         )
         return data["etchPacket"]
 
-    def generate_etch_signing_url(self, signer_eid: str, client_user_id: str) -> str:
+    def generate_etch_signing_url(
+        self,
+        signer_eid: str,
+        client_user_id: str,
+        *,
+        timeout: float | tuple[float, float] | None = None,
+    ) -> str:
         """Generate the URL an embedded signer signs at. Returns the URL.
 
         The packet must have been sent, and the signer must be an `embedded` signer.
@@ -413,7 +464,9 @@ class Anvil:
             signer_eid=signer_eid, client_user_id=client_user_id
         )
         data = self.request_graphql(
-            mutation.get_mutation(), mutation.create_payload().model_dump(by_alias=True)
+            mutation.get_mutation(),
+            mutation.create_payload().model_dump(by_alias=True),
+            timeout=timeout,
         )
         return data["generateEtchSignURL"]
 
@@ -421,11 +474,12 @@ class Anvil:
 
     def forge_submit(
         self,
-        payload: dict | ForgeSubmitPayload | None = None,
+        payload: dict | str | bytes | ForgeSubmitPayload | None = None,
         json: str | bytes | None = None,
         *,
         response_query: str | None = None,
         mutation: str | None = None,
+        timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Submit data to a webform (forge) in a workflow (weld). Returns the response's `data`.
 
@@ -437,11 +491,13 @@ class Anvil:
             of the defaults.
         :param mutation: Your own `forgeSubmit` mutation, instead of the client's.
         """
-        if payload is None and json is None:
+        if not payload and json is None:
             raise TypeError("One of arguments `json` or `payload` are required")
 
         if json is not None:
             payload = ForgeSubmitPayload.model_validate_json(json)
+        elif isinstance(payload, (str, bytes)):
+            payload = ForgeSubmitPayload.model_validate_json(payload)
 
         if isinstance(payload, dict):
             builder = ForgeSubmit.create_from_dict(payload)
@@ -456,17 +512,25 @@ class Anvil:
             by_alias=True, exclude_none=True
         )
         return self.request_graphql(
-            mutation or builder.get_mutation(response_query), variables
+            mutation or builder.get_mutation(response_query), variables, timeout=timeout
         )
 
-    def remove_weld_data(self, eid: str, *, mutation: str | None = None) -> bool:
+    def remove_weld_data(
+        self,
+        eid: str,
+        *,
+        mutation: str | None = None,
+        timeout: float | tuple[float, float] | None = None,
+    ) -> bool:
         """Remove a workflow submission's data (a weld data). Returns whether it was removed.
 
         :param eid: The weld data's eid, from `forge_submit`'s `weldData`.
         :param mutation: Your own `removeWeldData` mutation, instead of the client's.
         """
         data = self.request_graphql(
-            mutation or mutations.remove_weld_data.generate_mutation(), {"eid": eid}
+            mutation or mutations.remove_weld_data.generate_mutation(),
+            {"eid": eid},
+            timeout=timeout,
         )
         return bool(data["removeWeldData"])
 

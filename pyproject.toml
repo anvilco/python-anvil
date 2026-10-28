@@ -25,6 +25,8 @@ requires-python = ">=3.10,<3.16"
 dependencies = [
     "requests>=2.28.2,<3",
     "pydantic>=2.8,<3",
+    # The generated types use TypeAliasType on Python 3.10 and 3.11
+    "typing-extensions>=4.12",
 ]
 
 [project.optional-dependencies]
@@ -56,8 +58,11 @@ pytest-describe = ">=2.2"
 pytest-timeout = ">=2.3"
 types-requests = ">=2.28"
 types-tabulate = ">=0.9"
-# To check the client's queries and mutations against the API schema
+# To check the client's queries and mutations against the API schema, and to
+# generate python_anvil/types from it and the OpenAPI spec (dev/generate_types.py)
 graphql-core = ">=3.2"
+# Pinned to a minor: `make check-generated` byte-compares its output
+datamodel-code-generator = "~0.86"
 # So the CLI and its tests run from a dev install without --all-extras
 click = ">=8.0,<9"
 tabulate = ">=0.9,<0.11"
@@ -98,6 +103,10 @@ ignore = [
 # pytest-describe tests nest functions and shadow fixtures by design
 "tests/**" = ["D", "B018", "RUF012"]
 "examples/**" = ["D"]
+# Generated from the API specs; their docstrings are the API's descriptions
+"python_anvil/types/rest.py" = ["D", "UP", "RUF"]
+"python_anvil/types/graphql.py" = ["D", "UP", "RUF"]
+"python_anvil/types/operations.py" = ["D", "UP", "RUF"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"

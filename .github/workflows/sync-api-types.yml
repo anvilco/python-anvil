@@ -1,0 +1,158 @@
+name: Sync API Types
+
+# Refreshes schema/ from the live Anvil API and the published @anvilco/types,
+# regenerates python_anvil/types, and opens one PR when any of it changed.
+# Runs after a production rollout completes: Foundry's postsync step sends
+# `anvil-production-deploy` to every repo in its --webhook-repos list
+# (anvil-infra: k8s/anvil/base/foundry/postsync.yaml). That dispatch is
+# best-effort with no retry, so the weekly cron is a backstop for a dropped one.
+# anvil-js's sync-api-types.yml does the same for @anvilco/types.
+
+on:
+  repository_dispatch:
+    types: [anvil-production-deploy]
+  schedule:
+    - cron: '0 10 * * 1' # Every Monday at 10am UTC, after anvil-js's 9am sync
+  workflow_dispatch:
+
+# BRANCH is force-pushed, so never let two runs race on it.
+concurrency: sync-api-types
+
+env:
+  BRANCH: chore/sync-api-types
+  SCHEMA_DIR: schema
+  TYPES_DIR: python_anvil/types
+
+jobs:
+  sync-api-types:
+    name: Sync API Types
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      # Always master, so a manual run from another branch can't put that
+      # branch's commits in the PR. No persisted credentials: CI_GITHUB_TOKEN
+      # is only handed to git and gh in the steps that push, not to the
+      # install and the generators.
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          persist-credentials: false
+
+      - run: pipx install poetry
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: '.python-version'
+          cache: 'poetry'
+
+      - run: make install
+
+      # One step, so the types are never regenerated from a spec that failed
+      # to fetch, and a failed generation is discarded along with the specs.
+      - name: Fetch the specs and generate the types
+        id: generate
+        continue-on-error: true
+        run: |
+          make update-schema
+          make generate
+
+      - name: Discard the output if that failed
+        if: steps.generate.outcome != 'success'
+        run: git checkout -- "$SCHEMA_DIR" "$TYPES_DIR"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          echo "changed=$(git diff --quiet -- "$SCHEMA_DIR" "$TYPES_DIR" && echo false || echo true)" >> "$GITHUB_OUTPUT"
+          git diff --stat
+
+      - name: Open or update PR
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+          DEPLOY_VERSION: ${{ github.event.client_payload.version }}
+          DEPLOY_PR_URL: ${{ github.event.client_payload.pullRequest.url }}
+          DEPLOYED_AT: ${{ github.event.client_payload.deployedAt }}
+        run: |
+          # Not GITHUB_TOKEN: pushes and PRs made with it don't trigger
+          # workflows, so the PR would never get its CI checks.
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # A deploy that didn't move the API again would otherwise force-push
+          # an identical commit, re-running CI and discarding any edits made
+          # on the branch.
+          PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$PR" ] && git fetch -q --depth=1 origin "$BRANCH" && git diff --quiet FETCH_HEAD -- "$SCHEMA_DIR" "$TYPES_DIR"; then
+            echo "PR #$PR already has this output"
+            exit 0
+          fi
+
+          # Note the sync under Unreleased in the changelog, once per release
+          python3 - <<'PY'
+          import re
+          from pathlib import Path
+
+          path = Path("CHANGELOG.md")
+          text = path.read_text(encoding="utf-8")
+          note = "- Sync the generated API types in `python_anvil.types` with the production API."
+          match = re.search(r"^## \[Unreleased\]\n(?P<body>.*?)(?=^## \[|\Z)", text, re.M | re.S)
+          if match and note not in match["body"]:
+              body = match["body"].rstrip("\n")
+              section = f"{body}\n{note}\n\n" if body else f"\n{note}\n\n"
+              text = text[: match.start("body")] + section + text[match.end("body") :]
+              path.write_text(text, encoding="utf-8")
+          PY
+
+          if [ "$EVENT_NAME" = repository_dispatch ]; then
+            TRIGGER="Anvil production deploy \`$DEPLOY_VERSION\` ($DEPLOY_PR_URL), deployed $DEPLOYED_AT."
+          else
+            TRIGGER="\`$EVENT_NAME\` run."
+          fi
+          {
+            echo "Automated sync of the generated types from the production Anvil API. Triggered by $TRIGGER"
+            echo
+            echo "- \`$SCHEMA_DIR/\`: the GraphQL schema (from the published \`@anvilco/types\`) and the OpenAPI spec"
+            echo "- \`$TYPES_DIR/\`: regenerated from them with \`make generate\`"
+            echo
+            echo "If a type or field was removed or renamed, note it under Unreleased in CHANGELOG.md as a breaking change before merging."
+            echo
+            echo "A later deploy that changes these files again rebuilds this branch from \`master\`, replacing any edits made here."
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A -- "$SCHEMA_DIR" "$TYPES_DIR" CHANGELOG.md
+          git commit -m "Sync the generated API types from production"
+          git push --force origin "$BRANCH"
+
+          if [ -n "$PR" ]; then
+            gh pr edit "$PR" --body-file "$RUNNER_TEMP/pr-body.md"
+          else
+            gh pr create \
+              --title "Sync the generated API types from production" \
+              --body-file "$RUNNER_TEMP/pr-body.md" \
+              --base master \
+              --head "$BRANCH"
+          fi
+
+      # Production moved back to match master (e.g. a rollback before the PR
+      # merged), so an open sync PR is now wrong.
+      - name: Close stale PR
+        if: steps.changes.outputs.changed == 'false' && steps.generate.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$PR" ]; then
+            gh pr close "$PR" --delete-branch --comment "Production now matches master, so this sync is no longer needed."
+          fi
+
+      - name: Fail if the generator failed
+        if: steps.generate.outcome != 'success'
+        run: |
+          echo "::error::Fetching the specs or generating the types failed. See the step above."
+          exit 1
