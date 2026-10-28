@@ -137,6 +137,50 @@ def describe_rate_limiter():
         # But the first two went straight away
         assert sent[1] - sent[0] < 0.1
 
+    def it_counts_a_request_until_an_interval_after_its_response():
+        # The API counts from when a request arrives, which is somewhere between
+        # when it was sent and when its response came back
+        limiter = RateLimiter(2, 200)
+        limiter.update_from_headers(
+            {"x-ratelimit-limit": "2", "x-ratelimit-interval-ms": "200"}
+        )
+        sent: list[float] = []
+        answered: list[float] = []
+
+        def slow_send():
+            sent.append(time.monotonic())
+            time.sleep(0.15)
+            answered.append(time.monotonic())
+            return response()
+
+        for _ in range(3):
+            limiter.run(slow_send)
+
+        # The third waits for the first's response to leave the window, not its send
+        assert sent[2] - answered[0] >= 0.2
+        assert sent[2] - sent[0] >= 0.35
+
+    def it_counts_a_request_that_failed():
+        limiter = RateLimiter(1, 200)
+        limiter.update_from_headers(
+            {"x-ratelimit-limit": "1", "x-ratelimit-interval-ms": "200"}
+        )
+
+        def fail():
+            raise ConnectionError("dropped")
+
+        failed_at = time.monotonic()
+        with contextlib.suppress(ConnectionError):
+            limiter.run(fail)
+        sent: list[float] = []
+
+        def send():
+            sent.append(time.monotonic())
+            return response()
+
+        limiter.run(send)
+        assert sent[0] - failed_at >= 0.2
+
     def it_retries_a_429_after_retry_after_plus_the_buffer():
         limiter = RateLimiter(10, 1000)
         responses = iter([response(429, {"retry-after": "0.1"}), response(200)])

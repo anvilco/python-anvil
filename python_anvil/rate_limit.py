@@ -5,6 +5,14 @@ requests in any `X-RateLimit-Interval-Ms`. The limiter counts the same way,
 so it only holds a request back when the limit has been reached, and never
 delays requests that are within it.
 
+The API counts a request from the moment it arrives, which the client
+can't see. It is somewhere between when the request was sent and when the
+response came back, so a request counts here from when it is sent until an
+interval after its response arrives. That way the API never counts more
+requests in its window than the client counted in its own, whatever the
+latency, and a new connection's handshake can't put a request on the wrong
+side of the window.
+
 Every response carries those headers, so the client's first request goes out
 alone, and the limits in its response become the limits for every request
 after it. Requests made in the meantime wait for that first response.
@@ -58,8 +66,11 @@ class RateLimiter:
         self.interval_ms: int = DEFAULT_REQUEST_LIMIT_MS
         self.set_limits(limit, interval_ms)
 
-        # When the requests in the current window were sent, oldest first
-        self._request_times: deque[float] = deque()
+        # How many requests are out now, and when the responses of recent
+        # ones arrived, oldest first. A request counts from when it is sent
+        # until an interval after its response.
+        self._in_flight = 0
+        self._finished_at: deque[float] = deque()
         # Whether the limits have been set from an API response. Until they
         # have, every response is checked for the headers.
         self.has_set_from_response = False
@@ -119,10 +130,13 @@ class RateLimiter:
             try:
                 response = send()
             except BaseException:
+                # The request may still have reached the API, so it counts.
                 # There won't be a response to set the limits from, so let
-                # the requests waiting for one go ahead
+                # the requests waiting for one go ahead.
+                self._finish()
                 self._release_setup_gate()
                 raise
+            self._finish()
 
             if not self.has_set_from_response:
                 self.update_from_headers(response.headers)
@@ -149,22 +163,34 @@ class RateLimiter:
                 self._setting_in_progress = True
 
             # Wait until another request would keep us within `limit` requests
-            # in any `interval_ms`
+            # in any `interval_ms`: the ones out now, plus those whose response
+            # arrived within the last interval
             while True:
                 # Not time.time(), so that changes to the system clock can't hold requests up
                 now = time.monotonic()
-                # Requests sent before this no longer count. The buffer allows for
-                # requests that were sent further apart than they arrive.
+                # Responses that arrived before this no longer count. The buffer
+                # allows for the API's clock and the client's ticking apart.
                 window_start = now - (self.interval_ms + RETRY_BUFFER_MS) / 1000
-                while self._request_times and self._request_times[0] <= window_start:
-                    self._request_times.popleft()
+                while self._finished_at and self._finished_at[0] <= window_start:
+                    self._finished_at.popleft()
 
-                if len(self._request_times) < self.limit:
-                    self._request_times.append(now)
+                if self._in_flight + len(self._finished_at) < self.limit:
+                    self._in_flight += 1
                     return
 
-                # Wait for the oldest request to leave the window, then check again
-                self._condition.wait(timeout=self._request_times[0] - window_start)
+                if self._finished_at:
+                    # Wait for the oldest response to leave the window, then check again
+                    self._condition.wait(timeout=self._finished_at[0] - window_start)
+                else:
+                    # Every slot is a request still out; a response will wake us
+                    self._condition.wait()
+
+    def _finish(self) -> None:
+        """A request's response arrived, or it failed: it counts for another interval."""
+        with self._condition:
+            self._in_flight -= 1
+            self._finished_at.append(time.monotonic())
+            self._condition.notify_all()
 
     def _release_setup_gate(self) -> None:
         with self._condition:
