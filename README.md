@@ -657,7 +657,7 @@ Our API has request rate limits in place. The initial request made by this clien
 
 The limit is your account's, so every client in the process with the same `base_url` and credentials shares one limiter, and the limits it learned. An app that makes a new client for each request is limited as a whole, and the client is thread-safe, so requests from several threads share the limit too. The `request_limit` and `request_limit_ms` options are the starting limits until the first response, and only apply to the first client made for those credentials. Separate processes, like web server workers, each learn the limits for themselves.
 
-Like the API, the client counts requests over a sliding window: it only holds a request back when `X-RateLimit-Limit` requests have already been sent in the last `X-RateLimit-Interval-Ms`.
+Like the API, the client counts requests over a sliding window: it only holds a request back when `X-RateLimit-Limit` requests have already been sent in the last `X-RateLimit-Interval-Ms`. A request counts from when it is sent until an interval after its response arrives. The API counts from when the request reached it, which is somewhere in between, so it never sees more requests in its window than the client allowed.
 
 In the event that this client still receives a `429 Too Many Requests` error response, it will wait for the number of seconds in the `Retry-After` header, plus 50ms, then retry the request. Without a `Retry-After` it waits a second.
 
