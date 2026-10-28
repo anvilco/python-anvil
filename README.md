@@ -71,7 +71,7 @@ with open("output.pdf", "wb") as f:
 
 ### Types
 
-The client's request types are generated from the Anvil API's GraphQL schema and OpenAPI spec, as [pydantic](https://docs.pydantic.dev/) models in `python_anvil.types`, the Python counterpart of [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types). Field names are snake_case with camelCase aliases, and either works. The payload models the client's methods take extend them, so a misspelled option or enum value is a validation error:
+The client's request types are generated from the Anvil API's GraphQL schema and OpenAPI spec, as [pydantic](https://docs.pydantic.dev/) models in `python_anvil.types`, the Python counterpart of [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types). Field names are snake_case with camelCase aliases, and either works. `FillPDFPayload`, `EtchSigner`, `CreateEtchPacketPayload` and `ForgeSubmitPayload` extend them, so every option the API documents is available, and a value the API doesn't accept, like an unknown enum value, is a validation error before anything is sent:
 
 ```python
 from python_anvil.api_resources.payload import FillPDFPayload
@@ -161,6 +161,7 @@ with open("filled.pdf", "wb") as f:
   * See `python_anvil.types.rest.FillPdfRequest` for every option.
 * `version_number` (int) - _optional_ The version of the PDF template to fill. Defaults to the latest published version, or the latest version if the template has never been published. See [Constants](#constants).
 * `data_type` (str) - _optional_ What to return. `"bytes"` (the default) returns the PDF's bytes; `"stream"` returns the `requests.Response`, to stream a large PDF with `iter_content`. See [request_rest](#request_restmethod-path-json-params-data_type).
+* `params` (dict) - _optional_ Extra query string parameters.
 * Returns the filled PDF's raw bytes, or raises an [`AnvilRequestError`](#errors).
 
 ##### generate_pdf(payload[, data_type])
@@ -224,6 +225,7 @@ with open("generated.pdf", "wb") as f:
   * `type` (str) - _optional_ `"markdown"` (the default) or `"html"`
   * `data` (list | dict) - The data that generates the PDF: a list of content blocks for Markdown, or `{"html": ..., "css": ...}` for HTML. See [the docs](https://useanvil.com/docs/api/generate-pdf#supported-format-of-data) for all supported objects.
 * `data_type` (str) - _optional_ `"bytes"` (the default) or `"stream"`, like [fill_pdf](#fill_pdftemplate_id-payload-version_number-data_type).
+* `params` (dict) - _optional_ Extra query string parameters.
 * Returns the generated PDF's raw bytes, or raises an [`AnvilRequestError`](#errors).
 
 ##### create_etch_packet(payload[, json, response_query, mutation])
@@ -267,7 +269,7 @@ etch_packet = data["createEtchPacket"]
 signer_eid = etch_packet["documentGroup"]["signers"][0]["eid"]
 ```
 
-* `payload` (dict | `CreateEtchPacket` | `CreateEtchPacketPayload`) - The mutation's variables. See the [API Documentation](#api-documentation) for details, and the [`CreateEtchPacket` builder](#the-createetchpacket-builder) below for building a packet step by step. Files to upload can be base64 dicts, or prepared with [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
+* `payload` (dict | `CreateEtchPacket` | `CreateEtchPacketPayload`) - The mutation's variables, with snake_case or camelCase keys. See the [API Documentation](#api-documentation) for details, and the [`CreateEtchPacket` builder](#the-createetchpacket-builder) below for building a packet step by step. Files to upload can be base64 dicts, or prepared with [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
 * `json` (str) - _optional_ The variables as a JSON string, instead of `payload`.
 * `response_query` (str) - _optional_ A GraphQL Query compliant query to use for the data desired in the mutation response. Can be left out to use default.
 * `mutation` (str) - _optional_ If you'd like complete control of the GraphQL mutation, you can pass in a GraphQL Mutation compliant string that will be used in the mutation call. This string should also include your response query, as the `response_query` param is ignored if `mutation` is passed. Example:
@@ -360,7 +362,7 @@ packet.add_signer(
 data = anvil.create_etch_packet(packet)
 ```
 
-`EtchSigner`, `DocumentUpload` and the other payload models extend the generated [types](#types), so every option the API has is available on them.
+`EtchSigner` extends the generated [types](#types), so every signer option the API has is available on it.
 
 ##### get_etch_packet(eid[, response_query])
 
@@ -474,6 +476,7 @@ weld_data = data["weldData"]
 
 * `query` (str) - GraphQL query or mutation to run. See the [GraphQL reference](https://www.useanvil.com/docs/api/graphql/reference/) for a listing on all possible queries
 * `variables` (dict) - _optional_ GraphQL variables for the query. Files to upload can be anywhere in here; see [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
+* `timeout` (float) - _optional_ Overrides the client's `timeout` for this request.
 * Returns the response's `data`: use the query or mutation name to reference the data that you requested. Raises an [`AnvilRequestError`](#errors) for GraphQL errors (which come with a `200` status) and HTTP errors alike.
 
 `query(query, variables)` and `mutate(query, variables)` are the same method, under the names earlier versions used.
@@ -534,7 +537,7 @@ A few queries have methods of their own, for exploring your account. They return
 
 * `get_current_user()` - The user the API key belongs to, with their organizations.
 * `get_casts(fields=None, show_all=False)` - The PDF templates (casts) in every organization, up to 500 each. By default their `eid`, `title` and `fieldInfo`; `show_all` includes casts that aren't templates.
-* `get_cast(eid, fields=None, version_number=None)` - One PDF template.
+* `get_cast(eid, fields=None, version_number=None, cast_args=None)` - One PDF template. `cast_args` are extra `(name, value)` arguments for the `cast` query, with the value in GraphQL syntax.
 * `get_welds()` - The workflows (welds) in every organization, with their webforms (forges), up to 500 each.
 * `get_weld(eid)` - One workflow, with its webforms.
 
@@ -638,9 +641,9 @@ except AnvilRequestError as e:
   [{"name": "AssertionError", "message": "PDF did not generate properly from given HTML!"}]
   [{"name": "ValidationError", "status": 400, "fields": [{"message": "Required", "property": "data"}]}]
   ```
-* **A response that isn't JSON**, like a `502` from a proxy. The `name` and `message` are the HTTP status text:
+* **A response that isn't JSON**, like a `502` from a proxy. The `name` and `message` are the HTTP status text, and `body` the start of the response:
   ```python
-  [{"name": "Bad Gateway", "message": "Bad Gateway"}]
+  [{"name": "Bad Gateway", "message": "Bad Gateway", "body": "<html>..."}]
   ```
 * **A JSON response that couldn't be parsed.** The parsing error's `name` and `message`:
   ```python
@@ -665,7 +668,7 @@ See the [Anvil API docs](https://www.useanvil.com/docs/api/getting-started/#rate
 
 ### Retries
 
-A request that gets a `500`, `502`, `503` or `504`, or that can't connect, is retried up to `max_retries` times (5 by default) with exponential backoff: 100ms before the first retry, then 200ms, 400ms, and so on, or a `503`'s `Retry-After` when it has one. Retries wait for the rate limit like any request, and an upload is sent in full again. Mutations are retried as well, so a request the API processed but answered with a `5xx` could be sent twice; pass `max_retries=0` to turn retries off for a client that must not do that. A request that still fails raises an [`AnvilRequestError`](#errors) with the last response, or the `requests.ConnectionError`.
+A request that gets a `500`, `502`, `503` or `504`, or that can't connect, is retried up to `max_retries` times (5 by default) with exponential backoff: 100ms before the first retry, then 200ms, 400ms, and so on, or the response's `Retry-After` when it has one, capped at a minute. Retries wait for the rate limit like any request, and an upload is sent in full again. Mutations are retried as well, so a request the API processed but answered with a `5xx` could be sent twice; pass `max_retries=0` to turn retries off for a client that must not do that. A request that still fails raises an [`AnvilRequestError`](#errors) with the last response, or the `requests.ConnectionError`.
 
 ## Command line tool
 
