@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v6.0.0] - 2026-10-28
+
 - BREAKING: Drop support for Python 3.8 and 3.9, which are end of life. The minimum supported version is now Python 3.10.
 - Add support for Python 3.14 and 3.15 ([#95](https://github.com/anvilco/python-anvil/issues/95)).
 - BREAKING: The `anvil` command line tool's dependencies, `click` and `tabulate`, are now the `cli` extra: `pip install 'python-anvil[cli]'` ([#96](https://github.com/anvilco/python-anvil/issues/96)). Importing `python_anvil` no longer imports the CLI.
