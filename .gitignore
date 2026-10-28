@@ -19,11 +19,7 @@ Icon*
 *.pid
 
 # Generated documentation
-/docs/gen/
-/docs/apidocs/
-/site/
 /*.html
-/docs/*.png
 
 # Google Drive
 *.gdoc

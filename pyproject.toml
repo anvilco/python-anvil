@@ -75,6 +75,10 @@ build-backend = "poetry.core.masonry.api"
 line-length = 88
 target-version = "py310"
 
+[tool.ruff.format]
+# The README's code blocks are examples; some have `...` placeholders
+exclude = ["*.md"]
+
 [tool.ruff.lint]
 select = [
     "E",   # pycodestyle errors
