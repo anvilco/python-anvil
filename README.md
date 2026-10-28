@@ -71,7 +71,7 @@ with open("output.pdf", "wb") as f:
 
 ### Types
 
-The client's request types are generated from the Anvil API's GraphQL schema and OpenAPI spec, as [pydantic](https://docs.pydantic.dev/) models in `python_anvil.types`, the Python counterpart of [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types). Field names are snake_case with camelCase aliases, and either works. `FillPDFPayload`, `EtchSigner`, `CreateEtchPacketPayload` and `ForgeSubmitPayload` extend them, so every option the API documents is available, and a value the API doesn't accept, like an unknown enum value, is a validation error before anything is sent:
+The client's request types are generated from the Anvil API's GraphQL schema and OpenAPI spec, as [pydantic](https://docs.pydantic.dev/) models in `python_anvil.types`, the Python counterpart of [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types). Field names are snake_case with camelCase aliases, and either works. `FillPDFPayload`, `GeneratePDFPayload`, `EtchSigner`, `CreateEtchPacketPayload` and `ForgeSubmitPayload` extend them, so every option the API documents is available, and a value the API doesn't accept, like an unknown enum value, is a validation error before anything is sent:
 
 ```python
 from python_anvil.api_resources.payload import FillPDFPayload
@@ -114,14 +114,18 @@ A plain `dict` works everywhere a model does, and extra fields are kept, so a fe
 
 Creates an Anvil client instance.
 
-* `api_key` (str) - Your API key. Or pass `access_token=` instead; see [Authentication](#authentication).
+* `api_key` (str) - Your API key. Read from the `ANVIL_API_KEY` environment variable when left out. Or pass `access_token=` instead; see [Authentication](#authentication).
 * `**options` - [Options](#options) for the client, as keyword arguments.
 
 ```python
 from python_anvil import Anvil
 
 anvil = Anvil("abc123")
+# Or, with ANVIL_API_KEY set in the environment
+anvil = Anvil()
 ```
+
+Every method also takes a `timeout` keyword argument that overrides the client's [`timeout`](#options) for that one request.
 
 The client can also be used as a context manager, which closes its HTTP session when done.
 
@@ -224,6 +228,7 @@ with open("generated.pdf", "wb") as f:
   * `title` (str) - _optional_ Set the title encoded into the PDF document
   * `type` (str) - _optional_ `"markdown"` (the default) or `"html"`
   * `data` (list | dict) - The data that generates the PDF: a list of content blocks for Markdown, or `{"html": ..., "css": ...}` for HTML. See [the docs](https://useanvil.com/docs/api/generate-pdf#supported-format-of-data) for all supported objects.
+  * `page`, `logo`, `font_size`, `font_family`, `text_color`, `include_timestamp` - _optional_ See `python_anvil.types.rest.GenerateMarkdownPdfRequest` for every option.
 * `data_type` (str) - _optional_ `"bytes"` (the default) or `"stream"`, like [fill_pdf](#fill_pdftemplate_id-payload-version_number-data_type).
 * `params` (dict) - _optional_ Extra query string parameters.
 * Returns the generated PDF's raw bytes, or raises an [`AnvilRequestError`](#errors).
@@ -269,9 +274,9 @@ etch_packet = data["createEtchPacket"]
 signer_eid = etch_packet["documentGroup"]["signers"][0]["eid"]
 ```
 
-* `payload` (dict | `CreateEtchPacket` | `CreateEtchPacketPayload`) - The mutation's variables, with snake_case or camelCase keys. See the [API Documentation](#api-documentation) for details, and the [`CreateEtchPacket` builder](#the-createetchpacket-builder) below for building a packet step by step. Files to upload can be base64 dicts, or prepared with [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
+* `payload` (dict | str | `CreateEtchPacket` | `CreateEtchPacketPayload`) - The mutation's variables, as a dict with snake_case or camelCase keys, a JSON string, the [builder](#the-createetchpacket-builder) or the model. A dict's `files` may be uploads, template references (`{"id": ..., "castEid": ...}`), Markdown or HTML documents, or `DocumentUpload`, `EtchCastRef`, `DocumentMarkdown` and `DocumentMarkup` instances. See the [API Documentation](#api-documentation) for details, and the [`CreateEtchPacket` builder](#the-createetchpacket-builder) below for building a packet step by step. Files to upload can be base64 dicts, or prepared with [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
 * `json` (str) - _optional_ The variables as a JSON string, instead of `payload`.
-* `response_query` (str) - _optional_ A GraphQL Query compliant query to use for the data desired in the mutation response. Can be left out to use default.
+* `response_query` (str) - _optional_ The fields to select on the created packet, like `"{ eid status }"` (the braces are optional). Can be left out to use the default.
 * `mutation` (str) - _optional_ If you'd like complete control of the GraphQL mutation, you can pass in a GraphQL Mutation compliant string that will be used in the mutation call. This string should also include your response query, as the `response_query` param is ignored if `mutation` is passed. Example:
   ```graphql
     mutation CreateEtchPacket (
@@ -434,7 +439,7 @@ submission = data["forgeSubmit"]
 weld_data_eid = submission["weldData"]["eid"]
 ```
 
-* `payload` (dict | `ForgeSubmitPayload`) - Requires `forge_eid` and `payload`. Pass `weld_data_eid` and `submission_eid` to update an existing submission. See the [GraphQL reference](https://www.useanvil.com/docs/api/graphql/reference/) for all variables.
+* `payload` (dict | str | `ForgeSubmitPayload`) - The mutation's variables as a dict (snake_case or camelCase keys), a JSON string or the model. Requires `forge_eid` and `payload`. Pass `weld_data_eid` and `submission_eid` to update an existing submission. See the [GraphQL reference](https://www.useanvil.com/docs/api/graphql/reference/) for all variables.
 * `json` (str) - _optional_ The variables as a JSON string, instead of `payload`.
 * `response_query` (str) - _optional_ A GraphQL Query compliant query to use for the data desired in the mutation response. Can be left out to use default.
 * `mutation` (str) - _optional_ Your own complete GraphQL mutation. `response_query` is ignored if this is passed.
@@ -475,7 +480,7 @@ weld_data = data["weldData"]
 ```
 
 * `query` (str) - GraphQL query or mutation to run. See the [GraphQL reference](https://www.useanvil.com/docs/api/graphql/reference/) for a listing on all possible queries
-* `variables` (dict) - _optional_ GraphQL variables for the query. Files to upload can be anywhere in here; see [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
+* `variables` (dict | str) - _optional_ GraphQL variables for the query, as a dict or a JSON string. Files to upload can be anywhere in here; see [prepare_graphql_file](#anvilprepare_graphql_filepath_or_file-filename-mimetype).
 * `timeout` (float) - _optional_ Overrides the client's `timeout` for this request.
 * Returns the response's `data`: use the query or mutation name to reference the data that you requested. Raises an [`AnvilRequestError`](#errors) for GraphQL errors (which come with a `200` status) and HTTP errors alike.
 
