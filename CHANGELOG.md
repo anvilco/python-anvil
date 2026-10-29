@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- `query`, `mutate` and `request_graphql` given a `gql` document raise a `TypeError` that says to pass the query string, instead of `Object of type DocumentNode is not JSON serializable`.
+
 ## [v6.0.0] - 2026-10-28
 
 - BREAKING: Drop support for Python 3.8 and 3.9, which are end of life. The minimum supported version is now Python 3.10.
