@@ -50,7 +50,7 @@ requires-poetry = ">=2.0"
 packages = [{ include = "python_anvil" }]
 
 [tool.poetry.group.dev.dependencies]
-ruff = ">=0.17"
+ruff = ">=0.17.2"
 mypy = ">=1.18"
 pytest = ">=8"
 pytest-cov = ">=6"
