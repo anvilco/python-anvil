@@ -321,6 +321,12 @@ class Anvil:
         See the GraphQL reference for every query and mutation:
         https://www.useanvil.com/docs/api/graphql/reference/
         """
+        if not isinstance(query, str):
+            raise TypeError(
+                f"The query must be a string, not {type(query).__name__}. gql "
+                "documents aren't accepted since 6.0.0: pass the string you gave "
+                "gql(), or graphql.print_ast(document) for one built with its DSL."
+            )
         given = (
             json_lib.loads(variables)
             if isinstance(variables, (str, bytes))
@@ -370,7 +376,7 @@ class Anvil:
         timeout: float | tuple[float, float] | None = None,
     ) -> dict[str, Any]:
         """Send a GraphQL mutation, as a string or a mutation class. The same as `request_graphql`."""
-        mutation = query if isinstance(query, str) else query.get_mutation()
+        mutation = query.get_mutation() if isinstance(query, BaseQuery) else query
         return self.request_graphql(mutation, variables, timeout=timeout)
 
     def create_etch_packet(

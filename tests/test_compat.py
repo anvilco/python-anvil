@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+from graphql import parse
 
 from python_anvil import Anvil
 from python_anvil.api_resources.mutations import CreateEtchPacket, ForgeSubmit
@@ -90,6 +91,14 @@ def describe_query_and_mutate():
             graphql.call_args.args[0]
             == "mutation Mine($eid: String!) { mine(eid: $eid) { eid } }"
         )
+
+    def they_refuse_a_gql_document_before_sending(anvil):
+        document = parse("{ currentUser { eid } }")
+        with mock.patch.object(anvil.client, "request") as request:
+            for method in (anvil.query, anvil.mutate, anvil.request_graphql):
+                with pytest.raises(TypeError, match=r"not DocumentNode.*print_ast"):
+                    method(document)
+        request.assert_not_called()
 
     def the_old_module_constants_are_the_mutations():
         assert mutations.create_etch_packet.generate_mutation() == CREATE_ETCH_PACKET
