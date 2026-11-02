@@ -24,7 +24,7 @@ classifiers = [
 requires-python = ">=3.10,<3.16"
 dependencies = [
     "requests>=2.28.2,<3",
-    "pydantic>=2.8,<3",
+    "pydantic>=2.14.2,<3",
     # The generated types use TypeAliasType on Python 3.10 and 3.11
     "typing-extensions>=4.12",
 ]
