@@ -40,6 +40,17 @@ jobs:
           ref: master
           persist-credentials: false
 
+      # Fail before fetching or generating anything, rather than after, when
+      # the token that opens the PR is missing. See CONTRIBUTING.md.
+      - name: Check the CI_GITHUB_TOKEN secret is set
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::The CI_GITHUB_TOKEN repository secret is not set. The workflow needs it to push the sync branch and open the PR (the workflow's own GITHUB_TOKEN can't trigger the PR's CI). Add a token with Contents: write and Pull requests: write on this repository under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v7
