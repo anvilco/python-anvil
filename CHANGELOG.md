@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- The generated types come from the published `@anvilco/types` package alone: it ships the OpenAPI spec as well as the GraphQL schema, so `make update-schema` takes both from one version, and the Sync API Types workflow runs when anvil-js publishes a new version rather than on every production deploy.
+
 ## [v6.0.1] - 2026-10-29
 
 - `query`, `mutate` and `request_graphql` given a `gql` document raise a `TypeError` that says to pass the query string, instead of `Object of type DocumentNode is not JSON serializable`.

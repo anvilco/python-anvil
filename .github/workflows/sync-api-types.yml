@@ -1,18 +1,18 @@
 name: Sync API Types
 
-# Refreshes schema/ from the live Anvil API and the published @anvilco/types,
-# regenerates python_anvil/types, and opens one PR when any of it changed.
-# Runs after a production rollout completes: Foundry's postsync step sends
-# `anvil-production-deploy` to every repo in its --webhook-repos list
-# (anvil-infra: k8s/anvil/base/foundry/postsync.yaml). That dispatch is
+# Refreshes schema/ from the published @anvilco/types (the GraphQL schema and
+# the OpenAPI spec, regenerated from production after every deploy by
+# anvil-js's own sync), regenerates python_anvil/types, and opens one PR when
+# any of it changed. Runs when anvil-js publishes a new @anvilco/types: its
+# release workflow sends `anvilco-types-published` here. That dispatch is
 # best-effort with no retry, so the weekly cron is a backstop for a dropped one.
-# anvil-js's sync-api-types.yml does the same for @anvilco/types.
+# dotnet-anvil's sync-api-types.yml does the same.
 
 on:
   repository_dispatch:
-    types: [anvil-production-deploy]
+    types: [anvilco-types-published]
   schedule:
-    - cron: '0 10 * * 1' # Every Monday at 10am UTC, after anvil-js's 9am sync
+    - cron: '0 10 * * 1' # Every Monday at 10am UTC
   workflow_dispatch:
 
 # BRANCH is force-pushed, so never let two runs race on it.
@@ -73,9 +73,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           EVENT_NAME: ${{ github.event_name }}
-          DEPLOY_VERSION: ${{ github.event.client_payload.version }}
-          DEPLOY_PR_URL: ${{ github.event.client_payload.pullRequest.url }}
-          DEPLOYED_AT: ${{ github.event.client_payload.deployedAt }}
+          TYPES_VERSION: ${{ github.event.client_payload.version }}
+          TYPES_RELEASE_URL: ${{ github.event.client_payload.releaseUrl }}
         run: |
           # Not GITHUB_TOKEN: pushes and PRs made with it don't trigger
           # workflows, so the PR would never get its CI checks.
@@ -107,14 +106,14 @@ jobs:
           PY
 
           if [ "$EVENT_NAME" = repository_dispatch ]; then
-            TRIGGER="Anvil production deploy \`$DEPLOY_VERSION\` ($DEPLOY_PR_URL), deployed $DEPLOYED_AT."
+            TRIGGER="the release of \`@anvilco/types@$TYPES_VERSION\` ($TYPES_RELEASE_URL)."
           else
-            TRIGGER="\`$EVENT_NAME\` run."
+            TRIGGER="a \`$EVENT_NAME\` run."
           fi
           {
-            echo "Automated sync of the generated types from the production Anvil API. Triggered by $TRIGGER"
+            echo "Automated sync of the generated types from the published \`@anvilco/types\`, which carries the production API's specs. Triggered by $TRIGGER"
             echo
-            echo "- \`$SCHEMA_DIR/\`: the GraphQL schema (from the published \`@anvilco/types\`) and the OpenAPI spec"
+            echo "- \`$SCHEMA_DIR/\`: the GraphQL schema and the OpenAPI spec, from the package"
             echo "- \`$TYPES_DIR/\`: regenerated from them with \`make generate\`"
             echo
             echo "If a type or field was removed or renamed, note it under Unreleased in CHANGELOG.md as a breaking change before merging."
