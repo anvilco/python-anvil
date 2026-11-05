@@ -45,19 +45,16 @@ Everything it creates is test data. It creates a test Etch packet each run, and 
 
 ## The generated types
 
-`python_anvil/types` is generated from the API specs in `schema/`: `anvil_schema.graphql`, the GraphQL schema as published in the [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types) npm package (the same copy node-anvil validates against), and `openapi.json`, the API's OpenAPI spec. Neither needs an API key to fetch.
+`python_anvil/types` is generated from the API specs in `schema/`: `anvil_schema.graphql`, the GraphQL schema, and `openapi.json`, the API's OpenAPI spec. Both come from the published [`@anvilco/types`](https://www.npmjs.com/package/@anvilco/types) npm package, which anvil-js regenerates from production after every deploy; node-anvil and dotnet-anvil generate their types from the same copy, so every client describes the same API build. Neither needs an API key to fetch. (A version of the package that predates the OpenAPI spec shipping in it falls back to fetching the spec from production.)
 
 ```sh
-make update-schema  # refresh schema/ from @anvilco/types and production
+make update-schema  # refresh schema/ from the latest @anvilco/types
 make generate       # regenerate python_anvil/types from schema/
 ```
 
 `make generate` runs offline, and CI fails if the generated files don't match `schema/`, so run it after changing anything in `schema/`. See `dev/generate_types.py` for how each file is generated. The hand-written payload models in `python_anvil/api_resources/payload.py` extend the generated ones, so a change there is usually a matter of adjusting an override.
 
-The [Sync API Types workflow](.github/workflows/sync-api-types.yml) does both steps after each Anvil production deploy, and weekly as a backstop, and opens a PR when anything changed. It needs:
-
-* A `CI_GITHUB_TOKEN` repository secret: a token that can push branches and open PRs, so the PR gets its CI checks (the workflow's own `GITHUB_TOKEN` can't trigger workflows). anvil-js uses the same secret name.
-* `python-anvil` in the `--webhook-repos` list of Foundry's postsync step in anvil-infra, which sends the `anvil-production-deploy` dispatch. Until then, only the weekly run and manual runs happen.
+The [Sync API Types workflow](.github/workflows/sync-api-types.yml) does both steps whenever anvil-js publishes a new `@anvilco/types` (its release workflow sends an `anvilco-types-published` dispatch here), and weekly as a backstop, and opens a PR when anything changed. It needs a `CI_GITHUB_TOKEN` repository secret: a token that can push branches and open PRs, so the PR gets its CI checks (the workflow's own `GITHUB_TOKEN` can't trigger workflows). anvil-js and dotnet-anvil use the same secret name.
 
 ## Publishing
 
