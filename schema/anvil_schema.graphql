@@ -36,6 +36,10 @@ type BillingSubscription {
   status: String!
 }
 
+type CardVerification {
+  clientSecret: String!
+}
+
 """
 A `Cast` holds configuration for a single PDF template. It defines the
 location of boxes on PDF pages, and the type of each box (e.g. date, phone

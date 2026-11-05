@@ -95,6 +95,14 @@ class BillingSubscription(GeneratedModel):
     status: Annotated[String, Field(description="active | available | expired")]
 
 
+class CardVerification(GeneratedModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    client_secret: Annotated[String, Field(alias="clientSecret")]
+
+
 class CastRedirectMapping(GeneratedModel):
     """
     A mapping from an old redirect path to its canonical destination
