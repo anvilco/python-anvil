@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 - The generated types come from the published `@anvilco/types` package alone: it ships the OpenAPI spec as well as the GraphQL schema, so `make update-schema` takes both from one version, and the Sync API Types workflow runs when anvil-js publishes a new version rather than on every production deploy.
+- Sync the generated API types in `python_anvil.types` with the production API.
 
 ## [v6.0.1] - 2026-10-29
 
