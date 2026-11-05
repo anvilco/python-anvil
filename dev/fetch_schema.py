@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""Refreshes the API specs the generated types come from, from the published
-@anvilco/types npm package (https://www.npmjs.com/package/@anvilco/types).
+"""Refreshes the API specs the generated types come from.
+
+Both come from the published @anvilco/types npm package
+(https://www.npmjs.com/package/@anvilco/types):
 
 - schema/anvil_schema.graphql, the Anvil GraphQL schema, which the package has
   always shipped.
@@ -41,7 +43,11 @@ OPENAPI_PATH = SCHEMA_DIR / "openapi.json"
 
 
 def fetch_specs(version: str = "latest") -> tuple[str, str | None, str]:
-    """The GraphQL schema SDL and the OpenAPI spec (None when the package predates it) in the given version of @anvilco/types, and that version."""
+    """The specs in the given version of @anvilco/types, and that version.
+
+    The GraphQL schema SDL, and the OpenAPI spec or None when the version
+    predates the spec shipping in the package.
+    """
     metadata_url = f"{REGISTRY}/{PACKAGE.replace('/', '%2F')}"
     with urllib.request.urlopen(metadata_url, timeout=60) as response:
         metadata = json.load(response)
