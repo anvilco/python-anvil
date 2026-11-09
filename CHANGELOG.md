@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A sync of a major `@anvilco/types` release, one where the API removed or changed types or fields, is marked BREAKING here by the Sync API Types workflow, so the next release is a major. `schema/source.json` records which version the specs came from.
 - The generated types come from the published `@anvilco/types` package alone: it ships the OpenAPI spec as well as the GraphQL schema, so `make update-schema` takes both from one version, and the Sync API Types workflow runs when anvil-js publishes a new version rather than on every production deploy.
 - Sync the generated API types in `python_anvil.types` with the production API, from `@anvilco/types@1.0.0`.
+- Remove `python_anvil.types.graphql.CardVerification`, an internal type that was briefly in the API's schema. No API response ever returned it, so the removal is treated as a fix rather than a breaking change.
 
 ## [v6.0.1] - 2026-10-29
 
