@@ -9,6 +9,10 @@ Both come from the published @anvilco/types npm package
 - schema/openapi.json, the API's OpenAPI spec, which recent versions of the
   package ship. An older version doesn't have it, so it is fetched from
   production instead.
+- schema/source.json, which version of the package they came from. The Sync
+  API Types workflow compares it before and after a refresh: @anvilco/types
+  takes a major bump when the API removes or changes something, so a new
+  major means this client's next release is a breaking one too.
 
 The package is regenerated from production after every deploy, and node-anvil
 and dotnet-anvil generate their types from the same copy, so every client
@@ -40,6 +44,7 @@ OPENAPI_URL = "https://app.useanvil.com/api/v1/openapi.json"
 SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schema"
 SCHEMA_PATH = SCHEMA_DIR / "anvil_schema.graphql"
 OPENAPI_PATH = SCHEMA_DIR / "openapi.json"
+SOURCE_PATH = SCHEMA_DIR / "source.json"
 
 
 def fetch_specs(version: str = "latest") -> tuple[str, str | None, str]:
@@ -95,12 +100,19 @@ def main() -> None:
         openapi = fetch_openapi_spec_from_production()
         openapi_source = f"{OPENAPI_URL} ({PACKAGE}@{version} doesn't ship it)"
 
-    SCHEMA_PATH.write_text(schema, encoding="utf-8")
+    write_specs(schema, openapi, version)
     print(
         f"Wrote the GraphQL schema from {PACKAGE}@{version} to {_relative(SCHEMA_PATH)}"
     )
-    OPENAPI_PATH.write_text(openapi, encoding="utf-8")
     print(f"Wrote the OpenAPI spec from {openapi_source} to {_relative(OPENAPI_PATH)}")
+
+
+def write_specs(schema: str, openapi: str, version: str) -> None:
+    """Writes the specs and records the version they came from."""
+    SCHEMA_PATH.write_text(schema, encoding="utf-8")
+    OPENAPI_PATH.write_text(openapi, encoding="utf-8")
+    source = {"package": PACKAGE, "version": version}
+    SOURCE_PATH.write_text(json.dumps(source, indent=2) + "\n", encoding="utf-8")
 
 
 def _relative(path: Path) -> str:

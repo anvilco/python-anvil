@@ -54,7 +54,15 @@ make generate       # regenerate python_anvil/types from schema/
 
 `make generate` runs offline, and CI fails if the generated files don't match `schema/`, so run it after changing anything in `schema/`. See `dev/generate_types.py` for how each file is generated. The hand-written payload models in `python_anvil/api_resources/payload.py` extend the generated ones, so a change there is usually a matter of adjusting an override.
 
-The [Sync API Types workflow](.github/workflows/sync-api-types.yml) does both steps whenever anvil-js publishes a new `@anvilco/types` (its release workflow sends an `anvilco-types-published` dispatch here), and weekly as a backstop, and opens a PR when anything changed. It needs a `CI_GITHUB_TOKEN` repository secret: a token that can push branches and open PRs, so the PR gets its CI checks (the workflow's own `GITHUB_TOKEN` can't trigger workflows). anvil-js and dotnet-anvil use the same secret name.
+`schema/source.json` records which version of the package the specs came from.
+
+The [Sync API Types workflow](.github/workflows/sync-api-types.yml) does both steps whenever anvil-js publishes a new `@anvilco/types` (its release workflow sends an `anvilco-types-published` dispatch here), and weekly as a backstop, and opens a PR when anything changed. The PR says whether that version was a major, minor or patch of `@anvilco/types` (see Versioning); on a major it marks its changelog note `BREAKING`, adds the `breaking` label, and asks the GitHub users in the optional `SYNC_BREAKING_REVIEWERS` repository variable for review. It needs a `CI_GITHUB_TOKEN` repository secret: a token that can push branches and open PRs, so the PR gets its CI checks (the workflow's own `GITHUB_TOKEN` can't trigger workflows). anvil-js and dotnet-anvil use the same secret name.
+
+## Versioning
+
+Versions follow [semver](https://semver.org). The generated `python_anvil.types` are public API, so they count: a release that removes or renames a type or field is a major, one that adds them is a minor.
+
+They come from `@anvilco/types`, which takes its own bumps from the API's spec diffs ([its policy](https://github.com/anvilco/anvil-js/tree/main/packages/types#versioning): major for a removed or changed type, field or argument, minor for additions, patch for descriptions). So every sync sets a floor for the next release here: a sync of a `@anvilco/types` major is a `BREAKING:` entry in `CHANGELOG.md` and the next release is a major; a minor makes it at least a minor. The client's own changes can raise the bump, never lower it.
 
 ## Publishing
 

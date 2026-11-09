@@ -7,6 +7,15 @@ name: Sync API Types
 # release workflow sends `anvilco-types-published` here. That dispatch is
 # best-effort with no retry, so the weekly cron is a backstop for a dropped one.
 # dotnet-anvil's sync-api-types.yml does the same.
+#
+# @anvilco/types takes a major bump when the API removes or changes a type,
+# field or argument, a minor for additions and a patch for descriptions (its
+# README has the policy). The generated types are this client's public API,
+# so a sync of a major is a breaking change here too: the PR says so, its
+# changelog note is marked BREAKING, it is labelled `breaking`, and the GitHub
+# users in the SYNC_BREAKING_REVIEWERS repository variable (comma separated,
+# optional) are asked to review. The bump comes with the dispatch; a cron or
+# manual run reads it from the version recorded in schema/source.json.
 
 on:
   repository_dispatch:
@@ -86,6 +95,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           TYPES_VERSION: ${{ github.event.client_payload.version }}
           TYPES_RELEASE_URL: ${{ github.event.client_payload.releaseUrl }}
+          TYPES_BUMP: ${{ github.event.client_payload.bump }}
+          REVIEWERS: ${{ vars.SYNC_BREAKING_REVIEWERS }}
         run: |
           # Not GITHUB_TOKEN: pushes and PRs made with it don't trigger
           # workflows, so the PR would never get its CI checks.
@@ -100,14 +111,48 @@ jobs:
             exit 0
           fi
 
-          # Note the sync under Unreleased in the changelog, once per release
-          python3 - <<'PY'
+          # Which @anvilco/types this is, and whether it was a major, minor or
+          # patch: from the dispatch, or for a cron or manual run from the
+          # version recorded in schema/source.json before and after the refresh.
+          NEW_VERSION=$(python3 -c 'import json; print(json.load(open("schema/source.json"))["version"])')
+          OLD_VERSION=$(git show HEAD:schema/source.json 2>/dev/null | python3 -c 'import json, sys; print(json.load(sys.stdin)["version"])' 2>/dev/null || true)
+          TYPES_VERSION=${TYPES_VERSION:-$NEW_VERSION}
+          TYPES_RELEASE_URL=${TYPES_RELEASE_URL:-https://github.com/anvilco/anvil-js/releases/tag/@anvilco/types@$TYPES_VERSION}
+          if [ -z "$TYPES_BUMP" ]; then
+            TYPES_BUMP=$(python3 - "$OLD_VERSION" "$NEW_VERSION" <<'PY'
+          import re
+          import sys
+
+          def parse(version):
+              return [int(part) for part in re.match(r"(\d+)\.(\d+)\.(\d+)", version).groups()]
+
+          try:
+              old, new = parse(sys.argv[1]), parse(sys.argv[2])
+          except (AttributeError, TypeError):
+              print("patch")  # no recorded version to compare with
+          else:
+              print("major" if new[0] != old[0] else "minor" if new[1] != old[1] else "patch")
+          PY
+            )
+          fi
+          echo "@anvilco/types@$TYPES_VERSION, a $TYPES_BUMP release"
+
+          # Note the sync under Unreleased in the changelog, once per release.
+          # BREAKING on a major, so the next release here is a major: the
+          # generated types are public API, and the API removed or changed some.
+          if [ "$TYPES_BUMP" = major ]; then
+            NOTE="- BREAKING: Sync the generated API types in \`python_anvil.types\` with the production API, which removed or changed types or fields. Each one is listed in the [\`@anvilco/types@$TYPES_VERSION\` release notes]($TYPES_RELEASE_URL)."
+          else
+            NOTE="- Sync the generated API types in \`python_anvil.types\` with the production API."
+          fi
+          NOTE="$NOTE" python3 - <<'PY'
+          import os
           import re
           from pathlib import Path
 
           path = Path("CHANGELOG.md")
           text = path.read_text(encoding="utf-8")
-          note = "- Sync the generated API types in `python_anvil.types` with the production API."
+          note = os.environ["NOTE"]
           match = re.search(r"^## \[Unreleased\]\n(?P<body>.*?)(?=^## \[|\Z)", text, re.M | re.S)
           if match and note not in match["body"]:
               body = match["body"].rstrip("\n")
@@ -127,7 +172,17 @@ jobs:
             echo "- \`$SCHEMA_DIR/\`: the GraphQL schema and the OpenAPI spec, from the package"
             echo "- \`$TYPES_DIR/\`: regenerated from them with \`make generate\`"
             echo
-            echo "If a type or field was removed or renamed, note it under Unreleased in CHANGELOG.md as a breaking change before merging."
+            case "$TYPES_BUMP" in
+              major)
+                echo "**\`@anvilco/types@$TYPES_VERSION\` is a major release: the API removed or changed types or fields, listed in its [release notes]($TYPES_RELEASE_URL).** The generated types are this client's public API, so the changelog note is marked BREAKING and the next release must be a major. Review each change before merging."
+                ;;
+              minor)
+                echo "\`@anvilco/types@$TYPES_VERSION\` is a minor release: the API gained types, fields or values. The next release here is at least a minor."
+                ;;
+              *)
+                echo "\`@anvilco/types@$TYPES_VERSION\` is a patch release: only descriptions changed."
+                ;;
+            esac
             echo
             echo "A later deploy that changes these files again rebuilds this branch from \`master\`, replacing any edits made here."
           } > "$RUNNER_TEMP/pr-body.md"
@@ -139,14 +194,28 @@ jobs:
           git commit -m "Sync the generated API types from production"
           git push --force origin "$BRANCH"
 
+          TITLE="Sync the generated API types from production"
+          if [ "$TYPES_BUMP" = major ]; then
+            TITLE="$TITLE (breaking API changes)"
+          fi
           if [ -n "$PR" ]; then
-            gh pr edit "$PR" --body-file "$RUNNER_TEMP/pr-body.md"
+            gh pr edit "$PR" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
           else
             gh pr create \
-              --title "Sync the generated API types from production" \
+              --title "$TITLE" \
               --body-file "$RUNNER_TEMP/pr-body.md" \
               --base master \
               --head "$BRANCH"
+            PR=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          fi
+
+          # A breaking release can't merge as routine: flag it and ask for review.
+          if [ "$TYPES_BUMP" = major ]; then
+            gh label create breaking --color B60205 --description "Removes or changes part of the public API" --force >/dev/null 2>&1 || true
+            gh pr edit "$PR" --add-label breaking || echo "::warning::Could not label PR #$PR as breaking"
+            if [ -n "$REVIEWERS" ]; then
+              gh pr edit "$PR" --add-reviewer "$(printf '%s' "$REVIEWERS" | tr -d ' ')" || echo "::warning::Could not request review of PR #$PR from $REVIEWERS"
+            fi
           fi
 
       # Production moved back to match master (e.g. a rollback before the PR
