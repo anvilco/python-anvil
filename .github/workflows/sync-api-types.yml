@@ -74,8 +74,13 @@ jobs:
       - name: Fetch the specs and generate the types
         id: generate
         continue-on-error: true
+        env:
+          TYPES_VERSION: ${{ github.event.client_payload.version }}
         run: |
-          make update-schema
+          # The version the dispatch names, not `latest`: the run arrives
+          # seconds after the publish, before npm's dist-tag has propagated.
+          # The first 1.0.0 dispatch fetched 0.2.5 that way.
+          poetry run python dev/fetch_schema.py "${TYPES_VERSION:-latest}"
           make generate
 
       - name: Discard the output if that failed
