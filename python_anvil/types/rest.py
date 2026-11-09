@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, RootModel
 
 from python_anvil.types._base import GeneratedModel
 
@@ -261,6 +261,36 @@ class EtchSigner(GeneratedModel):
         int | None, Field(alias="tokenValidForMinutes", ge=1, le=86400)
     ] = None
     token_valid_until: Annotated[str | None, Field(alias="tokenValidUntil")] = None
+
+
+class Records(RootModel[str]):
+    root: Annotated[str, Field(pattern="^[0-9]+$")]
+
+
+class Records1Item(RootModel[str]):
+    root: Annotated[str, Field(pattern="^[0-9]+$")]
+
+
+class Records1(RootModel[list[Records1Item]]):
+    root: Annotated[list[Records1Item], Field(max_length=1, min_length=1)]
+
+
+class FillPdfFromIntegrationRequest(GeneratedModel):
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    output_format: Annotated[
+        Literal["pdf", "url"] | None, Field(alias="outputFormat")
+    ] = "pdf"
+    records: Annotated[
+        dict[str, Records | Records1],
+        Field(
+            description='Record IDs keyed by the template\'s object types, e.g.\n`{ "contacts": "111", "companies": "999" }`. Each type takes one ID\nas a numeric string, or a list holding one.\n',
+            min_length=1,
+        ),
+    ]
+    title: str | None = None
 
 
 class Data(GeneratedModel):

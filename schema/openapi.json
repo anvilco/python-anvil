@@ -418,6 +418,47 @@
         ],
         "type": "object"
       },
+      "FillPdfFromIntegrationRequest": {
+        "properties": {
+          "outputFormat": {
+            "default": "pdf",
+            "enum": [
+              "pdf",
+              "url"
+            ],
+            "type": "string"
+          },
+          "records": {
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "pattern": "^[0-9]+$",
+                  "type": "string"
+                },
+                {
+                  "items": {
+                    "pattern": "^[0-9]+$",
+                    "type": "string"
+                  },
+                  "maxItems": 1,
+                  "minItems": 1,
+                  "type": "array"
+                }
+              ]
+            },
+            "description": "Record IDs keyed by the template's object types, e.g.\n`{ \"contacts\": \"111\", \"companies\": \"999\" }`. Each type takes one ID\nas a numeric string, or a list holding one.\n",
+            "minProperties": 1,
+            "type": "object"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "records"
+        ],
+        "type": "object"
+      },
       "FillPdfRequest": {
         "properties": {
           "borderColor": {
@@ -899,13 +940,13 @@
             "description": "Redirect to a short-lived signed URL for the zip."
           },
           "401": {
-            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+            "description": "Authentication required — API key or OAuth token is missing or invalid."
           },
           "403": {
             "description": "The OAuth token belongs to a public client without a scope that covers this route."
           },
           "404": {
-            "description": "Document group not found \u2014 no document group exists with the given EID, or the authenticated user lacks access to it."
+            "description": "Not found. No document group exists with the given EID, the authenticated user lacks access to it, or its zip is missing from storage."
           }
         },
         "security": [
@@ -974,19 +1015,19 @@
             "description": "The filled PDF document."
           },
           "400": {
-            "description": "Validation error \u2014 invalid or missing fields in the request body."
+            "description": "Validation error — invalid or missing fields in the request body."
           },
           "401": {
-            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+            "description": "Authentication required — API key or OAuth token is missing or invalid."
           },
           "404": {
-            "description": "Template not found \u2014 no Cast exists with the given EID, or the authenticated user lacks access."
+            "description": "Template not found — no Cast exists with the given EID, or the authenticated user lacks access."
           },
           "415": {
-            "description": "Unsupported media type \u2014 Content-Type must be application/json or multipart/form-data."
+            "description": "Unsupported media type — Content-Type must be application/json or multipart/form-data."
           },
           "429": {
-            "description": "Concurrency limit exceeded \u2014 too many simultaneous requests on a development API key."
+            "description": "Concurrency limit exceeded — too many simultaneous requests on a development API key."
           }
         },
         "security": [
@@ -998,6 +1039,102 @@
           }
         ],
         "summary": "Fill a PDF template",
+        "tags": [
+          "PDF"
+        ]
+      }
+    },
+    "/api/v1/fill/{integrationType}/{castEid}.pdf": {
+      "post": {
+        "description": "Fills a PDF template (Cast) built from an integration with values read\nfrom that integration's records, and returns the same PDF or signed URL\nas `/api/v1/fill/{castEid}.pdf`. Accepts every option that endpoint does\nexcept `data`.\n\nOnly `hubspot` is supported, and one record per object type.\n",
+        "operationId": "fillPdfFromIntegration",
+        "parameters": [
+          {
+            "description": "The integration the template was built from.",
+            "in": "path",
+            "name": "integrationType",
+            "required": true,
+            "schema": {
+              "enum": [
+                "hubspot"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "The EID of the PDF template (Cast) to fill.",
+            "in": "path",
+            "name": "castEid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The version number of the template to use. Defaults to the latest published version.",
+            "in": "query",
+            "name": "versionNumber",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FillPdfFromIntegrationRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FillPdfFromIntegrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The filled PDF document."
+          },
+          "400": {
+            "description": "Validation error, the template wasn't built from this integration, or the integration has no record with a given ID."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "No edit access to the template."
+          },
+          "404": {
+            "description": "Template not found."
+          },
+          "415": {
+            "description": "Unsupported media type."
+          },
+          "429": {
+            "description": "Concurrency limit exceeded."
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "oauth2": []
+          }
+        ],
+        "summary": "Fill a PDF template from integration records",
         "tags": [
           "PDF"
         ]
@@ -1049,16 +1186,16 @@
             "description": "The generated PDF document."
           },
           "400": {
-            "description": "Validation error \u2014 invalid or missing fields in the request body."
+            "description": "Validation error — invalid or missing fields in the request body."
           },
           "401": {
-            "description": "Authentication required \u2014 API key or OAuth token is missing or invalid."
+            "description": "Authentication required — API key or OAuth token is missing or invalid."
           },
           "415": {
-            "description": "Unsupported media type \u2014 Content-Type must be application/json or multipart/form-data."
+            "description": "Unsupported media type — Content-Type must be application/json or multipart/form-data."
           },
           "429": {
-            "description": "Concurrency limit exceeded \u2014 too many simultaneous requests on a development API key."
+            "description": "Concurrency limit exceeded — too many simultaneous requests on a development API key."
           }
         },
         "security": [
