@@ -66,40 +66,10 @@ They come from `@anvilco/types`, which takes its own bumps from the API's spec d
 
 ## Publishing
 
-Publishing to PyPI is done by the [Publish workflow](.github/workflows/publish.yml) when a version tag is pushed, in two steps: the workflow builds and checks the release, and a maintainer approves the publish job. Merging to `master` does not publish anything.
+Releases are run from [anvilco/package-ops](https://github.com/anvilco/package-ops), the private repository that releases every Anvil package: Actions → **Release** → **Run workflow**, pick `anvilco/python-anvil` and the increment. Merging to `master` does not publish anything, and nothing in this repository publishes.
 
-1. On a branch, bump the version and release the `[Unreleased]` section of `CHANGELOG.md`:
-   ```sh
-   poetry run python dev/release.py prepare 6.0.0
-   ```
-   This sets `version` in `pyproject.toml`, renames `[Unreleased]` to `[v6.0.0]` with today's date, and commits. If you're on `master`, it creates a `release/v6.0.0` branch first. Push the branch, open a PR, and merge it to `master`.
-1. Tag that commit on `master` and push the tag:
-   ```sh
-   git checkout master && git pull
-   poetry run python dev/release.py tag
-   ```
-   This checks that `master` is up to date with `origin/master`, that `v6.0.0` doesn't already exist, and that `CHANGELOG.md` has a `[v6.0.0]` section, then tags and pushes.
-1. When the workflow's build job has finished, approve its publish job on the workflow run's page. The job then publishes to PyPI and creates the GitHub release.
+The run checks out `master`, runs `make lint` and `make test`, checks the release floor (the last tag matches `version` in `pyproject.toml`, `CHANGELOG.md` has notes under `[Unreleased]`, and the increment isn't below what the synced `@anvilco/types` demands; see Versioning), then bumps `pyproject.toml`, turns `[Unreleased]` into `[vX.Y.Z] - date`, commits `Release vX.Y.Z` to `master`, tags `vX.Y.Z`, creates the GitHub release with that changelog section as its notes, builds with `make build`, and publishes the build to PyPI with [trusted publishing](https://docs.pypi.org/trusted-publishers/). A dry run (the default) shows all of that and changes nothing; run one first.
 
-Both commands accept `--dry-run`. For a pre-release, run `poetry run python dev/release.py prepare 6.0.0rc1`: it bumps the version but leaves `CHANGELOG.md` alone, so the notes stay under `[Unreleased]` for the final release. Versions follow [PEP 440](https://peps.python.org/pep-0440/), so pre-releases are `6.0.0a1`, `6.0.0b1` or `6.0.0rc1`, and tagged `v6.0.0rc1`.
+A pre-release (`prerelease` set to `rc`, say) bumps the version but leaves `CHANGELOG.md` alone, so the notes stay under `[Unreleased]` for the final release. The tag is semver (`v6.1.0-rc.1`); Poetry normalizes the version in the built package to [PEP 440](https://peps.python.org/pep-0440/) (`6.1.0rc1`), which is what PyPI shows.
 
-The workflow then:
-
-1. Checks the tag is on `master` and matches the `pyproject.toml` version.
-1. Lints, tests and builds the commit that was tagged.
-1. Waits for a maintainer to approve the `pypi` environment, then publishes the build to PyPI with [trusted publishing](https://docs.pypi.org/trusted-publishers/).
-1. Creates a GitHub release, using that version's `CHANGELOG.md` section as the release notes. Pre-releases are marked as such on GitHub.
-
-### Setup
-
-The workflow uses PyPI trusted publishing, so there is no PyPI token to store in GitHub secrets. Before the first release:
-
-1. A maintainer of the PyPI project adds a trusted publisher on pypi.org, under the project's **Publishing** settings:
-   * Publisher: GitHub
-   * Owner: `anvilco`
-   * Repository name: `python-anvil`
-   * Workflow name: `publish.yml`
-   * Environment name: `pypi`
-1. A repository admin creates a `pypi` [environment](https://github.com/anvilco/python-anvil/settings/environments) on GitHub with **Required reviewers** set to the maintainers who may approve a release, and with deployment branches and tags limited to tags matching `v*`. The required reviewers are what makes a publish wait for approval; without them, the job publishes as soon as the build passes.
-
-No GitHub secrets are needed: the release is created with the workflow's own `GITHUB_TOKEN`.
+Who may run a real release, the PyPI trusted publisher, and the GitHub App that pushes the release commit are set up in package-ops; its README has the details and how to add a repository.
