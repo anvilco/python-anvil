@@ -171,6 +171,9 @@ jobs:
           else
             TRIGGER="a \`$EVENT_NAME\` run."
           fi
+          # What the next release must at least be, for the PR body
+          INCREMENT=patch
+          case "$TYPES_BUMP" in major | minor) INCREMENT=$TYPES_BUMP ;; esac
           {
             echo "Automated sync of the generated types from the published \`@anvilco/types\`, which carries the production API's specs. Triggered by $TRIGGER"
             echo
@@ -189,6 +192,8 @@ jobs:
                 ;;
             esac
             echo
+            echo
+            echo "**After merging:** release from [package-ops](https://github.com/anvilco/package-ops/actions/workflows/release.yml), picking \`$GITHUB_REPOSITORY\` and increment \`$INCREMENT\` (higher if other unreleased changes call for it). Nothing publishes on merge."
             echo "A later deploy that changes these files again rebuilds this branch from \`master\`, replacing any edits made here."
           } > "$RUNNER_TEMP/pr-body.md"
 
