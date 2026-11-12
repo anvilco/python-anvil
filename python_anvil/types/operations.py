@@ -49,6 +49,27 @@ class CurrentUserArgs(GeneratedModel):
     pass
 
 
+class DownloadArgs(GeneratedModel):
+    """Arguments of the `download` query.
+
+    A short-lived signed URL for a file Anvil stores: a Document Template's
+    PDF, or the documents of an e-sign packet as a zip. The link downloads it
+    with a plain GET and stops working at `expiresAt`.
+    """
+
+    eid: Annotated[str, Field(description="The `eid` of the object to download.")]
+    format: Annotated[
+        graphql.DownloadFormat | None,
+        Field(
+            description="The file to return. Optional for an object with one format; required\nwhen it has several."
+        ),
+    ] = None
+    object_type: Annotated[
+        graphql.DownloadObjectType,
+        Field(alias="objectType", description="What `eid` refers to."),
+    ]
+
+
 class EtchPacketArgs(GeneratedModel):
     """Arguments of the `etchPacket` query.
 
@@ -611,7 +632,7 @@ class DuplicateWeldArgs(GeneratedModel):
 
     eid: str
     name: str | None = None
-    organization_eid: Annotated[str, Field(alias="organizationEid")]
+    organization_eid: Annotated[str | None, Field(alias="organizationEid")] = None
     slug: str | None = None
     visibility: str | None = None
 
@@ -1217,6 +1238,7 @@ __all__ = [
     "CurrentUserArgs",
     "DestroySubmissionArgs",
     "DisconnectDocusignArgs",
+    "DownloadArgs",
     "DuplicateCastArgs",
     "DuplicateWeldArgs",
     "EtchPacketArgs",

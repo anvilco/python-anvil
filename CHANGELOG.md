@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Sync the generated API types in `python_anvil.types` with the production API.
+
 ## [v6.1.0] - 2026-11-10
 
 - A sync of a major `@anvilco/types` release, one where the API removed or changed types or fields, is marked BREAKING here by the Sync API Types workflow, so the next release is a major. `schema/source.json` records which version the specs came from.
