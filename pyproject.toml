@@ -52,7 +52,7 @@ packages = [{ include = "python_anvil" }]
 [tool.poetry.group.dev.dependencies]
 ruff = ">=0.17"
 mypy = ">=1.18"
-pytest = ">=8"
+pytest = ">=9.2.0"
 pytest-cov = ">=6"
 pytest-describe = ">=2.2"
 pytest-timeout = ">=2.3"
