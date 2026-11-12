@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
-from pydantic import ConfigDict, Field
+from pydantic import ConfigDict, Field, RootModel
 from typing_extensions import TypeAliasType
 
 from python_anvil.types._base import GeneratedModel
@@ -45,6 +45,24 @@ String = TypeAliasType("String", str)
 """
 The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.
 """
+
+
+class DownloadFormat(RootModel[Literal["pdf", "zip"]]):
+    """
+    The file a `download` returns.
+    """
+
+    root: Literal["pdf", "zip"]
+
+
+class DownloadObjectType(
+    RootModel[Literal["cast", "document_group", "document_template", "esign_documents"]]
+):
+    """
+    What an eid passed to `download` refers to.
+    """
+
+    root: Literal["cast", "document_group", "document_template", "esign_documents"]
 
 
 class Amount(GeneratedModel):
@@ -120,6 +138,27 @@ class CastRedirectMapping(GeneratedModel):
         Field(
             description="The canonical destination path (e.g., /forms/current-tag/current-slug/)"
         ),
+    ]
+
+
+class Download(GeneratedModel):
+    """
+    A link to a file Anvil stores, signed for a short time. Fetch it before
+    `expiresAt`; after that, ask for a new one.
+    """
+
+    model_config = ConfigDict(
+        extra="allow",
+        populate_by_name=True,
+    )
+    expires_at: Annotated[
+        Date, Field(alias="expiresAt", description="When the URL stops working.")
+    ]
+    filename: Annotated[
+        String | None, Field(description="The name the file downloads as.")
+    ] = None
+    url: Annotated[
+        String, Field(description="The signed URL. A plain GET downloads the file.")
     ]
 
 
@@ -2081,6 +2120,13 @@ class Weld(GeneratedModel):
     ] = None
     has_weld_datas: Annotated[Boolean | None, Field(alias="hasWeldDatas")] = None
     id: Int
+    is_expired: Annotated[
+        Boolean | None,
+        Field(
+            alias="isExpired",
+            description="This `Weld` is closed to new submissions: its `expiresAt` date has passed.",
+        ),
+    ] = None
     is_latest_version: Annotated[Boolean | None, Field(alias="isLatestVersion")] = None
     is_published_version: Annotated[
         Boolean | None, Field(alias="isPublishedVersion")

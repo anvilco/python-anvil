@@ -305,6 +305,42 @@ type DocumentGroupPage {
 }
 
 """
+A link to a file Anvil stores, signed for a short time. Fetch it before
+`expiresAt`; after that, ask for a new one.
+"""
+type Download {
+  """When the URL stops working."""
+  expiresAt: Date!
+
+  """The name the file downloads as."""
+  filename: String
+
+  """The signed URL. A plain GET downloads the file."""
+  url: String!
+}
+
+"""The file a `download` returns."""
+enum DownloadFormat {
+  pdf
+  zip
+}
+
+"""What an eid passed to `download` refers to."""
+enum DownloadObjectType {
+  """The same object as `document_template`, under the name the API uses."""
+  cast
+
+  """The same object as `esign_documents`, under the name the API uses."""
+  document_group
+
+  """Downloads as pdf."""
+  document_template
+
+  """Downloads as zip."""
+  esign_documents
+}
+
+"""
 An object used by `createEtchPacket` to specify a file. See the
 [Etch e-sign guide](/docs/api/e-signatures) for more info.
 """
@@ -1115,7 +1151,7 @@ type Mutation {
   destroySubmission(eid: String!): Boolean
   disconnectDocusign(organizationSlug: String!): Organization
   duplicateCast(eid: String!, name: String, organizationEid: String, title: String): Cast
-  duplicateWeld(eid: String!, name: String, organizationEid: String!, slug: String, visibility: String): Weld
+  duplicateWeld(eid: String!, name: String, organizationEid: String, slug: String, visibility: String): Weld
 
   """
   Expires the `UserToken` associated with the provided `requestTokenEid`. Any authentication attempts
@@ -1809,6 +1845,25 @@ type Query {
   currentUser: User
 
   """
+  A short-lived signed URL for a file Anvil stores: a Document Template's
+  PDF, or the documents of an e-sign packet as a zip. The link downloads it
+  with a plain GET and stops working at `expiresAt`.
+  """
+  download(
+    """The `eid` of the object to download."""
+    eid: String!
+
+    """
+    The file to return. Optional for an object with one format; required
+    when it has several.
+    """
+    format: DownloadFormat
+
+    """What `eid` refers to."""
+    objectType: DownloadObjectType!
+  ): Download
+
+  """
   Fetch a single `EtchPacket`. An `EtchPacket` represents a signature
   packet containing PDFs, signers, signed documents. This is the result of
   `createEtchPacket`. See the
@@ -2438,6 +2493,11 @@ type Weld {
   hasUnpublishedChanges: Boolean
   hasWeldDatas: Boolean
   id: Int!
+
+  """
+  This `Weld` is closed to new submissions: its `expiresAt` date has passed.
+  """
+  isExpired: Boolean
   isLatestVersion: Boolean
   isPublishedVersion: Boolean
   isTest: Boolean
