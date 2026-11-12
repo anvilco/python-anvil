@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v6.2.0] - 2026-11-12
+
 - Sync the generated API types in `python_anvil.types` with the production API.
 
 ## [v6.1.0] - 2026-11-10
