@@ -64,7 +64,7 @@ graphql-core = ">=3.2"
 # Pinned to a minor: `make check-generated` byte-compares its output
 datamodel-code-generator = "~0.86"
 # So the CLI and its tests run from a dev install without --all-extras
-click = ">=8.0,<9"
+click = ">=8.5.1,<9"
 tabulate = ">=0.9,<0.11"
 
 [build-system]
